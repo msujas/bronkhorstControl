@@ -1,9 +1,32 @@
 import socket
 from bronkhorst import MFC
-
+import subprocess
+import sys
 HOST = 'localhost'
 PORT = 61245
-def run(HOST=HOST, PORT=PORT):
+
+def getIP():
+    p = subprocess.run('ipconfig',text=True,capture_output=True)
+    ipaddressline = [line for line in p.stdout.split('\n') if 'IPv4 Address' in line][0]
+    ipaddress = ipaddressline.split(' ')[-1]
+    return ipaddress
+
+def run(PORT=PORT):
+    args = sys.argv
+    if len(args) == 1:
+        host = 'local'
+    else:
+        host = args[1]
+
+    if host == 'local':
+        HOST = 'localhost'
+    elif host == 'remote':
+        HOST = getIP()
+    else:
+        print('usage bronkorstServer [host]')
+        print('host must must be "local", "remote" or nothing (local)')
+        return
+    print(HOST)
     close = False
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
