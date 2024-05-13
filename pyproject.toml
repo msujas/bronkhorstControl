@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools >= 59.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bronkhorstControlbm31"
+version = "0.1"
+requires-python = ">= 3.10"
+dependencies = ["bronkhorst-propar",
+                "pandas",]
+authors = [{name = "Kenneth P. Marshall", email = "kenneth.marshall@esrf.fr"}]
+maintainers = [{name = "Kenneth P. Marshall", email = "kenneth.marshall@esrf.fr"}]
+description = "tools for communicating with Bronkhorst MFCs with the API for BM31"
+readme = {file = "README.MD", content-type = "text/markdown"}
+keywords = ["Bronkhorst", "MFCs"]
+classifiers = [
+"Development Status :: 4 - Beta",
+"Programming Language :: Python :: 3.12"]
+
+[project.scripts]
+bronkhorstServer = "bronkhorstControlbm31.bronkhorstServer:run"
+
+[tool.setuptools]
+packages = ["bronkhorstControlbm31"]
+
+#[project.urls]
+#repository = "https://github.com/msujas/pdfgetx3_gui.git"
