@@ -1,7 +1,9 @@
 import socket
 from bronkhorstControlbm31.bronkhorst import MFC, startMfc
 import subprocess
-import sys
+import os, pathlib
+import argparse
+
 HOST = 'localhost'
 PORT = 61245
 com = 'COM1'
@@ -13,14 +15,33 @@ def getIP():
     return ipaddress
 
 
+homedir = pathlib.Path.home()
+configfile = f'{homedir}/bronkhorstServerConfig/comConfg.log'
+if not os.path.exists(os.path.dirname(configfile)):
+    os.makedirs(os.path.dirname(configfile))
 
-def run(PORT=PORT, com = com):
-    mfcMain = startMfc(com)
-    args = sys.argv
-    if len(args) == 1:
-        host = 'local'
+
+
+
+def run(PORT=PORT):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('local_remote',nargs='?', default='local')
+
+    if not os.path.exists(configfile):
+        defaultCom = 1
     else:
-        host = args[1]
+        f = open(configfile,'r')
+        defaultCom = f.read()
+        f.close()
+    parser.add_argument('-c','--com', default=defaultCom)
+    args = parser.parse_args()
+    f = open(configfile,'w')
+    f.write(args.com)
+    com = f'COM{args.com}'
+    host = parser.local_remote
+    mfcMain = startMfc(com)
+    #nodes = mfcMain.master.get_nodes()
+    #addresses = [n['address'] for n in nodes]
 
     if host == 'local':
         HOST = 'localhost'
@@ -31,6 +52,7 @@ def run(PORT=PORT, com = com):
         print('host must must be "local", "remote" or nothing (local)')
         return
     print(HOST)
+
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
         s.bind((HOST, PORT))
