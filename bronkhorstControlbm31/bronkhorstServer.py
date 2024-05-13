@@ -1,5 +1,5 @@
 import socket
-from bronkhorst import MFC
+from bronkhorstControlbm31.bronkhorst import MFC
 import subprocess
 import sys
 HOST = 'localhost'
