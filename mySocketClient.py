@@ -1,6 +1,6 @@
 import socket
 
-HOST = "172.29.159.70"
+HOST = "localhost"
 PORT = 65432
 close = False
 while True:
