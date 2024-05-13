@@ -37,6 +37,7 @@ def run(PORT=PORT):
     args = parser.parse_args()
     f = open(configfile,'w')
     f.write(args.com)
+    f.close()
     com = f'COM{args.com}'
     host = args.local_remote
     mfcMain = startMfc(com)
