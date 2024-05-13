@@ -12,11 +12,10 @@ def getIP():
     ipaddress = ipaddressline.split(' ')[-1]
     return ipaddress
 
-mfcMain = startMfc(com)
-nodes = mfcMain.master.get_nodes()
-addresses = [n['address'] for n in nodes]
+
+
 def run(PORT=PORT, com = com):
-    
+    mfcMain = startMfc(com)
     args = sys.argv
     if len(args) == 1:
         host = 'local'
@@ -49,7 +48,8 @@ def run(PORT=PORT, com = com):
                     address = int(strdata.split()[0])
                     print(strdata)
                     result = MFC(address, mfcMain).strToMethod(strdata)
-                    conn.sendall(result)
+                    byteResult = bytes(str(result),encoding = 'utf-8')
+                    conn.sendall(byteResult)
                     if strdata == 'close':
                         close = True
                         break

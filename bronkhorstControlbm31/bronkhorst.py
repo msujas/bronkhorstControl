@@ -57,6 +57,11 @@ class MFC():
         name = self.readParam('User tag')
         print(name)
         return name
+    def getAddresses(self):
+        nodes = self.mfcMain.master.get_nodes()
+        addresses = [n['address'] for n in nodes]
+        addressesString = ' '.join(addresses)
+        return addressesString
     def strToMethod(self,inputString):
         stringSplit = inputString.split()
         address = stringSplit[0]
@@ -66,7 +71,8 @@ class MFC():
             args[i] = strToFloat(args[i])
         methodDct = {'readName': self.readName, 'readParam':self.readParam,
                      'readSetpoint':self.readSetpoint, 'writeSetpoint':self.writeSetpoint,
-                     'writeParam':self.writeParam, 'readFlow':self.readFlow}
+                     'writeParam':self.writeParam, 'readFlow':self.readFlow,
+                     'getAddresses': self.getAddresses}
         method = methodDct[methodName]
         val = method(*args)
         return val

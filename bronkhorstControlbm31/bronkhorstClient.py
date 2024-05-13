@@ -1,8 +1,7 @@
 import socket
-from bronkhorstControlbm31.bronkhorstServer import addresses
+
 HOST = 'localhost'
 PORT = 61245
-
 
 
 
@@ -11,6 +10,12 @@ class MFCclient():
         self.address = address
         self.host = host
         self.port = port
+    def getAddresses(self):
+        baddresses = self.sendMessage('getAddresses')
+        addressesString = baddresses.decode()
+        addresses = [int(a) for a in addressesString.split()]
+        print(addresses)
+        return addresses
     def readName(self):
         string = f'{self.address} readName'
         self.sendMessage(string)
@@ -44,6 +49,7 @@ class MFCclient():
         data = s.recv(1024)
         print(data)
         s.close()
+        return data
 
 
 
