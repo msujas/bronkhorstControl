@@ -59,7 +59,7 @@ class MFC():
         return name
     def getAddresses(self):
         nodes = self.mfcMain.master.get_nodes()
-        addresses = [n['address'] for n in nodes]
+        addresses = [str(n['address']) for n in nodes]
         addressesString = ' '.join(addresses)
         return addressesString
     def strToMethod(self,inputString):

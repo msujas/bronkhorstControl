@@ -11,7 +11,7 @@ class MFCclient():
         self.host = host
         self.port = port
     def getAddresses(self):
-        baddresses = self.sendMessage('getAddresses')
+        baddresses = self.sendMessage(f'{self.address} getAddresses')
         addressesString = baddresses.decode()
         addresses = [int(a) for a in addressesString.split()]
         print(addresses)
@@ -44,7 +44,7 @@ class MFCclient():
         self.sendMessage('close')
     def sendMessage(self,message):
         s= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(self.host,self.port)
+        s.connect((self.host,self.port))
         s.sendall(bytes(message,encoding='utf-8'))
         data = s.recv(1024)
         print(data)

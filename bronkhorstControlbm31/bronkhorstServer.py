@@ -31,7 +31,6 @@ def run(PORT=PORT, com = com):
         print('host must must be "local", "remote" or nothing (local)')
         return
     print(HOST)
-    close = False
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
         s.bind((HOST, PORT))
@@ -45,15 +44,14 @@ def run(PORT=PORT, com = com):
                     if not data:
                         break
                     strdata = data.decode()
+                    if strdata == 'close':
+                        print(strdata)
+                        return
                     address = int(strdata.split()[0])
                     print(strdata)
                     result = MFC(address, mfcMain).strToMethod(strdata)
                     byteResult = bytes(str(result),encoding = 'utf-8')
                     conn.sendall(byteResult)
-                    if strdata == 'close':
-                        close = True
-                        break
-            if close:
-                break
+
 if __name__ == '__main__':
     run()
