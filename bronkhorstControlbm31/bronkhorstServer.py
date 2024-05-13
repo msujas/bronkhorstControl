@@ -38,7 +38,7 @@ def run(PORT=PORT):
     f = open(configfile,'w')
     f.write(args.com)
     com = f'COM{args.com}'
-    host = parser.local_remote
+    host = args.local_remote
     mfcMain = startMfc(com)
     #nodes = mfcMain.master.get_nodes()
     #addresses = [n['address'] for n in nodes]
