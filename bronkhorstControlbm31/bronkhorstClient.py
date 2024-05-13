@@ -1,9 +1,9 @@
 import socket
-from bronkhorstControlbm31.bronkhorst import nodes
+from bronkhorstControlbm31.bronkhorstServer import addresses
 HOST = 'localhost'
 PORT = 61245
 
-addresses = [n['address'] for n in nodes]
+
 
 
 class MFCclient():

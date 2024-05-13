@@ -20,11 +20,15 @@ def strToFloat(string):
         return string
 
 paramDF = getParamDF()
-mfcMain = propar.instrument('COM1')
-nodes = mfcMain.master.get_nodes()
+def startMfc(com = 'COM1'):
+    mfcMain = propar.instrument(com)
+    return mfcMain
+#mfcMain = propar.instrument('COM1')
+#nodes = mfcMain.master.get_nodes()
 class MFC():
-    def __init__(self,address):
+    def __init__(self,address, mfcMain):
         self.address = address
+        self.mfcMain = mfcMain
     def __str__(self):
         return self.readName()
     def getNumbers(self,name):
@@ -34,12 +38,12 @@ class MFC():
         return proc_nr, parm_nr, parm_type
     def readParam(self,name):
         proc_nr, parm_nr, parm_type = self.getNumbers(name)
-        parValue = mfcMain.master.read(self.address,proc_nr,parm_nr,parm_type)
+        parValue = self.mfcMain.master.read(self.address,proc_nr,parm_nr,parm_type)
         print(parValue)
         return parValue
     def writeParam(self,name, value):
         proc_nr, parm_nr, parm_type = self.getNumbers(name)
-        x = mfcMain.master.write(self.address,proc_nr,parm_nr,parm_type,value)
+        x = self.mfcMain.master.write(self.address,proc_nr,parm_nr,parm_type,value)
         return x
     def writeSetpoint(self):
         return self.writeParam('fSetpoint')
@@ -67,10 +71,4 @@ class MFC():
         val = method(*args)
         return val
 
-'''
-mfc1 = MFC(1)
-mfc2 = MFC(2)
-mfc3 = MFC(3)
-mfc4 = MFC(4)
-mfc5 = MFC(5)
-'''
+
