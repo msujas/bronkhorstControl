@@ -116,7 +116,6 @@ class MFC():
             df.loc[a] = values
         df = df.set_index('address')
         self.paramDf = df
-        print(self.paramDf)
         return df
     
 

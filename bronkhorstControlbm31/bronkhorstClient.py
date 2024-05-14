@@ -1,6 +1,5 @@
 import socket
-#import pandas as pd
-#from io import StringIO
+
 HOST = 'localhost'
 PORT = 61245
 
@@ -71,9 +70,6 @@ class MFCclient():
     def pollAll(self):
         string = f'{self.address} pollAll'
         data = self.sendMessage(string)
-        #dataio = StringIO(data)
-        #dataDf = pd.read_csv(dataio, sep = '  ', index_col=0)
-        #print(data)
         return data
 
 
