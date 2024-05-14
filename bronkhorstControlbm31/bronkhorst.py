@@ -92,7 +92,7 @@ class MFC():
         self.readFluidType()
         return x
     def strToMethod(self,inputString):
-        stringSplit = inputString.split('  ')
+        stringSplit = inputString.split()
         _address = stringSplit[0]
         methodName = stringSplit[1]
         args = stringSplit[2:]
