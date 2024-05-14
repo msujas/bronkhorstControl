@@ -48,6 +48,14 @@ class MFCclient():
         string = f'{self.address} writeControlMode {value}'
         data = self.sendMessage(string)
         return data
+    def readFluidType(self):
+        string = f'{self.address} readFluidType'
+        data = self.sendMessage(string)
+        return data
+    def writeFluidIndex(self,value):
+        string = f'{self.address} writeFluidIndex {value}'
+        data = self.sendMessage(string)
+        return data
     def closeServer(self):
         self.sendMessage('close')
     def sendMessage(self,message):

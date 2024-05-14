@@ -69,6 +69,8 @@ class MFC():
         self.addresses = [n['address'] for n in nodes]
         addressesString = ' '.join([str(a) for a in self.addresses])
         return addressesString
+    def readAddresses(self):
+        return self.getAddresses()
     def readControlMode(self):
         mode = self.readParam('Control mode')
         name = self.readName()
@@ -78,6 +80,15 @@ class MFC():
         value = int(value)
         x = self.writeParam('Control mode', value)
         return x
+    def readFluidType(self):
+        name = self.readName()
+        fluidIndex = self.readParam('Fluidset index')
+        fluidName = self.readParam('Fluid name')
+        print(f'{name} fluid: {fluidName}, fluid index: {fluidIndex}')
+        return fluidName, fluidIndex
+    def writeFluidIndex(self,value):
+        value = int(value)
+        return self.writeParam('Fluidset index',value)
     def strToMethod(self,inputString):
         stringSplit = inputString.split()
         _address = stringSplit[0]
@@ -87,7 +98,8 @@ class MFC():
                      'readSetpoint':self.readSetpoint, 'writeSetpoint':self.writeSetpoint,
                      'writeParam':self.writeParam, 'readFlow':self.readFlow,
                      'getAddresses': self.getAddresses, 'pollAll':self.pollAll,
-                     'readControlMode': self.readControlMode, 'writeControlMode': self.writeControlMode}
+                     'readControlMode': self.readControlMode, 'writeControlMode': self.writeControlMode,
+                     'readFluidType':self.readFluidType, 'writeFluidIndex':self.writeFluidIndex}
         method = methodDct[methodName]
         val = method(*args)
         return val
