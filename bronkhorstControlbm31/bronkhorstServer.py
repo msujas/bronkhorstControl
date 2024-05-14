@@ -73,7 +73,7 @@ def run(port = PORT):
                     if strdata == 'close':
                         print(strdata)
                         return
-                    address = int(strdata.split()[0])
+                    address = int(strdata.split(';')[0])
                     print(strdata)
                     result = MFC(address, mfcMain).strToMethod(strdata)
                     print(result)
