@@ -45,8 +45,8 @@ class MFC():
         proc_nr, parm_nr, parm_type = self.getNumbers(name)
         x = self.mfcMain.master.write(self.address,proc_nr,parm_nr,parm_type,value)
         return x
-    def writeSetpoint(self):
-        return self.writeParam('fSetpoint')
+    def writeSetpoint(self,value):
+        return self.writeParam('fSetpoint',value)
     def readSetpoint(self):
         sp = self.readParam('fSetpoint')
         return sp
@@ -59,8 +59,8 @@ class MFC():
         return name
     def getAddresses(self):
         nodes = self.mfcMain.master.get_nodes()
-        addresses = [str(n['address']) for n in nodes]
-        addressesString = ' '.join(addresses)
+        self.addresses = [n['address'] for n in nodes]
+        addressesString = ' '.join([str(a) for a in self.addresses])
         return addressesString
     def strToMethod(self,inputString):
         stringSplit = inputString.split()
@@ -76,5 +76,29 @@ class MFC():
         method = methodDct[methodName]
         val = method(*args)
         return val
+    
+class MFCMain():
+    def __init__(self,mfcmain):
+        self.mfcmain = mfcmain
+        self.getAddresses()
+    def getAddresses(self):
+        nodes = self.mfcMain.master.get_nodes()
+        self.addresses = [n['address'] for n in nodes]
+        #print(self.addresses)
+        return self.addresses
+    def pollAll(self):
+        self.getAddresses()
+        params = ['fMeasure', 'fSetpoint']
+        df = pd.DataFrame(columns=params)
+        for a in self.addresses:
+            userTag = MFC(a).readName()
+            values = []
+            for p in params:
+                values.append(self.readParam(p,a))
+            df.loc[userTag] = values
+        self.paramDf = df
+        #print(self.paramDf)
+        return df
+
 
 

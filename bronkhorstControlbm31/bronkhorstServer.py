@@ -23,7 +23,7 @@ if not os.path.exists(os.path.dirname(configfile)):
 
 
 
-def run(PORT=PORT):
+def run():
     parser = argparse.ArgumentParser()
     parser.add_argument('local_remote',nargs='?', default='local')
 
@@ -34,11 +34,13 @@ def run(PORT=PORT):
         defaultCom = f.read()
         f.close()
     parser.add_argument('-c','--com', default=defaultCom)
+    parser.add_argument('-p','--port',default=PORT)
     args = parser.parse_args()
     f = open(configfile,'w')
     f.write(args.com)
     f.close()
     com = f'COM{args.com}'
+    PORT = args.port
     host = args.local_remote
     mfcMain = startMfc(com)
     #nodes = mfcMain.master.get_nodes()
@@ -73,6 +75,7 @@ def run(PORT=PORT):
                     address = int(strdata.split()[0])
                     print(strdata)
                     result = MFC(address, mfcMain).strToMethod(strdata)
+                    print(result)
                     byteResult = bytes(str(result),encoding = 'utf-8')
                     conn.sendall(byteResult)
 

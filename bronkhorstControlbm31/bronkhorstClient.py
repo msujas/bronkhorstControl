@@ -14,6 +14,7 @@ class MFCclient():
         baddresses = self.sendMessage(f'{self.address} getAddresses')
         addressesString = baddresses.decode()
         addresses = [int(a) for a in addressesString.split()]
+        self.addresses = addresses
         print(addresses)
         return addresses
     def readName(self):
