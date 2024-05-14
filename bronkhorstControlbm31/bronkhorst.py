@@ -48,6 +48,7 @@ class MFC():
         return x
     def writeSetpoint(self,value):
         name = self.readName()
+        value = float(value)
         print(f'setting {name} to {value} ml/min')
         return self.writeParam('fSetpoint',value)
     def readSetpoint(self):
@@ -74,6 +75,7 @@ class MFC():
         print(f'{name} control mode: {mode}')
         return mode
     def writeControlMode(self, value):
+        value = int(value)
         x = self.writeParam('Control mode', value)
         return x
     def strToMethod(self,inputString):
@@ -81,8 +83,6 @@ class MFC():
         _address = stringSplit[0]
         methodName = stringSplit[1]
         args = stringSplit[2:]
-        for i in range(len(args)):
-            args[i] = strToFloat(args[i])
         methodDct = {'readName': self.readName, 'readParam':self.readParam,
                      'readSetpoint':self.readSetpoint, 'writeSetpoint':self.writeSetpoint,
                      'writeParam':self.writeParam, 'readFlow':self.readFlow,
