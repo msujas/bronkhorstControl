@@ -88,7 +88,9 @@ class MFC():
         return fluidName, fluidIndex
     def writeFluidIndex(self,value):
         value = int(value)
-        return self.writeParam('Fluidset index',value)
+        x = self.writeParam('Fluidset index',value)
+        self.readFluidType()
+        return x
     def strToMethod(self,inputString):
         stringSplit = inputString.split()
         _address = stringSplit[0]
