@@ -39,7 +39,7 @@ class MFC():
     def readParam(self,name):
         proc_nr, parm_nr, parm_type = self.getNumbers(name)
         parValue = self.mfcMain.master.read(self.address,proc_nr,parm_nr,parm_type)
-        print(parValue)
+        #print(parValue)
         return parValue
     def writeParam(self,name, value):
         proc_nr, parm_nr, parm_type = self.getNumbers(name)
@@ -69,7 +69,7 @@ class MFC():
         return addressesString
     def strToMethod(self,inputString):
         stringSplit = inputString.split()
-        address = stringSplit[0]
+        _address = stringSplit[0]
         methodName = stringSplit[1]
         args = stringSplit[2:]
         for i in range(len(args)):
@@ -81,16 +81,6 @@ class MFC():
         method = methodDct[methodName]
         val = method(*args)
         return val
-    
-class MFCMain():
-    def __init__(self,mfcmain):
-        self.mfcmain = mfcmain
-        self.getAddresses()
-    def getAddresses(self):
-        nodes = self.mfcMain.master.get_nodes()
-        self.addresses = [n['address'] for n in nodes]
-        #print(self.addresses)
-        return self.addresses
     def pollAll(self):
         self.getAddresses()
         params = ['User tag','fMeasure', 'fSetpoint']
@@ -101,8 +91,10 @@ class MFCMain():
                 values.append(self.readParam(p,a))
             df.loc[a] = values
         self.paramDf = df
-        #print(self.paramDf)
+        print(self.paramDf)
         return df
+    
+
 
 
 
