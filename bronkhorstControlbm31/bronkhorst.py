@@ -107,14 +107,14 @@ class MFC():
         return val
     def pollAll(self):
         self.getAddresses()
-        params = ['User tag','fMeasure', 'fSetpoint']
-        df = pd.DataFrame(columns=params)
+        params = ['User tag', 'Control mode', 'Fluid name', 'Fluidset index','fMeasure', 'fSetpoint']
+        df = pd.DataFrame(columns=['address']+params)
         for a in self.addresses:
-            values = []
+            values = [a]
             for p in params:
                 values.append(self.readParam(p,a))
             df.loc[a] = values
-        df.index.name = 'address'
+        df.set_index('address')
         self.paramDf = df
         print(self.paramDf)
         return df

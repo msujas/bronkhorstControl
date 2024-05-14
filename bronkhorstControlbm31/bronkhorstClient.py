@@ -1,5 +1,6 @@
 import socket
-
+#import pandas as pd
+#from io import StringIO
 HOST = 'localhost'
 PORT = 61245
 
@@ -18,20 +19,20 @@ class MFCclient():
         return addresses
     def readName(self):
         string = f'{self.address} readName'
-        self.sendMessage(string)
-        return string
+        data = self.sendMessage(string)
+        return data
     def readParam(self, name):
         string = f'{self.address} readParam {name}'
-        self.sendMessage(string)
-        return string
+        data = self.sendMessage(string)
+        return data
     def readFlow(self):
         string = f'{self.address} readFlow'
         data = self.sendMessage(string)
-        return data
+        return float(data)
     def readSetpoint(self):
         string = f'{self.address} readSetpoint'
         data = self.sendMessage(string)
-        return data
+        return float(data)
     def writeParam(self, name, value):
         string = f'{self.address} writeParam {name} {value}'
         data = self.sendMessage(string)
@@ -70,6 +71,9 @@ class MFCclient():
     def pollAll(self):
         string = f'{self.address} pollAll'
         data = self.sendMessage(string)
+        #dataio = StringIO(data)
+        #dataDf = pd.read_csv(dataio, sep = '  ', index_col=0)
+        #print(data)
         return data
 
 
