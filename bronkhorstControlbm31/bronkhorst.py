@@ -114,7 +114,7 @@ class MFC():
             for p in params:
                 values.append(self.readParam(p,a))
             df.loc[a] = values
-        df.set_index('address')
+        df = df.set_index('address')
         self.paramDf = df
         print(self.paramDf)
         return df
