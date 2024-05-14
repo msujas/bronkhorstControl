@@ -23,7 +23,7 @@ if not os.path.exists(os.path.dirname(configfile)):
 
 
 
-def run():
+def run(port = PORT):
     parser = argparse.ArgumentParser()
     parser.add_argument('local_remote',nargs='?', default='local')
 
@@ -34,7 +34,7 @@ def run():
         defaultCom = f.read()
         f.close()
     parser.add_argument('-c','--com', default=defaultCom)
-    parser.add_argument('-p','--port',default=PORT)
+    parser.add_argument('-p','--port',default=port)
     args = parser.parse_args()
     f = open(configfile,'w')
     f.write(args.com)
