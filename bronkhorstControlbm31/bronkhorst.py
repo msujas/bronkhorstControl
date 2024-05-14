@@ -46,16 +46,21 @@ class MFC():
         x = self.mfcMain.master.write(self.address,proc_nr,parm_nr,parm_type,value)
         return x
     def writeSetpoint(self,value):
+        name = self.readName()
+        print(f'setting {name} to {value} ml/min')
         return self.writeParam('fSetpoint',value)
     def readSetpoint(self):
         sp = self.readParam('fSetpoint')
+        name = self.readName()
+        print(f'{name} setpoint {sp} ml/min')
         return sp
     def readFlow(self):
         flowRate = self.readParam('fMeasure')
+        name = self.readName()
+        print(f'{name} flow {flowRate} ml/min')
         return flowRate
     def readName(self):
         name = self.readParam('User tag')
-        print(name)
         return name
     def getAddresses(self):
         nodes = self.mfcMain.master.get_nodes()
@@ -88,14 +93,13 @@ class MFCMain():
         return self.addresses
     def pollAll(self):
         self.getAddresses()
-        params = ['fMeasure', 'fSetpoint']
+        params = ['User tag','fMeasure', 'fSetpoint']
         df = pd.DataFrame(columns=params)
         for a in self.addresses:
-            userTag = MFC(a).readName()
             values = []
             for p in params:
                 values.append(self.readParam(p,a))
-            df.loc[userTag] = values
+            df.loc[a] = values
         self.paramDf = df
         #print(self.paramDf)
         return df

@@ -41,6 +41,7 @@ def run(port = PORT):
     f.close()
     com = f'COM{args.com}'
     PORT = args.port
+    print(f'port: {PORT}')
     host = args.local_remote
     mfcMain = startMfc(com)
     #nodes = mfcMain.master.get_nodes()
