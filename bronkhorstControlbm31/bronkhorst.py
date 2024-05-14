@@ -91,20 +91,6 @@ class MFC():
         x = self.writeParam('Fluidset index',value)
         self.readFluidType()
         return x
-    def strToMethod(self,inputString):
-        stringSplit = inputString.split()
-        _address = stringSplit[0]
-        methodName = stringSplit[1]
-        args = stringSplit[2:]
-        methodDct = {'readName': self.readName, 'readParam':self.readParam,
-                     'readSetpoint':self.readSetpoint, 'writeSetpoint':self.writeSetpoint,
-                     'writeParam':self.writeParam, 'readFlow':self.readFlow,
-                     'getAddresses': self.getAddresses, 'pollAll':self.pollAll,
-                     'readControlMode': self.readControlMode, 'writeControlMode': self.writeControlMode,
-                     'readFluidType':self.readFluidType, 'writeFluidIndex':self.writeFluidIndex}
-        method = methodDct[methodName]
-        val = method(*args)
-        return val
     def pollAll(self):
         self.getAddresses()
         params = ['User tag', 'Control mode', 'Fluid name', 'Fluidset index','fMeasure', 'fSetpoint']
@@ -117,6 +103,21 @@ class MFC():
         df = df.set_index('address')
         self.paramDf = df
         return df
+    def strToMethod(self,inputString):
+        stringSplit = inputString.split(';')
+        _address = stringSplit[0]
+        methodName = stringSplit[1]
+        args = stringSplit[2:]
+        methodDct = {'readName': self.readName, 'readParam':self.readParam,
+                     'readSetpoint':self.readSetpoint, 'writeSetpoint':self.writeSetpoint,
+                     'writeParam':self.writeParam, 'readFlow':self.readFlow,
+                     'getAddresses': self.getAddresses, 'pollAll':self.pollAll,
+                     'readControlMode': self.readControlMode, 'writeControlMode': self.writeControlMode,
+                     'readFluidType':self.readFluidType, 'writeFluidIndex':self.writeFluidIndex}
+        method = methodDct[methodName]
+        val = method(*args)
+        return val
+
     
 
 

@@ -11,49 +11,54 @@ class MFCclient():
         self.host = host
         self.port = port
     def readAddresses(self):
-        addressesString = self.sendMessage(f'{self.address} getAddresses')
+        string = self.makeMessage(self.address, 'getAddresses')
+        addressesString = self.sendMessage(string)
         addresses = [int(a) for a in addressesString.split()]
         self.addresses = addresses
         print(addresses)
         return addresses
     def readName(self):
-        string = f'{self.address} readName'
+        string = self.makeMessage(self.address, 'readName')
         data = self.sendMessage(string)
         return data
     def readParam(self, name):
-        string = f'{self.address} readParam {name}'
+        string = self.makeMessage(self.address, 'readParam', name)
         data = self.sendMessage(string)
         return data
     def readFlow(self):
-        string = f'{self.address} readFlow'
+        string = self.makeMessage(self.address, 'readFlow')
         data = self.sendMessage(string)
         return float(data)
     def readSetpoint(self):
-        string = f'{self.address} readSetpoint'
+        string = self.makeMessage(self.address, 'readSetpoint')
         data = self.sendMessage(string)
         return float(data)
     def writeParam(self, name, value):
-        string = f'{self.address} writeParam {name} {value}'
+        string = self.makeMessage(self.address, 'writeParam', name, value)
         data = self.sendMessage(string)
         return data
     def writeSetpoint(self,value):
-        string = f'{self.address} writeSetpoint {value}'
+        string = self.makeMessage(self.address, 'writeSetpoint', value)
         data = self.sendMessage(string)
         return data
     def readControlMode(self):
-        string = f'{self.address} readControlMode'
+        string = self.makeMessage(self.address, 'readControlMode')
         data = self.sendMessage(string)
         return data
     def writeControlMode(self,value):
-        string = f'{self.address} writeControlMode {value}'
+        string = self.makeMessage(self.address, 'writeControlMode',value)
         data = self.sendMessage(string)
         return data
     def readFluidType(self):
-        string = f'{self.address} readFluidType'
+        string = self.makeMessage(self.address, 'readFluidType')
         data = self.sendMessage(string)
         return data
     def writeFluidIndex(self,value):
-        string = f'{self.address} writeFluidIndex {value}'
+        string = self.makeMessage(self.address, 'writeFluidIndex',value)
+        data = self.sendMessage(string)
+        return data
+    def pollAll(self):
+        string = self.makeMessage(self.address, 'pollAll')
         data = self.sendMessage(string)
         return data
     def closeServer(self):
@@ -67,10 +72,13 @@ class MFCclient():
         print(strdata)
         s.close()
         return strdata
-    def pollAll(self):
-        string = f'{self.address} pollAll'
-        data = self.sendMessage(string)
-        return data
+    def makeMessage(self, *args):
+        sep = ';'
+        string = f'{args[0]}'
+        for arg in args[1:]:
+            string += f'{sep}{arg}'
+        return string
+        
 
 
 
