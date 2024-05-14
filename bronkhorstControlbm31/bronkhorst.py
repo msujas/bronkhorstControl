@@ -68,6 +68,14 @@ class MFC():
         self.addresses = [n['address'] for n in nodes]
         addressesString = ' '.join([str(a) for a in self.addresses])
         return addressesString
+    def readControlMode(self):
+        mode = self.readParam('Control mode')
+        name = self.readName()
+        print(f'{name} control mode: {mode}')
+        return mode
+    def writeControlMode(self, value):
+        x = self.writeParam('Control mode', value)
+        return x
     def strToMethod(self,inputString):
         stringSplit = inputString.split()
         _address = stringSplit[0]
@@ -78,7 +86,8 @@ class MFC():
         methodDct = {'readName': self.readName, 'readParam':self.readParam,
                      'readSetpoint':self.readSetpoint, 'writeSetpoint':self.writeSetpoint,
                      'writeParam':self.writeParam, 'readFlow':self.readFlow,
-                     'getAddresses': self.getAddresses, 'pollAll':self.pollAll}
+                     'getAddresses': self.getAddresses, 'pollAll':self.pollAll,
+                     'readControlMode': self.readControlMode, 'writeControlMode': self.writeControlMode}
         method = methodDct[methodName]
         val = method(*args)
         return val
@@ -91,7 +100,7 @@ class MFC():
             for p in params:
                 values.append(self.readParam(p,a))
             df.loc[a] = values
-        df.index.names = ['address']
+        df.index.name = 'address'
         self.paramDf = df
         print(self.paramDf)
         return df

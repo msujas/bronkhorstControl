@@ -10,9 +10,8 @@ class MFCclient():
         self.address = address
         self.host = host
         self.port = port
-    def getAddresses(self):
-        baddresses = self.sendMessage(f'{self.address} getAddresses')
-        addressesString = baddresses.decode()
+    def readAddresses(self):
+        addressesString = self.sendMessage(f'{self.address} getAddresses')
         addresses = [int(a) for a in addressesString.split()]
         self.addresses = addresses
         print(addresses)
@@ -39,6 +38,14 @@ class MFCclient():
         return data
     def writeSetpoint(self,value):
         string = f'{self.address} writeSetpoint {value}'
+        data = self.sendMessage(string)
+        return data
+    def readControlMode(self):
+        string = f'{self.address} readControlMode'
+        data = self.sendMessage(string)
+        return data
+    def writeControlMode(self,value):
+        string = f'{self.address} writeControlMode {value}'
         data = self.sendMessage(string)
         return data
     def closeServer(self):
