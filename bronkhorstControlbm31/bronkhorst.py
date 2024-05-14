@@ -36,10 +36,11 @@ class MFC():
         parm_nr = paramDF.loc[name]['parm_nr']
         parm_type = paramDF.loc[name]['parm_type']
         return proc_nr, parm_nr, parm_type
-    def readParam(self,name):
+    def readParam(self,name, address = None):
+        if address == None:
+            address = self.address
         proc_nr, parm_nr, parm_type = self.getNumbers(name)
-        parValue = self.mfcMain.master.read(self.address,proc_nr,parm_nr,parm_type)
-        #print(parValue)
+        parValue = self.mfcMain.master.read(address,proc_nr,parm_nr,parm_type)
         return parValue
     def writeParam(self,name, value):
         proc_nr, parm_nr, parm_type = self.getNumbers(name)
@@ -90,6 +91,7 @@ class MFC():
             for p in params:
                 values.append(self.readParam(p,a))
             df.loc[a] = values
+        df.index.names = ['address']
         self.paramDf = df
         print(self.paramDf)
         return df

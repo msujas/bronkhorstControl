@@ -27,21 +27,20 @@ class MFCclient():
         return string
     def readFlow(self):
         string = f'{self.address} readFlow'
-        self.sendMessage(string)
-        return string
+        data = self.sendMessage(string)
+        return data
     def readSetpoint(self):
         string = f'{self.address} readSetpoint'
-        self.sendMessage(string)
-        return string
+        data = self.sendMessage(string)
+        return data
     def writeParam(self, name, value):
         string = f'{self.address} writeParam {name} {value}'
-        self.sendMessage(string)
-        return string
+        data = self.sendMessage(string)
+        return data
     def writeSetpoint(self,value):
         string = f'{self.address} writeSetpoint {value}'
         data = self.sendMessage(string)
-        print(data)
-        return string
+        return data
     def closeServer(self):
         self.sendMessage('close')
     def sendMessage(self,message):
@@ -49,13 +48,14 @@ class MFCclient():
         s.connect((self.host,self.port))
         s.sendall(bytes(message,encoding='utf-8'))
         data = s.recv(1024)
-        print(data)
+        strdata = data.decode()
+        print(strdata)
         s.close()
-        return data
+        return strdata
     def pollAll(self):
         string = f'{self.address} pollAll'
         data = self.sendMessage(string)
-        print(data)
+        return data
 
 
 
