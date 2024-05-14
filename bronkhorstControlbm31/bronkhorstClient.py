@@ -39,7 +39,8 @@ class MFCclient():
         return string
     def writeSetpoint(self,value):
         string = f'{self.address} writeSetpoint {value}'
-        self.sendMessage(string)
+        data = self.sendMessage(string)
+        print(data)
         return string
     def closeServer(self):
         self.sendMessage('close')
@@ -51,6 +52,10 @@ class MFCclient():
         print(data)
         s.close()
         return data
+    def pollAll(self):
+        string = f'{self.address} pollAll'
+        data = self.sendMessage(string)
+        print(data)
 
 
 

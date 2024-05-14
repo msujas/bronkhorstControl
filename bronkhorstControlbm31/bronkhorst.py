@@ -77,7 +77,7 @@ class MFC():
         methodDct = {'readName': self.readName, 'readParam':self.readParam,
                      'readSetpoint':self.readSetpoint, 'writeSetpoint':self.writeSetpoint,
                      'writeParam':self.writeParam, 'readFlow':self.readFlow,
-                     'getAddresses': self.getAddresses}
+                     'getAddresses': self.getAddresses, 'pollAll':self.pollAll}
         method = methodDct[methodName]
         val = method(*args)
         return val
