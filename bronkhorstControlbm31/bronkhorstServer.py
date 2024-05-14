@@ -40,7 +40,7 @@ def run(port = PORT):
     f.write(args.com)
     f.close()
     com = f'COM{args.com}'
-    PORT = args.port
+    PORT = int(args.port)
     print(f'port: {PORT}')
     host = args.local_remote
     mfcMain = startMfc(com)
