@@ -2,3 +2,6 @@ __pycache__
 *.txt
 bronkhorstControlbm31/__pycache__
 bronkhorstControlbm31.egg-info
+mySocket.py
+mySocketClient.py
+pollDF.dat
