@@ -10,10 +10,10 @@ To send commands import the MFCclient class (from bronkhorstControlbm31.bronkhor
 
 E.g.
 
-MFCclient(3,\<ip address\>).pollAll() 
+MFCclient(3,'\<ip address\>').pollAll() 
 
 (this gives information about all MFCs that are connected in a dataframe, the MFC address isn't used and can be anything in this case). 
 
 To change setpoint :
 
-MFCclient(3,\<ip address\>).writeSetpoint(value).
+MFCclient(3,'\<ip address\>').writeSetpoint(value).
