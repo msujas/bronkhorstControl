@@ -1,4 +1,7 @@
 import socket
+import os
+import pandas as pd
+import matplotlib.pyplot as plt
 
 HOST = 'localhost'
 PORT = 61245
@@ -60,7 +63,12 @@ class MFCclient():
     def pollAll(self):
         string = self.makeMessage(self.address, 'pollAll')
         data = self.sendMessage(string)
-        return data
+        tmpfile = f'{os.path.dirname(os.path.realname(__file__))}/tmpdf2.dat'
+        f= open(tmpfile,'w')
+        f.write(data)
+        f.close()
+        df = pd.read_csv(tmpfile,sep = ';',index_col=0)
+        return df
     def closeServer(self):
         self.sendMessage('close')
     def sendMessage(self,message):
@@ -80,7 +88,19 @@ class MFCclient():
         return string
         
 
-
+def plotLoop(ipaddress = 'localhost'):
+    
+    fig,(ax1,ax2) = plt.subplots(2,1)
+    while True:
+        ax1.set_title('Measure')
+        ax2.set_title('Setpoint')
+        df = MFCclient(1,ipaddress)
+        df.plot.bar(x='User tag', y='fMeasure',ax=ax1)
+        df.plot.bar(x='User tag', y='fSetpoint',ax=ax2)
+        plt.show(block = False)
+        plt.pause(1)
+        ax1.cla()
+        ax2.cla()
 
 
     

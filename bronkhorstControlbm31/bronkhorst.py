@@ -1,5 +1,6 @@
 import propar
 import pandas as pd
+import os
 
 def getParamDF():
     paramDF = pd.DataFrame(columns=['proc_nr','parm_nr','parm_type'])
@@ -102,7 +103,13 @@ class MFC():
             df.loc[a] = values
         df = df.set_index('address')
         self.paramDf = df
-        return df
+        tmpfile = f'{os.path.dirname(os.path.realpath(__file__))}/tmpdf.dat'
+        df.to_csv(tmpfile,sep = ';')
+        print(df)
+        f = open(tmpfile,'r')
+        dfstring = f.read()
+        f.close()
+        return dfstring
     def strToMethod(self,inputString):
         stringSplit = inputString.split(';')
         _address = stringSplit[0]
