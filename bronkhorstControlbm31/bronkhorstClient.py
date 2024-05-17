@@ -63,7 +63,7 @@ class MFCclient():
     def pollAll(self):
         string = self.makeMessage(self.address, 'pollAll')
         data = self.sendMessage(string)
-        tmpfile = f'{os.path.dirname(os.path.realname(__file__))}/tmpdf2.dat'
+        tmpfile = f'{os.path.dirname(os.path.realpath(__file__))}/tmpdf2.dat'
         f= open(tmpfile,'w')
         f.write(data)
         f.close()
