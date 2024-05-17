@@ -94,7 +94,7 @@ def plotLoop(ipaddress = 'localhost'):
     while True:
         ax1.set_title('Measure')
         ax2.set_title('Setpoint')
-        df = MFCclient(1,ipaddress)
+        df = MFCclient(1,ipaddress).pollAll()
         df.plot.bar(x='User tag', y='fMeasure',ax=ax1)
         df.plot.bar(x='User tag', y='fSetpoint',ax=ax2)
         plt.show(block = False)
