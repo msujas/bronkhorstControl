@@ -6,13 +6,15 @@ import matplotlib.pyplot as plt
 HOST = 'localhost'
 PORT = 61245
 
-
+def connect(host=HOST, port=PORT):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((host,port))
+    return s
 
 class MFCclient():
-    def __init__(self,address, host = HOST, port = PORT):
+    def __init__(self,address, socket):
         self.address = address
-        self.host = host
-        self.port = port
+        self.s = socket
     def readAddresses(self):
         string = self.makeMessage(self.address, 'getAddresses')
         addressesString = self.sendMessage(string)
@@ -72,13 +74,10 @@ class MFCclient():
     def closeServer(self):
         self.sendMessage('close')
     def sendMessage(self,message):
-        s= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((self.host,self.port))
-        s.sendall(bytes(message,encoding='utf-8'))
-        data = s.recv(1024)
+        self.s.sendall(bytes(message,encoding='utf-8'))
+        data = self.s.recv(1024)
         strdata = data.decode()
         print(strdata)
-        s.close()
         return strdata
     def makeMessage(self, *args):
         sep = ';'
@@ -86,19 +85,20 @@ class MFCclient():
         for arg in args[1:]:
             string += f'{sep}{arg}'
         return string
+
         
 
-def plotLoop(ipaddress = 'localhost'):
+def plotLoop(socket):
     
     fig,(ax1,ax2) = plt.subplots(2,1)
     while True:
         ax1.set_title('Measure')
         ax2.set_title('Setpoint')
-        df = MFCclient(1,ipaddress).pollAll()
+        df = MFCclient(1,socket).pollAll()
         df.plot.bar(x='User tag', y='fMeasure',ax=ax1)
         df.plot.bar(x='User tag', y='fSetpoint',ax=ax2)
         plt.show(block = False)
-        plt.pause(1)
+        plt.pause(2)
         ax1.cla()
         ax2.cla()
 

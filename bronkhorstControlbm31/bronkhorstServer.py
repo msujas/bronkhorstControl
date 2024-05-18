@@ -37,7 +37,7 @@ def run(port = PORT):
     parser.add_argument('-p','--port',default=port)
     args = parser.parse_args()
     f = open(configfile,'w')
-    f.write(args.com)
+    f.write(str(args.com))
     f.close()
     com = f'COM{args.com}'
     PORT = int(args.port)
