@@ -6,9 +6,11 @@ e.g.
 
 bronkhorstServer remote -c 7
 
-To send commands import the MFCclient class (from bronkhorstControlbm31.bronkhorstClient import MFCclient, connect), then run it's methods. Initial arguments are MFC address (will be an integer), the IP address (default localhost) and the port (default is that in the script). 
+To send commands import the MFCclient class and connect function, then run it's methods. Initial arguments are MFC address (will be an integer), the IP address (default localhost) and the port (default is that in the script). 
 
 E.g.
+
+from bronkhorstControlbm31.bronkhorstClient import MFCclient, connect
 
 s = connect('\<ip address\>',port) #default 'localhost', and port number in script
 
