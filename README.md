@@ -6,14 +6,16 @@ e.g.
 
 bronkhorstServer remote -c 7
 
-To send commands import the MFCclient class (from bronkhorstControlbm31.bronkhorstClient import MFCclient), then run it's methods. Initial arguments are MFC address (will be an integer), the IP address (default localhost) and the port (default is that in the script). 
+To send commands import the MFCclient class (from bronkhorstControlbm31.bronkhorstClient import MFCclient, connect), then run it's methods. Initial arguments are MFC address (will be an integer), the IP address (default localhost) and the port (default is that in the script). 
 
 E.g.
 
-MFCclient(3,'\<ip address\>').pollAll() 
+s = connect('\<ip address\>',port) #default 'localhost', and port number in script
+
+MFCclient(3,s).pollAll() 
 
 (this gives information about all MFCs that are connected in a dataframe, the MFC address isn't used and can be anything in this case). 
 
 To change setpoint :
 
-MFCclient(3,'\<ip address\>').writeSetpoint(value).
+MFCclient(3,s).writeSetpoint(value).
