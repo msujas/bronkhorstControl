@@ -70,6 +70,7 @@ class MFCclient():
         f.write(data)
         f.close()
         df = pd.read_csv(tmpfile,sep = ';',index_col=0)
+        os.remove(tmpfile)
         return df
     def closeServer(self):
         self.sendMessage('close')

@@ -3,6 +3,7 @@ from bronkhorstControlbm31.bronkhorst import MFC, startMfc
 import subprocess
 import os, pathlib
 import argparse
+import selectors, types
 
 HOST = 'localhost'
 PORT = 61245
@@ -79,6 +80,65 @@ def run(port = PORT):
                     print(result)
                     byteResult = bytes(str(result),encoding = 'utf-8')
                     conn.sendall(byteResult)
+
+
+def accept_wrapper(sock,sel):
+    conn,addr =sock.accept()
+    conn.setblocking(False)
+    print(f'Accepted connection from {addr}')
+    data = types.SimpleNamespace(addr=addr,inb = b'',outb = b'')
+    events = selectors.EVENT_READ | selectors.EVENT_WRITE
+    sel.register(conn,events,data=data)
+
+def service_connection(key,mask,sel,mfcMain):
+    sock = key.fileobj
+    data = key.data
+    if mask & selectors.EVENT_READ:
+        recvData = sock.recv(1024)
+        print(recvData)
+        if recvData:
+            data.outb += recvData
+            strmessage = data.outb.decode()
+            address = int(strmessage.split(';')[0])
+            mainmessage = MFC(1,mfcMain).strToMethod(strmessage)
+            lenmessage = len(mainmessage+5)
+            fullmessage = f'{lenmessage:04d};{mainmessage}'
+            bytemessage = bytes(fullmessage,encoding='utf-8')
+        else:
+            print(f'closing connection to {data.addr}')
+            sel.unregister(sock)
+            sock.close()
+    if mask & selectors.EVENT_WRITE:
+
+        if bytemessage:
+            print(f'echoing {bytemessage} to {data.addr}')
+            sent = sock.send(bytemessage)
+            bytemessage = bytemessage[sent:]
+
+
+def multiServer(HOST = 'localhost', PORT=PORT):
+    mfcMain = startMfc()
+    sel = selectors.DefaultSelector()
+    print('running multiServer')
+    s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind((HOST, PORT))
+    s.listen()
+    s.setblocking(False)
+    sel.register(s,selectors.EVENT_READ,data=None)
+
+    try:
+        while True:
+            events = sel.select(timeout=None)
+            for key, mask in events:
+                if key.data is None:
+                    accept_wrapper(key.fileobj,sel)
+                else:
+                    service_connection(key, mask,sel,mfcMain)
+    except KeyboardInterrupt:
+        print("caught keyboard interrupt, exiting")
+    finally:
+        sel.close()
+
 
 if __name__ == '__main__':
     run()

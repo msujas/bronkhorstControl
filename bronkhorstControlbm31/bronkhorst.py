@@ -109,10 +109,11 @@ class MFC():
         f = open(tmpfile,'r')
         dfstring = f.read()
         f.close()
+        os.remove(tmpfile)
         return dfstring
     def strToMethod(self,inputString):
         stringSplit = inputString.split(';')
-        _address = stringSplit[0]
+        #address = stringSplit[0]
         methodName = stringSplit[1]
         args = stringSplit[2:]
         methodDct = {'readName': self.readName, 'readParam':self.readParam,
