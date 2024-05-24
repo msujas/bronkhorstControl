@@ -102,9 +102,7 @@ def service_connection(key,mask,sel,mfcMain):
             data.outb += recvData
             strmessage = data.outb.decode()
             if strmessage == 'close':
-                print(f'closing connection to {data.addr}')
-                sel.unregister(sock)
-                sock.close()
+
                 bytemessage += b'close'
             else:
                 address = int(strmessage.split(';')[0])
@@ -122,10 +120,14 @@ def service_connection(key,mask,sel,mfcMain):
             print(f'echoing {bytemessage} to {data.addr}')
             sent = sock.send(bytemessage)
             bytemessage = bytemessage[sent:]
+            if bytemessage.decode() == 'close':
+                print(f'closing connection to {data.addr}')
+                sel.unregister(sock)
+                sock.close()
     return bytemessage
 
 
-def multiServer(HOST = 'localhost', PORT=PORT):
+def multiServer():
     com,port, host = getParsers()
     
     mfcMain = startMfc(com)
