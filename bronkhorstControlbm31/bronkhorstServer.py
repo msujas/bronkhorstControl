@@ -148,7 +148,7 @@ def multiServer():
                     accept_wrapper(key.fileobj,sel)
                 else:
                     bytemessage = service_connection(key, mask,sel,mfcMain)
-                    if bytemessage.decode() == 'close':
+                    if bytemessage.decode() == 'close!':
                         sel.close()
                         return
     except KeyboardInterrupt:

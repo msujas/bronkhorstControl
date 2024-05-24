@@ -139,7 +139,7 @@ class MFCclient():
         if mask & selectors.EVENT_READ:
             recv_data = sock.recv(1024)  # Should be ready to read
             if recv_data:
-                print(f"Received {recv_data!r} from connection {data.connid}")
+                #print(f"Received {recv_data!r} from connection {data.connid}")
                 receivedMessage+= recv_data
                 data.recv_total += len(recv_data)
                 if receivedMessage:
@@ -156,7 +156,7 @@ class MFCclient():
             if not data.outb and data.messages:
                 data.outb = data.messages.pop(0)
             if data.outb:
-                print(f"Sending {data.outb!r} to connection {data.connid}")
+                print(f"Sending {data.outb} to connection {data.connid}")
                 sent = sock.send(data.outb)  # Should be ready to write
                 data.outb = data.outb[sent:]      
 
