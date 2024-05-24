@@ -100,9 +100,9 @@ def service_connection(key,mask,sel,mfcMain):
             data.outb += recvData
             strmessage = data.outb.decode()
             address = int(strmessage.split(';')[0])
-            mainmessage = MFC(1,mfcMain).strToMethod(strmessage)
-            lenmessage = len(mainmessage+5)
-            fullmessage = f'{lenmessage:04d};{mainmessage}'
+            mainmessage = MFC(address,mfcMain).strToMethod(strmessage)
+            #endmessageMarker = '!'
+            fullmessage = f'{mainmessage}!'
             bytemessage = bytes(fullmessage,encoding='utf-8')
         else:
             print(f'closing connection to {data.addr}')

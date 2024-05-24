@@ -2,6 +2,8 @@ import socket
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
+import selectors,types
+from bronkhorstControlbm31.bronkhorstServer import getIP
 
 HOST = 'localhost'
 PORT = 61245
@@ -12,9 +14,12 @@ def connect(host=HOST, port=PORT):
     return s
 
 class MFCclient():
-    def __init__(self,address, socket):
+    def __init__(self,address, host=HOST,port=PORT, multi=False):
         self.address = address
-        self.s = socket
+        self.host = host
+        self.port = port
+        
+        self.multi = multi
     def readAddresses(self):
         string = self.makeMessage(self.address, 'getAddresses')
         addressesString = self.sendMessage(string)
@@ -75,9 +80,14 @@ class MFCclient():
     def closeServer(self):
         self.sendMessage('close')
     def sendMessage(self,message):
-        self.s.sendall(bytes(message,encoding='utf-8'))
-        data = self.s.recv(1024)
-        strdata = data.decode()
+        if not self.multi:
+            self.s = connect(self.host,self.port)
+            self.s.sendall(bytes(message,encoding='utf-8'))
+            data = self.s.recv(1024)
+            self.s.close()
+            strdata = data.decode()
+        else:
+            strdata = self.multiClient(message)
         print(strdata)
         return strdata
     def makeMessage(self, *args):
@@ -87,15 +97,70 @@ class MFCclient():
             string += f'{sep}{arg}'
         return string
 
-        
+    def multiClient(self,message):
+        sel = selectors.DefaultSelector()
+        server_addr = (self.host, self.port)
+        connid = getIP()
+        print(f"Starting connection {connid} to {server_addr}")
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.setblocking(False)
+        sock.connect_ex(server_addr)
+        events = selectors.EVENT_READ | selectors.EVENT_WRITE
+        data = types.SimpleNamespace(
+            connid=connid,
+            msg_total=len(message),
+            recv_total=0,
+            messages=[message.copy()],
+            outb=b"",
+        )
+        sel.register(sock, events, data=data)
+        try:
+            while True:
+                events = sel.select(timeout=1)
+                if events:
+                    for key, mask in events:
+                        receivedMessage = self.service_connection(key, mask,sel)
+                # Check for a socket being monitored to continue.
+                if not sel.get_map():
+                    break
+        except KeyboardInterrupt:
+            print("Caught keyboard interrupt, exiting")
+        finally:
+            sel.close()
+        return receivedMessage
 
-def plotLoop(socket):
+    def service_connection(self,key, mask,sel):
+        sock = key.fileobj
+        data = key.data
+        receivedMessage = b''
+        if mask & selectors.EVENT_READ:
+            recv_data = sock.recv(1024)  # Should be ready to read
+            if recv_data:
+                print(f"Received {recv_data!r} from connection {data.connid}")
+                receivedMessage+= recv_data
+                data.recv_total += len(recv_data)
+                strMessage = receivedMessage.decode()
+            if not recv_data or '!' in strMessage:
+                
+                print(f"Closing connection {data.connid}")
+                sel.unregister(sock)
+                sock.close()
+                return strMessage
+        if mask & selectors.EVENT_WRITE:
+            if not data.outb and data.messages:
+                data.outb = data.messages.pop(0)
+            if data.outb:
+                print(f"Sending {data.outb!r} to connection {data.connid}")
+                sent = sock.send(data.outb)  # Should be ready to write
+                data.outb = data.outb[sent:]      
+
+def plotLoop(host, port = PORT, multi = True):
     
     fig,(ax1,ax2) = plt.subplots(2,1)
     while True:
         ax1.set_title('Measure')
         ax2.set_title('Setpoint')
-        df = MFCclient(1,socket).pollAll()
+        df = MFCclient(1,host,port,multi=True).pollAll()
         df.plot.bar(x='User tag', y='fMeasure',ax=ax1)
         df.plot.bar(x='User tag', y='fSetpoint',ax=ax2)
         plt.show(block = False)
