@@ -21,10 +21,7 @@ configfile = f'{homedir}/bronkhorstServerConfig/comConfg.log'
 if not os.path.exists(os.path.dirname(configfile)):
     os.makedirs(os.path.dirname(configfile))
 
-
-
-
-def run(port = PORT):
+def getParsers(port=PORT):
     parser = argparse.ArgumentParser()
     parser.add_argument('local_remote',nargs='?', default='local')
 
@@ -44,23 +41,28 @@ def run(port = PORT):
     PORT = int(args.port)
     print(f'port: {PORT}')
     host = args.local_remote
-    mfcMain = startMfc(com)
-    #nodes = mfcMain.master.get_nodes()
-    #addresses = [n['address'] for n in nodes]
-
     if host == 'local':
-        HOST = 'localhost'
+        host = 'localhost'
     elif host == 'remote':
-        HOST = getIP()
+        host = getIP()
     else:
         print('usage bronkorstServer [host]')
         print('host must must be "local", "remote" or nothing (local)')
         return
-    print(HOST)
+    return com, port, host
+
+def run(port = PORT):
+
+    mfcMain = startMfc(com)
+    #nodes = mfcMain.master.get_nodes()
+    #addresses = [n['address'] for n in nodes]
+    com, port, host = getParsers()
+
+    print(host)
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
-        s.bind((HOST, PORT))
+        s.bind((host, port))
         s.listen()
         while True:
             conn, addr = s.accept()
@@ -117,11 +119,13 @@ def service_connection(key,mask,sel,mfcMain):
 
 
 def multiServer(HOST = 'localhost', PORT=PORT):
-    mfcMain = startMfc()
+    com,port, host = getParsers()
+    print('')
+    mfcMain = startMfc(com)
     sel = selectors.DefaultSelector()
     print('running multiServer')
     s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind((HOST, PORT))
+    s.bind((host, port))
     s.listen()
     s.setblocking(False)
     sel.register(s,selectors.EVENT_READ,data=None)
