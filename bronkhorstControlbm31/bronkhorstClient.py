@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import selectors,types
-from bronkhorstControlbm31.bronkhorstServer import getIP
+#from bronkhorstControlbm31.bronkhorstServer import getIP
 
 HOST = 'localhost'
 PORT = 61245
@@ -14,7 +14,7 @@ def connect(host=HOST, port=PORT):
     return s
 
 class MFCclient():
-    def __init__(self,address, host=HOST,port=PORT, multi=False,connid = getIP()):
+    def __init__(self,address, host=HOST,port=PORT, multi=False,connid = socket.gethostname()):
         self.address = address
         self.host = host
         self.port = port
