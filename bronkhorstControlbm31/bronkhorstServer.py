@@ -49,6 +49,7 @@ def getParsers(port=PORT):
         print('usage bronkorstServer [host]')
         print('host must must be "local", "remote" or nothing (local)')
         return
+    print(host)
     return com, port, host
 
 def run(port = PORT):
@@ -57,8 +58,6 @@ def run(port = PORT):
     #nodes = mfcMain.master.get_nodes()
     #addresses = [n['address'] for n in nodes]
     com, port, host = getParsers()
-
-    print(host)
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
@@ -120,7 +119,8 @@ def service_connection(key,mask,sel,mfcMain):
 
 def multiServer(HOST = 'localhost', PORT=PORT):
     com,port, host = getParsers()
-    print('')
+    print('running multiser')
+    
     mfcMain = startMfc(com)
     sel = selectors.DefaultSelector()
     print('running multiServer')
