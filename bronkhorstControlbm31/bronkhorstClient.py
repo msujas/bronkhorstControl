@@ -142,13 +142,16 @@ class MFCclient():
                 print(f"Received {recv_data!r} from connection {data.connid}")
                 receivedMessage+= recv_data
                 data.recv_total += len(recv_data)
-                strMessage = receivedMessage.decode()
+                if receivedMessage:
+                    strMessage = receivedMessage.decode()
             if not recv_data or '!' in strMessage:
-                
                 print(f"Closing connection {data.connid}")
                 sel.unregister(sock)
                 sock.close()
-                return strMessage
+                if recv_data:
+                    return strMessage
+                
+            
         if mask & selectors.EVENT_WRITE:
             if not data.outb and data.messages:
                 data.outb = data.messages.pop(0)

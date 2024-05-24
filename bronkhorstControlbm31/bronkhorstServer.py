@@ -97,13 +97,13 @@ def service_connection(key,mask,sel,mfcMain):
     bytemessage = b''
     if mask & selectors.EVENT_READ:
         recvData = sock.recv(1024)
-        print(recvData)
         if recvData:
+            print(recvData)
             data.outb += recvData
             strmessage = data.outb.decode()
             if strmessage == 'close':
 
-                bytemessage += b'close'
+                bytemessage += b'close!'
 
                 print(f'closing connection to {data.addr}')
                 sel.unregister(sock)
@@ -121,7 +121,7 @@ def service_connection(key,mask,sel,mfcMain):
     if mask & selectors.EVENT_WRITE:
 
         if bytemessage and strmessage != 'close':
-            print(f'echoing {bytemessage} to {data.addr}')
+            print(f'sending {bytemessage} to {data.addr}')
             sent = sock.send(bytemessage)
             bytemessage = bytemessage[sent:]
 
@@ -150,6 +150,7 @@ def multiServer():
                     bytemessage = service_connection(key, mask,sel,mfcMain)
                     if bytemessage.decode() == 'close':
                         sel.close()
+                        return
     except KeyboardInterrupt:
         print("caught keyboard interrupt, exiting")
     finally:
