@@ -111,7 +111,7 @@ class MFCclient():
             connid=connid,
             msg_total=len(message),
             recv_total=0,
-            messages=[message.copy()],
+            messages=[message],
             outb=b"",
         )
         sel.register(sock, events, data=data)

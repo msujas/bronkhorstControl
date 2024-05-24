@@ -119,7 +119,6 @@ def service_connection(key,mask,sel,mfcMain):
 
 def multiServer(HOST = 'localhost', PORT=PORT):
     com,port, host = getParsers()
-    print('running multiser')
     
     mfcMain = startMfc(com)
     sel = selectors.DefaultSelector()
