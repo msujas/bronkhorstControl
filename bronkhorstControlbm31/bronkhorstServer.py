@@ -94,6 +94,7 @@ def accept_wrapper(sock,sel):
 def service_connection(key,mask,sel,mfcMain):
     sock = key.fileobj
     data = key.data
+    bytemessage = b''
     if mask & selectors.EVENT_READ:
         recvData = sock.recv(1024)
         print(recvData)
@@ -104,7 +105,7 @@ def service_connection(key,mask,sel,mfcMain):
             mainmessage = MFC(address,mfcMain).strToMethod(strmessage)
             #endmessageMarker = '!'
             fullmessage = f'{mainmessage}!'
-            bytemessage = bytes(fullmessage,encoding='utf-8')
+            bytemessage += bytes(fullmessage,encoding='utf-8')
         else:
             print(f'closing connection to {data.addr}')
             sel.unregister(sock)

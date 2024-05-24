@@ -121,7 +121,8 @@ class MFCclient():
                 if events:
                     for key, mask in events:
                         receivedMessage = self.service_connection(key, mask,sel)
-                        receivedMessage = receivedMessage.replace('!','')
+                        if receivedMessage:
+                            receivedMessage = receivedMessage.replace('!','')
                 # Check for a socket being monitored to continue.
                 if not sel.get_map():
                     break
