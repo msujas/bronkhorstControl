@@ -104,6 +104,10 @@ def service_connection(key,mask,sel,mfcMain):
             if strmessage == 'close':
 
                 bytemessage += b'close'
+
+                print(f'closing connection to {data.addr}')
+                sel.unregister(sock)
+                sock.close()
             else:
                 address = int(strmessage.split(';')[0])
                 mainmessage = MFC(address,mfcMain).strToMethod(strmessage)
@@ -116,14 +120,11 @@ def service_connection(key,mask,sel,mfcMain):
             sock.close()
     if mask & selectors.EVENT_WRITE:
 
-        if bytemessage:
+        if bytemessage and strmessage != 'close':
             print(f'echoing {bytemessage} to {data.addr}')
             sent = sock.send(bytemessage)
             bytemessage = bytemessage[sent:]
-            if bytemessage.decode() == 'close':
-                print(f'closing connection to {data.addr}')
-                sel.unregister(sock)
-                sock.close()
+
     return bytemessage
 
 
