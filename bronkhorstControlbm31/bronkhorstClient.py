@@ -14,11 +14,11 @@ def connect(host=HOST, port=PORT):
     return s
 
 class MFCclient():
-    def __init__(self,address, host=HOST,port=PORT, multi=False):
+    def __init__(self,address, host=HOST,port=PORT, multi=False,connid = getIP()):
         self.address = address
         self.host = host
         self.port = port
-        
+        self.connid = connid
         self.multi = multi
     def readAddresses(self):
         string = self.makeMessage(self.address, 'getAddresses')
@@ -101,14 +101,14 @@ class MFCclient():
     def multiClient(self,message):
         sel = selectors.DefaultSelector()
         server_addr = (self.host, self.port)
-        connid = getIP()
-        print(f"Starting connection {connid} to {server_addr}")
+
+        print(f"Starting connection {self.connid} to {server_addr}")
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setblocking(False)
         sock.connect_ex(server_addr)
         events = selectors.EVENT_READ | selectors.EVENT_WRITE
         data = types.SimpleNamespace(
-            connid=connid,
+            connid=self.connid,
             msg_total=len(message),
             recv_total=0,
             messages=[message],
@@ -157,13 +157,13 @@ class MFCclient():
                 sent = sock.send(data.outb)  # Should be ready to write
                 data.outb = data.outb[sent:]      
 
-def plotLoop(host, port = PORT, multi = True):
+def plotLoop(host, port = PORT, multi = True, connid = 'plotLoop'):
     
     fig,(ax1,ax2) = plt.subplots(2,1)
     while True:
         ax1.set_title('Measure')
         ax2.set_title('Setpoint')
-        df = MFCclient(1,host,port,multi=True).pollAll()
+        df = MFCclient(1,host,port,multi=True, connid=connid).pollAll()
         df.plot.bar(x='User tag', y='fMeasure',ax=ax1)
         df.plot.bar(x='User tag', y='fSetpoint',ax=ax2)
         plt.show(block = False)
