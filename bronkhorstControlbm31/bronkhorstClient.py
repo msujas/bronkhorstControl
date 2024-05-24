@@ -80,14 +80,15 @@ class MFCclient():
     def closeServer(self):
         self.sendMessage('close')
     def sendMessage(self,message):
+        bytemessage = bytes(message,encoding='utf-8')
         if not self.multi:
             self.s = connect(self.host,self.port)
-            self.s.sendall(bytes(message,encoding='utf-8'))
+            self.s.sendall(bytemessage)
             data = self.s.recv(1024)
             self.s.close()
             strdata = data.decode()
         else:
-            strdata = self.multiClient(message)
+            strdata = self.multiClient(bytemessage)
         print(strdata)
         return strdata
     def makeMessage(self, *args):
@@ -120,6 +121,7 @@ class MFCclient():
                 if events:
                     for key, mask in events:
                         receivedMessage = self.service_connection(key, mask,sel)
+                        receivedMessage = receivedMessage.replace('!','')
                 # Check for a socket being monitored to continue.
                 if not sel.get_map():
                     break
