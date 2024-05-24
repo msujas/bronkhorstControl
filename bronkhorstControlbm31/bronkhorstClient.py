@@ -161,19 +161,22 @@ class MFCclient():
                 data.outb = data.outb[sent:]      
 
 def plotLoop(host, port = PORT, multi = True, connid = 'plotLoop'):
-    
     fig,(ax1,ax2) = plt.subplots(2,1)
     while True:
-        ax1.set_title('Measure')
-        ax2.set_title('Setpoint')
-        df = MFCclient(1,host,port,multi=True, connid=connid).pollAll()
-        df.plot.bar(x='User tag', y='fMeasure',ax=ax1)
-        df.plot.bar(x='User tag', y='fSetpoint',ax=ax2)
-        plt.show(block = False)
-        plt.pause(2)
-        ax1.cla()
-        ax2.cla()
-
+        try:
+            ax1.set_title('Measure')
+            ax2.set_title('Setpoint')
+            df = MFCclient(1,host,port,multi=True, connid=connid).pollAll()
+            df.plot.bar(x='User tag', y='fMeasure',ax=ax1)
+            df.plot.bar(x='User tag', y='fSetpoint',ax=ax2)
+            plt.tight_layout()
+            plt.show(block = False)
+            plt.pause(2)
+            ax1.cla()
+            ax2.cla()
+        except KeyboardInterrupt:
+            plt.close(fig)
+            break
 
     
     
