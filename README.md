@@ -13,13 +13,13 @@ E.g.
 from bronkhorstControlbm31.bronkhorstClient import MFCclient, connect
 
 
-MFCclient(3,\<ip address\>).pollAll() 
+MFCclient(3,'\<ip address\>').pollAll() 
 
 (this gives information about all MFCs that are connected in a dataframe, the MFC address isn't used and can be anything in this case). 
 
 To change setpoint on MFC address 3:
 
-MFCclient(3,\<ip address\>).writeSetpoint(value)
+MFCclient(3,'\<ip address\>').writeSetpoint(value)
 
 A second server is available for accepting multiple clients:
 
@@ -27,4 +27,4 @@ bronkhorstMultiServer remote
 
 then for the client use multi=True:
 
-MFCclient(3,\<ip address\>, multi=True).pollAll()
+MFCclient(3,'\<ip address\>', multi=True).pollAll()
