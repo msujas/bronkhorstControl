@@ -104,15 +104,11 @@ class MFC():
             for p in params:
                 values.append(self.readParam(p,a))
             df.loc[a] = values
-        df = df.set_index('address')
         self.paramDf = df
-        tmpfile = f'{os.path.dirname(os.path.realpath(__file__))}/tmpdf.dat'
-        df.to_csv(tmpfile,sep = ';')
-        print(df)
-        f = open(tmpfile,'r')
-        dfstring = f.read()
-        f.close()
-        os.remove(tmpfile)
+        dfstring = ';'.join(df.columns)
+        for i in df.index.values:
+            dfstring += '\n'
+            dfstring += ';'.join([str(x) for x in df.loc[i]])
         return dfstring
     def strToMethod(self,inputString):
         stringSplit = inputString.split(';')
