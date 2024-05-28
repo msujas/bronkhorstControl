@@ -54,11 +54,11 @@ def getParsers(port=PORT):
 
 def run(port = PORT):
 
-    mfcMain = startMfc(com)
+    
     #nodes = mfcMain.master.get_nodes()
     #addresses = [n['address'] for n in nodes]
     com, port, host = getParsers()
-
+    mfcMain = startMfc(com)
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
         s.bind((host, port))

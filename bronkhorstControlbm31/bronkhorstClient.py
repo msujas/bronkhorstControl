@@ -3,7 +3,10 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import selectors,types
+import numpy as np
 #from bronkhorstControlbm31.bronkhorstServer import getIP
+import matplotlib
+matplotlib.rcParams.update({'font.size':14})
 
 HOST = 'localhost'
 PORT = 61245
@@ -70,12 +73,12 @@ class MFCclient():
     def pollAll(self):
         string = self.makeMessage(self.address, 'pollAll')
         data = self.sendMessage(string)
-        tmpfile = f'{os.path.dirname(os.path.realpath(__file__))}/tmpdf2.dat'
-        f= open(tmpfile,'w')
-        f.write(data)
-        f.close()
-        df = pd.read_csv(tmpfile,sep = ';',index_col=0)
-        os.remove(tmpfile)
+        datalines = data.split('\n')
+        columns = datalines[0].split(';')
+        print(datalines)
+        array = [line.split(';') for line in datalines[1:] if line]
+        print(array)
+        df = pd.DataFrame(data = array,columns=columns,index_col = 0)
         return df
     def closeServer(self):
         self.sendMessage('close')
@@ -160,7 +163,7 @@ class MFCclient():
                 sent = sock.send(data.outb)  # Should be ready to write
                 data.outb = data.outb[sent:]      
 
-def plotLoop(host, port = PORT, multi = True, connid = 'plotLoop'):
+def plotLoop(host, port = PORT,waittime = 1, multi = True, connid = 'plotLoop'):
     fig,(ax1,ax2) = plt.subplots(2,1)
     while True:
         try:
@@ -171,7 +174,7 @@ def plotLoop(host, port = PORT, multi = True, connid = 'plotLoop'):
             df.plot.bar(x='User tag', y='fSetpoint',ax=ax2)
             plt.tight_layout()
             plt.show(block = False)
-            plt.pause(2)
+            plt.pause(waittime)
             ax1.cla()
             ax2.cla()
         except KeyboardInterrupt:
