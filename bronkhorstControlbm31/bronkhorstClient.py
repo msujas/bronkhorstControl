@@ -78,7 +78,7 @@ class MFCclient():
         print(datalines)
         array = [line.split(';') for line in datalines[1:] if line]
         print(array)
-        df = pd.DataFrame(data = array,columns=columns,index_col = 0)
+        df = pd.DataFrame(data = array,columns=columns)
         return df
     def closeServer(self):
         self.sendMessage('close')
