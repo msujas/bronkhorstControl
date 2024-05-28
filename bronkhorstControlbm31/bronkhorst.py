@@ -105,6 +105,7 @@ class MFC():
                 values.append(self.readParam(p,a))
             df.loc[a] = values
         self.paramDf = df
+        print(df)
         dfstring = ';'.join(df.columns)
         for i in df.index.values:
             dfstring += '\n'
