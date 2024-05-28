@@ -35,6 +35,10 @@ class MFCclient():
         string = self.makeMessage(self.address, 'readName')
         data = self.sendMessage(string)
         return data
+    def writeName(self,newname):
+        string = self.makeMessage(self.address,'writeName',newname)
+        data = self.sendMessage(string)
+        return data
     def readParam(self, name):
         string = self.makeMessage(self.address, 'readParam', name)
         data = self.sendMessage(string)
@@ -198,7 +202,7 @@ def scatterPlot(host, port = PORT,waittime = 1, multi = True, connid = 'scatterP
         try:
             tlist.append(time.time())
             df = MFCclient(1,host,port,multi=multi, connid=connid).pollAll()
-            
+
             if c == 0:
                 for ut in df['User tag'].values:
                     measure[ut] = []

@@ -65,6 +65,9 @@ class MFC():
     def readName(self):
         name = self.readParam('User tag')
         return name
+    def writeName(self,newname):
+        x = self.writeParam('User tag',newname)
+        return x
     def getAddresses(self):
         nodes = self.mfcMain.master.get_nodes()
         self.addresses = [n['address'] for n in nodes]
@@ -121,7 +124,8 @@ class MFC():
                      'writeParam':self.writeParam, 'readFlow':self.readFlow,
                      'getAddresses': self.getAddresses, 'pollAll':self.pollAll,
                      'readControlMode': self.readControlMode, 'writeControlMode': self.writeControlMode,
-                     'readFluidType':self.readFluidType, 'writeFluidIndex':self.writeFluidIndex}
+                     'readFluidType':self.readFluidType, 'writeFluidIndex':self.writeFluidIndex,
+                     'writeName':self.writeName}
         method = methodDct[methodName]
         val = method(*args)
         return val
