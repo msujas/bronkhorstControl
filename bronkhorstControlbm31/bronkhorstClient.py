@@ -7,6 +7,7 @@ import numpy as np
 #from bronkhorstControlbm31.bronkhorstServer import getIP
 import matplotlib
 matplotlib.rcParams.update({'font.size':14})
+import time 
 
 HOST = 'localhost'
 PORT = 61245
@@ -170,11 +171,12 @@ class MFCclient():
 
 def plotLoop(host, port = PORT,waittime = 1, multi = True, connid = 'plotLoop'):
     fig,(ax1,ax2) = plt.subplots(2,1)
+
     while True:
         try:
             ax1.set_title('Measure')
             ax2.set_title('Setpoint')
-            df = MFCclient(1,host,port,multi=True, connid=connid).pollAll()
+            df = MFCclient(1,host,port,multi=multi, connid=connid).pollAll()
             df.plot.bar(x='User tag', y='fMeasure',ax=ax1)
             df.plot.bar(x='User tag', y='fSetpoint',ax=ax2)
             plt.tight_layout()
@@ -186,5 +188,41 @@ def plotLoop(host, port = PORT,waittime = 1, multi = True, connid = 'plotLoop'):
             plt.close(fig)
             break
 
-    
+def scatterPlot(host, port = PORT,waittime = 1, multi = True, connid = 'scatterPlot',xlim = 1):
+    measure = {}
+    c=0
+    fig,ax = plt.subplots()
+    tlist = []
+    xlims = xlim*3600
+    while True:
+        try:
+            tlist.append(time.time())
+            df = MFCclient(1,host,port,multi=multi, connid=connid).pollAll()
+            
+            if c == 0:
+                for ut in df['User tag'].values:
+                    measure[ut] = []
+                c = 1
+
+            for ut in measure:
+                measure[ut].append(df[df['User tag'] == ut]['fMeasure'])
+                if tlist[-1] -tlist[0] > xlims:
+                    measure[ut].pop(0)
+            if tlist[-1] -tlist[0] > xlims:
+                tlist.pop(0)
+            tlistPlot = [t-tlist[-1] for t in tlist]
+            for ut in measure:
+                ax.plot(tlistPlot,measure[ut],'o-',label = ut,markersize = 3)
+            ax.set_title(f'measure, tscale: {xlim} hours')
+            ax.legend()
+            ax.set_xlabel('t-current time (s)')
+            ax.set_ylabel('MFC/BPR measure')
+
+            plt.tight_layout()
+            plt.show(block = False)
+            plt.pause(waittime)
+            ax.cla()
+        except KeyboardInterrupt:
+            plt.close(fig)
+            break
     
