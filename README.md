@@ -28,3 +28,5 @@ bronkhorstMultiServer remote
 then for the client use multi=True:
 
 MFCclient(3,'\<ip address\>', multi=True).pollAll()
+
+I should mention this article https://realpython.com/python-sockets/ and the associated repository which helped me to make this.
