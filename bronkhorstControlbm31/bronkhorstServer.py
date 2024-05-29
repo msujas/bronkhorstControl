@@ -9,13 +9,6 @@ HOST = 'localhost'
 PORT = 61245
 com = 'COM1'
 
-def getIP():
-    p = subprocess.run('ipconfig',text=True,capture_output=True)
-    ipaddressline = [line for line in p.stdout.split('\n') if 'IPv4 Address' in line][0]
-    ipaddress = ipaddressline.split(' ')[-1]
-    return ipaddress
-
-
 homedir = pathlib.Path.home()
 configfile = f'{homedir}/bronkhorstServerConfig/comConfg.log'
 if not os.path.exists(os.path.dirname(configfile)):
@@ -44,7 +37,7 @@ def getParsers(port=PORT):
     if host == 'local':
         host = 'localhost'
     elif host == 'remote':
-        host = getIP()
+        host = socket.gethostname()
     else:
         print('usage bronkorstServer [host]')
         print('host must must be "local", "remote" or nothing (local)')
