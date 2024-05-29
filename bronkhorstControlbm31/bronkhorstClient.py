@@ -82,8 +82,6 @@ class MFCclient():
         columns = datalines[0].split(';')
         print(datalines)
         array = [[float(i) if i.replace('.','',1).isdigit() else i for i in line.split(';')] for line in datalines[1:] if line]
-
-        print(array)
         df = pd.DataFrame(data = array,columns=columns)
         return df
     def closeServer(self):
@@ -188,7 +186,7 @@ def plotLoop(host, port = PORT,waittime = 1, multi = True, connid = 'plotLoop'):
             plt.close(fig)
             break
 
-def scatterPlot(host, port = PORT,waittime = 1, multi = True, connid = 'scatterPlot',xlim = 1):
+def timePlot(host, port = PORT,waittime = 1, multi = True, connid = 'timePlot',xlim = 1):
     measure = {}
     c=0
     fig,ax = plt.subplots()
