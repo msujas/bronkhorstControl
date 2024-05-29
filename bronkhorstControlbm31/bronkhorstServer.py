@@ -46,9 +46,6 @@ def getParsers(port=PORT):
 
 def run(port = PORT):
 
-    
-    #nodes = mfcMain.master.get_nodes()
-    #addresses = [n['address'] for n in nodes]
     com, port, host = getParsers()
     mfcMain = startMfc(com)
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -88,7 +85,10 @@ def service_connection(key,mask,sel,mfcMain):
     data = key.data
     bytemessage = b''
     if mask & selectors.EVENT_READ:
-        recvData = sock.recv(1024)
+        try:
+            recvData = sock.recv(1024)
+        except ConnectionAbortedError:
+            recvData = b''
         if recvData:
             print(recvData)
             data.outb += recvData
