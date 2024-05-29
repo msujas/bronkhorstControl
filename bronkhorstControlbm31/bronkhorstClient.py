@@ -171,11 +171,9 @@ def plotLoop(host, port = PORT,waittime = 1, multi = True, connid = 'plotLoop'):
         try:
             ax1.set_ylabel('MFC/BPR Measure')
             ax2.set_ylabel('MFC/BPR Setpoint')
-            try:
-                df = MFCclient(1,host,port,multi=multi, connid=connid).pollAll()
-            except AttributeError:
-                plt.close(fig)
-                return
+
+            df = MFCclient(1,host,port,multi=multi, connid=connid).pollAll()
+
             df.plot.bar(x='User tag', y='fMeasure',ax=ax1)
             df.plot.bar(x='User tag', y='fSetpoint',ax=ax2)
             plt.tight_layout()
@@ -183,9 +181,9 @@ def plotLoop(host, port = PORT,waittime = 1, multi = True, connid = 'plotLoop'):
             plt.pause(waittime)
             ax1.cla()
             ax2.cla()
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, AttributeError):
             plt.close(fig)
-            break
+            return
 
 def timePlot(host, port = PORT,waittime = 1, multi = True, connid = 'timePlot',xlim = 1):
     measure = {}
@@ -196,11 +194,7 @@ def timePlot(host, port = PORT,waittime = 1, multi = True, connid = 'timePlot',x
     while True:
         try:
             tlist.append(time.time())
-            try:
-                df = MFCclient(1,host,port,multi=multi, connid=connid).pollAll()
-            except AttributeError:
-                plt.close(fig)
-                return
+            df = MFCclient(1,host,port,multi=multi, connid=connid).pollAll()
 
             if c == 0:
                 for ut in df['User tag'].values:
@@ -225,7 +219,7 @@ def timePlot(host, port = PORT,waittime = 1, multi = True, connid = 'timePlot',x
             plt.show(block = False)
             plt.pause(waittime)
             ax.cla()
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt,AttributeError):
             plt.close(fig)
             return
     
