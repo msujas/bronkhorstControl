@@ -1,10 +1,7 @@
 import socket
-import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import selectors,types
-import numpy as np
-#from bronkhorstControlbm31.bronkhorstServer import getIP
 import matplotlib
 matplotlib.rcParams.update({'font.size':14})
 import time 

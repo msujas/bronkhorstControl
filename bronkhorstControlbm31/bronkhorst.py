@@ -1,6 +1,5 @@
 import propar
 import pandas as pd
-import os
 
 def getParamDF():
     paramDF = pd.DataFrame(columns=['proc_nr','parm_nr','parm_type'])

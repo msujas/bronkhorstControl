@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bronkhorstControlbm31"
-version = "0.1"
+version = "1.0.0"
 requires-python = ">= 3.10"
 dependencies = ["bronkhorst-propar",
                 "pandas",
@@ -25,5 +25,5 @@ bronkhorstMultiServer = "bronkhorstControlbm31.bronkhorstServer:multiServer"
 [tool.setuptools]
 packages = ["bronkhorstControlbm31"]
 
-#[project.urls]
-#repository = "https://github.com/msujas/pdfgetx3_gui.git"
+[project.urls]
+repository = "https://github.com/msujas/bronkhorstControl"

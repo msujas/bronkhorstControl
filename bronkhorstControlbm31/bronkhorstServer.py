@@ -1,6 +1,5 @@
 import socket
 from bronkhorstControlbm31.bronkhorst import MFC, startMfc
-import subprocess
 import os, pathlib
 import argparse
 import selectors, types
