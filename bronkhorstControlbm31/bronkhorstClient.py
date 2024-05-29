@@ -169,8 +169,8 @@ def plotLoop(host, port = PORT,waittime = 1, multi = True, connid = 'plotLoop'):
 
     while True:
         try:
-            ax1.set_title('Measure')
-            ax2.set_title('Setpoint')
+            ax1.set_ylabel('MFC/BPR Measure')
+            ax2.set_ylabel('MFC/BPR Setpoint')
             df = MFCclient(1,host,port,multi=multi, connid=connid).pollAll()
             df.plot.bar(x='User tag', y='fMeasure',ax=ax1)
             df.plot.bar(x='User tag', y='fSetpoint',ax=ax2)
