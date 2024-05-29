@@ -81,11 +81,7 @@ class MFCclient():
         datalines = data.split('\n')
         columns = datalines[0].split(';')
         print(datalines)
-        array = [line.split(';') for line in datalines[1:] if line]
-        for i in range(len(array)):
-            for j in range(len(array[0])):
-                if array[i][j].replace('.','',1).isdigit():
-                    array[i][j] = float(array[i][j])
+        array = [[float(i) if i.replace('.','',1).isdigit() else i for i in line.split(';')] for line in datalines[1:] if line]
 
         print(array)
         df = pd.DataFrame(data = array,columns=columns)
