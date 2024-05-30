@@ -57,7 +57,10 @@ def run(port = PORT):
             with conn:
                 print(f"Connected by {addr}")
                 while True:
-                    data = conn.recv(1024)
+                    try:
+                        data = conn.recv(1024)
+                    except ConnectionAbortedError:
+                        data = b''
                     if not data:
                         break
                     strdata = data.decode()
