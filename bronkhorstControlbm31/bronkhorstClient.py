@@ -4,10 +4,32 @@ import matplotlib.pyplot as plt
 import selectors,types
 import matplotlib
 matplotlib.rcParams.update({'font.size':14})
-import time 
+import time
+import argparse
 
 HOST = 'localhost'
 PORT = 61245
+
+def getArgs(host=HOST, port=PORT, connid = socket.gethostname(),waitTime = 0.5, plotTime = 1):
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('host',nargs='?', default=host, type= str)
+    parser.add_argument('-p','--port',default=port, type=int)
+    parser.add_argument('-c','--connid',default=connid, type = str)
+    parser.add_argument('-wt','--waittime',default=waitTime, type = float)
+    parser.add_argument('-pt','--plotTime',default=plotTime, type = float)
+    args = parser.parse_args()
+
+    host = args.host
+    port = args.port
+    connid = args.connid
+    waitTime = args.waittime
+    plotTime = args.plotTime
+
+    print(host)
+    print(port)
+    print(connid)
+    return host, port, connid, waitTime, plotTime
 
 def connect(host=HOST, port=PORT):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -164,7 +186,8 @@ class MFCclient():
                 sent = sock.send(data.outb)  # Should be ready to write
                 data.outb = data.outb[sent:]      
 
-def plotLoop(host, port = PORT,waittime = 1, multi = True, connid = 'plotLoop'):
+def barPlot(host=HOST, port = PORT,waittime = 0.5, multi = True, connid = 'plotLoop'):
+    host,port,connid, waittime, xlim=getArgs(host=host,port=port,connid=connid, waitTime=waittime,plotTime=1)
     fig,(ax1,ax2) = plt.subplots(2,1)
 
     while True:
@@ -185,7 +208,8 @@ def plotLoop(host, port = PORT,waittime = 1, multi = True, connid = 'plotLoop'):
             plt.close(fig)
             return
 
-def timePlot(host, port = PORT,waittime = 1, multi = True, connid = 'timePlot',xlim = 1):
+def timePlot(host=HOST, port = PORT,waittime = 0.5, multi = True, connid = 'timePlot',xlim = 1):
+    host,port,connid, waittime, xlim=getArgs(host=host,port=port,connid=connid, waitTime=waittime,plotTime=xlim)
     measure = {}
     c=0
     fig,ax = plt.subplots()

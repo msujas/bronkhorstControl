@@ -21,6 +21,8 @@ classifiers = [
 [project.scripts]
 bronkhorstServer = "bronkhorstControlbm31.bronkhorstServer:run"
 bronkhorstMultiServer = "bronkhorstControlbm31.bronkhorstServer:multiServer"
+timePlot = "bronkhorstControlbm31.bronkhorstClient:timePlot"
+barPlot = "bronkhorstControlbm31.bronkhorstClient:barPlot"
 
 [tool.setuptools]
 packages = ["bronkhorstControlbm31"]
