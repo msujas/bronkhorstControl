@@ -13,11 +13,12 @@ PORT = 61245
 def getArgs(host=HOST, port=PORT, connid = socket.gethostname(),waitTime = 0.5, plotTime = 1):
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('host',nargs='?', default=host, type= str)
-    parser.add_argument('-p','--port',default=port, type=int)
-    parser.add_argument('-c','--connid',default=connid, type = str)
-    parser.add_argument('-wt','--waittime',default=waitTime, type = float)
-    parser.add_argument('-pt','--plotTime',default=plotTime, type = float)
+    parser.add_argument('host',nargs='?', default=host, type= str, help = 'host name/address')
+    parser.add_argument('-p','--port',default=port, type=int, help = 'port number')
+    parser.add_argument('-c','--connid',default=connid, type = str, help='name for connection')
+    parser.add_argument('-wt','--waittime',default=waitTime, type = float, help = 'time to wait between iterations (default 0.5 s)')
+    parser.add_argument('-pt','--plotTime',default=plotTime, type = float, 
+                        help = 'total time to plot on x-axis (only for timePlot, default 1 hour)')
     args = parser.parse_args()
 
     host = args.host
