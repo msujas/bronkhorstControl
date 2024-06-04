@@ -8,3 +8,5 @@ pollDF.dat
 dfplottest.py
 bronkhorstControlbm31/tmpdf2.dat
 dist
+testClient.py
+testServer.py

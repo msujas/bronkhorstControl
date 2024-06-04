@@ -23,8 +23,7 @@ paramDF = getParamDF()
 def startMfc(com = 'COM1'):
     mfcMain = propar.instrument(com)
     return mfcMain
-#mfcMain = propar.instrument('COM1')
-#nodes = mfcMain.master.get_nodes()
+
 class MFC():
     def __init__(self,address, mfcMain):
         self.address = address

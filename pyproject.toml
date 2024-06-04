@@ -4,11 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bronkhorstControlbm31"
-version = "1.1.0"
+version = "1.2.0"
 requires-python = ">= 3.10"
-dependencies = ["bronkhorst-propar",
-                "pandas",
-                "matplotlib"]
+dependencies = ["bronkhorst-propar", "pandas", "matplotlib"]
 authors = [{name = "Kenneth P. Marshall", email = "kenneth.marshall@esrf.fr"}]
 maintainers = [{name = "Kenneth P. Marshall", email = "kenneth.marshall@esrf.fr"}]
 description = "tools for communicating with Bronkhorst MFCs with the API for BM31"

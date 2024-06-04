@@ -3,10 +3,17 @@ from bronkhorstControlbm31.bronkhorst import MFC, startMfc
 import os, pathlib
 import argparse
 import selectors, types
+import subprocess
 
 HOST = 'localhost'
 PORT = 61245
 com = 'COM1'
+
+def getIP():
+    p = subprocess.run('ipconfig',capture_output=True,text=True)
+    ipLine = [l for l in p.stdout.split('\n') if 'IPv4 Address' in l][0]
+    ip = ipLine.split()[-1]
+    return ip
 
 homedir = pathlib.Path.home()
 configfile = f'{homedir}/bronkhorstServerConfig/comConfg.log'
@@ -15,7 +22,7 @@ if not os.path.exists(os.path.dirname(configfile)):
 
 def getParsers(port=PORT):
     parser = argparse.ArgumentParser()
-    parser.add_argument('local_remote',nargs='?', default='local')
+    parser.add_argument('host',nargs='?', default='local', help = 'can be "local" (localhost), "remote" (host name), or "remoteip" (ip address)')
 
     if not os.path.exists(configfile):
         defaultCom = 1
@@ -32,14 +39,16 @@ def getParsers(port=PORT):
     com = f'COM{args.com}'
     PORT = int(args.port)
     print(f'port: {PORT}')
-    host = args.local_remote
+    host = args.host
     if host == 'local':
         host = 'localhost'
     elif host == 'remote':
         host = socket.gethostname()
+    elif host == 'remoteip':
+        host = getIP() #added this option as sometimes connection won't work with host name
     else:
         print('usage bronkorstServer [host]')
-        print('host must must be "local", "remote" or nothing (local)')
+        print('host must must be "local", "remote", "remoteip" or nothing (local)')
         return
     print(host)
     return com, port, host

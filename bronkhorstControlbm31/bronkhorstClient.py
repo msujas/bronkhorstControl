@@ -38,7 +38,7 @@ def connect(host=HOST, port=PORT):
     return s
 
 class MFCclient():
-    def __init__(self,address, host=HOST,port=PORT, multi=False,connid = socket.gethostname()):
+    def __init__(self,address, host=HOST,port=PORT, multi=True,connid = socket.gethostname()):
         self.address = address
         self.host = host
         self.port = port
