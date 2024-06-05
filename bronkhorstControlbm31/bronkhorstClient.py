@@ -103,6 +103,7 @@ class MFCclient():
         print(datalines)
         array = [[float(i) if i.replace('.','',1).isdigit() else i for i in line.split(';')] for line in datalines[1:] if line]
         df = pd.DataFrame(data = array,columns=columns)
+        df = df.astype({'address':'int8'})
         return df
     def closeServer(self):
         self.sendMessage('close')
