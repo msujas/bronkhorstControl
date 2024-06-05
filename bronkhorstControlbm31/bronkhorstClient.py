@@ -114,6 +114,7 @@ class MFCclient():
             data = self.s.recv(1024)
             self.s.close()
             strdata = data.decode()
+            strdata = strdata.replace('!','')
         else:
             strdata = self.multiClient(bytemessage)
         print(strdata)
@@ -222,19 +223,20 @@ def timePlot(host=HOST, port = PORT,waittime = 0.5, multi = True, connid = 'time
             df = MFCclient(1,host,port,multi=multi, connid=connid).pollAll()
 
             if c == 0:
-                for ut in df['User tag'].values:
-                    measure[ut] = []
+                for a in df['address'].values:
+                    measure[a] = []
                 c = 1
-
-            for ut in measure:
-                measure[ut].append(df[df['User tag'] == ut]['fMeasure'])
+            userTags = {}
+            for a in measure:
+                userTags[a] = df[df['address'] == a]['User tag'].values[0]
+                measure[a].append(df[df['address'] == a]['fMeasure'].values[0])
                 if tlist[-1] -tlist[0] > xlims:
-                    measure[ut].pop(0)
+                    measure[a].pop(0)
             if tlist[-1] -tlist[0] > xlims:
                 tlist.pop(0)
             tlistPlot = [t-tlist[-1] for t in tlist]
-            for ut in measure:
-                ax.plot(tlistPlot,measure[ut],'o-',label = ut,markersize = 3)
+            for a in measure:
+                ax.plot(tlistPlot,measure[a],'o-',label = userTags[a],markersize = 3)
             ax.set_title(f'measure, tscale: {xlim} hours')
             ax.legend()
             ax.set_xlabel('t-current time (s)')
