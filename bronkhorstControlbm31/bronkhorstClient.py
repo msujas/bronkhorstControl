@@ -100,7 +100,6 @@ class MFCclient():
         data = self.sendMessage(string)
         datalines = data.split('\n')
         columns = datalines[0].split(';')
-        print(datalines)
         array = [[float(i) if i.replace('.','',1).isdigit() else i for i in line.split(';')] for line in datalines[1:] if line]
         df = pd.DataFrame(data = array,columns=columns)
         df = df.astype({'address':'int8'})
