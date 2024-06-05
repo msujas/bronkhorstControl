@@ -104,8 +104,6 @@ class MFCclient():
         df = pd.DataFrame(data = array,columns=columns)
         df = df.astype({'address':'int8'})
         return df
-    def closeServer(self):
-        self.sendMessage('close')
     def sendMessage(self,message):
         bytemessage = bytes(message,encoding='utf-8')
         if not self.multi:

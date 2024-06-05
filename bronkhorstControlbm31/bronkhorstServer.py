@@ -73,13 +73,13 @@ def run(port = PORT):
                     if not data:
                         break
                     strdata = data.decode()
-                    if strdata == 'close':
+                    try:
+                        address = int(strdata.split(';')[0])
                         print(strdata)
-                        return
-                    address = int(strdata.split(';')[0])
-                    print(strdata)
-                    result = MFC(address, mfcMain).strToMethod(strdata)
-                    print(result)
+                        result = MFC(address, mfcMain).strToMethod(strdata)
+                        print(result)
+                    except (ValueError, IndexError):
+                        byteResult = b'invalid input'
                     byteResult = bytes(str(result),encoding = 'utf-8')
                     conn.sendall(byteResult)
 
@@ -96,6 +96,10 @@ def service_connection(key,mask,sel,mfcMain):
     sock = key.fileobj
     data = key.data
     bytemessage = b''
+    def closeConnection():
+        print(f'closing connection to {data.addr}')
+        sel.unregister(sock)
+        sock.close()
     if mask & selectors.EVENT_READ:
         try:
             recvData = sock.recv(1024)
@@ -105,23 +109,16 @@ def service_connection(key,mask,sel,mfcMain):
             print(recvData)
             data.outb += recvData
             strmessage = data.outb.decode()
-            if strmessage == 'close':
-
-                bytemessage += b'close!'
-
-                print(f'closing connection to {data.addr}')
-                sel.unregister(sock)
-                sock.close()
-            else:
+            try:
                 address = int(strmessage.split(';')[0])
                 mainmessage = MFC(address,mfcMain).strToMethod(strmessage)
                 #endmessageMarker = '!'
                 fullmessage = f'{mainmessage}!'
                 bytemessage += bytes(fullmessage,encoding='utf-8')
+            except (ValueError, KeyError):
+                closeConnection()
         else:
-            print(f'closing connection to {data.addr}')
-            sel.unregister(sock)
-            sock.close()
+            closeConnection()
     if mask & selectors.EVENT_WRITE:
 
         if bytemessage and strmessage != 'close':
@@ -129,7 +126,7 @@ def service_connection(key,mask,sel,mfcMain):
             sent = sock.send(bytemessage)
             bytemessage = bytemessage[sent:]
 
-    return bytemessage
+
 
 
 def multiServer():
@@ -151,10 +148,8 @@ def multiServer():
                 if key.data is None:
                     accept_wrapper(key.fileobj,sel)
                 else:
-                    bytemessage = service_connection(key, mask,sel,mfcMain)
-                    if bytemessage.decode() == 'close!':
-                        sel.close()
-                        return
+                    service_connection(key, mask,sel,mfcMain)
+
     except KeyboardInterrupt:
         print("caught keyboard interrupt, exiting")
     finally:
