@@ -93,6 +93,7 @@ def run(port = PORT):
                         address = int(strdata.split(';')[0])
                         print(strdata)
                         result = MFC(address, mfcMain).strToMethod(strdata)
+                        result += '!'
                         print(result)
                     except (ValueError, KeyError):
                         byteResult = b'invalid input!'
@@ -137,7 +138,7 @@ def service_connection(key,mask,sel,mfcMain):
             closeConnection()
     if mask & selectors.EVENT_WRITE:
 
-        if bytemessage and strmessage != 'close':
+        if bytemessage:
             print(f'sending {bytemessage} to {data.addr}')
             sent = sock.send(bytemessage)
             bytemessage = bytemessage[sent:]
