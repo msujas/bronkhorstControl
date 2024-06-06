@@ -15,6 +15,16 @@ def getIP():
     ip = ipLine.split()[-1]
     return ip
 
+def isValidIP(ipaddress):
+    try:
+        hostname = socket.gethostbyaddr(ipaddress)[0].split('.')[0]
+        if hostname.lower() == socket.gethostname().lower():
+            return True
+        else:
+            return False
+    except:
+        return False
+    
 homedir = pathlib.Path.home()
 configfile = f'{homedir}/bronkhorstServerConfig/comConfg.log'
 if not os.path.exists(os.path.dirname(configfile)):
@@ -22,7 +32,8 @@ if not os.path.exists(os.path.dirname(configfile)):
 
 def getParsers(port=PORT):
     parser = argparse.ArgumentParser()
-    parser.add_argument('host',nargs='?', default='local', help = 'can be "local" (localhost), "remote" (host name), or "remoteip" (ip address)')
+    parser.add_argument('host',nargs='?', default='local', help = ('can be "local" (localhost), "remote" (host name), '
+                                                                   '"remoteip" (ip address), or the IP address of the host'))
 
     if not os.path.exists(configfile):
         defaultCom = 1
@@ -45,7 +56,9 @@ def getParsers(port=PORT):
     elif host == 'remote':
         host = socket.gethostname()
     elif host == 'remoteip':
-        host = getIP() #added this option as sometimes connection won't work with host name
+        host = getIP() #added this option as connection may not work with host name if host has multiple connections
+    elif isValidIP(host):
+        pass
     else:
         print('usage bronkorstServer [host]')
         print('host must must be "local", "remote", "remoteip" or nothing (local)')
@@ -78,7 +91,7 @@ def run(port = PORT):
                         print(strdata)
                         result = MFC(address, mfcMain).strToMethod(strdata)
                         print(result)
-                    except (ValueError, IndexError):
+                    except (ValueError, KeyError):
                         byteResult = b'invalid input'
                     byteResult = bytes(str(result),encoding = 'utf-8')
                     conn.sendall(byteResult)
