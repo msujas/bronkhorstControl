@@ -12,7 +12,7 @@ To send commands import the MFCclient class and connect function, then run it's 
 
 E.g.
 
-from bronkhorstControlbm31.bronkhorstClient import MFCclient
+from bronkhorstControlbm31 import MFCclient
 
 
 MFCclient(3,'\<hostname or ip address\>').pollAll() 
