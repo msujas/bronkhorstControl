@@ -95,7 +95,7 @@ def run(port = PORT):
                         result = MFC(address, mfcMain).strToMethod(strdata)
                         print(result)
                     except (ValueError, KeyError):
-                        byteResult = b'invalid input'
+                        byteResult = b'invalid input!'
                     byteResult = bytes(str(result),encoding = 'utf-8')
                     conn.sendall(byteResult)
 
@@ -132,7 +132,7 @@ def service_connection(key,mask,sel,mfcMain):
                 fullmessage = f'{mainmessage}!'
                 bytemessage += bytes(fullmessage,encoding='utf-8')
             except (ValueError, KeyError):
-                bytemessage = b'invalid message'
+                bytemessage = b'invalid message!'
         else:
             closeConnection()
     if mask & selectors.EVENT_WRITE:
