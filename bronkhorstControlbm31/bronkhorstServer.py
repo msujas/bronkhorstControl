@@ -30,10 +30,11 @@ configfile = f'{homedir}/bronkhorstServerConfig/comConfg.log'
 if not os.path.exists(os.path.dirname(configfile)):
     os.makedirs(os.path.dirname(configfile))
 
-def getParsers(port=PORT):
+def getArgs(port=PORT):
     parser = argparse.ArgumentParser()
     parser.add_argument('host',nargs='?', default='local', help = ('can be "local" (localhost), "remote" (host name), '
-                                                                   '"remoteip" (ip address), or the IP address of the host'))
+                                            '"remoteip" (ip address), or the IP address of the host. The last two options are '
+                                            'due to complications which may arise from a host having multiple connections'))
 
     if not os.path.exists(configfile):
         defaultCom = 1
@@ -41,14 +42,16 @@ def getParsers(port=PORT):
         f = open(configfile,'r')
         defaultCom = f.read()
         f.close()
-    parser.add_argument('-c','--com', default=defaultCom)
-    parser.add_argument('-p','--port',default=port)
+    parser.add_argument('-c','--com', default=defaultCom, help=('COM port (as number, e.g. -c 1) where MFCs are connected to. '
+                                                                'If unsure, check in Device Manager under Ports. Default is last used'))
+    parser.add_argument('-p','--port',default=port, type=int, help= ('port number. There is a default, but you can choose. Anything from '
+                                                                '49152-65535 should be fine'))
     args = parser.parse_args()
     f = open(configfile,'w')
     f.write(str(args.com))
     f.close()
     com = f'COM{args.com}'
-    PORT = int(args.port)
+    PORT = args.port
     print(f'port: {PORT}')
     host = args.host
     if host == 'local':
@@ -68,7 +71,7 @@ def getParsers(port=PORT):
 
 def run(port = PORT):
 
-    com, port, host = getParsers()
+    com, port, host = getArgs()
     mfcMain = startMfc(com)
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
@@ -129,7 +132,7 @@ def service_connection(key,mask,sel,mfcMain):
                 fullmessage = f'{mainmessage}!'
                 bytemessage += bytes(fullmessage,encoding='utf-8')
             except (ValueError, KeyError):
-                closeConnection()
+                bytemessage = b'invalid message'
         else:
             closeConnection()
     if mask & selectors.EVENT_WRITE:
@@ -143,7 +146,7 @@ def service_connection(key,mask,sel,mfcMain):
 
 
 def multiServer():
-    com,port, host = getParsers()
+    com,port, host = getArgs()
     
     mfcMain = startMfc(com)
     sel = selectors.DefaultSelector()

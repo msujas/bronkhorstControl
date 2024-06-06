@@ -6,9 +6,8 @@ import matplotlib
 matplotlib.rcParams.update({'font.size':14})
 import time
 import argparse
+from bronkhorstControlbm31.bronkhorstServer import PORT, HOST
 
-HOST = 'localhost'
-PORT = 61245
 
 def getArgs(host=HOST, port=PORT, connid = socket.gethostname(),waitTime = 0.5, plotTime = 1):
     parser = argparse.ArgumentParser()

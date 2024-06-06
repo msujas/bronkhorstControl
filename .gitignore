@@ -10,3 +10,5 @@ bronkhorstControlbm31/tmpdf2.dat
 dist
 testClient.py
 testServer.py
+build
+*.docx
