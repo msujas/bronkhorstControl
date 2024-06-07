@@ -2,18 +2,17 @@ repository for communicating with Bronkhorst MFCs remotely. Intended to be used 
 
 Usage: On the PC connected to the MFCs run bronkhorstServer in a terminal. Options are -c/--com input the com number as an integer (default 1, but check com ports in Device Manager), this will save next time you run so you shouldn't need to input it again. -p/--port port number, (default is value in the script, probably unnecessary to change). A positional argument which can be 'local' ('localhost'), 'remote' (hostname), or remoteip (ip address) (default local). If remote the hostname will be displayed to connect from another computer, otherwise it will be 'localhost'. The port number will also be displayed.
 
-e.g.
+The best way to run is to use the multi client server e.g.
 
-bronkhorstServer remote -c 7
+bronkhorstMultiServer remote -c 7
 
-Use remoteip instead of remote to use the IP address as the hostname, sometimes it works better.
+Use remoteip or the IP address itself instead of remote to use the IP address as the hostname, sometimes it works better in cases where the PC has multiple connections.
 
 To send commands import the MFCclient class and connect function, then run it's methods. Initial arguments are MFC address (will be an integer), the IP address (default localhost) and the port (default is that in the script). 
 
 E.g.
 
 from bronkhorstControlbm31 import MFCclient
-
 
 MFCclient(3,'\<hostname or ip address\>').pollAll() 
 
@@ -23,15 +22,7 @@ To change setpoint on MFC address 3:
 
 MFCclient(3,'\<hostname or ip address\>').writeSetpoint(value)
 
-A second server is available for accepting multiple clients:
-
-bronkhorstMultiServer remote
-
-then for the client use multi=True:
-
-MFCclient(3,'\<hostname or ip address\>', multi=True).pollAll()
-
-There are also 2 other functions in bronkhorstClient called barPlot() and timePlot() which can be run in conjunction with the bronkhorstMultiServer. Takes host as a required argument. These are also packaged as executables, so run e.g. 'timePlot \<hostname\>'
+There are also 2 other programs called barPlot and timePlot which can be run in conjunction with the bronkhorstMultiServer. Takes host as a positional argument (default 'localhost'). Run e.g. 'timePlot \<hostname\>'
 
 I should mention this article https://realpython.com/python-sockets/ and the associated repository which helped me to make this.
 
