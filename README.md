@@ -35,7 +35,7 @@ There are also 2 other functions in bronkhorstClient called barPlot() and timePl
 
 I should mention this article https://realpython.com/python-sockets/ and the associated repository which helped me to make this.
 
-Can also be controlled more directly, without the server, using the MFC class in the bronkhorst.py module, but the plotting programs won't work in that case. e.g.
+Can also be controlled more directly, without the server, using the MFC class in the bronkhorst.py module, but the plotting programs won't work in that case, and it must be on the same PC as the MFCs. e.g.
 
 from bronkhorstControlbm31.bronkhorst import MFC, startMfc
 
