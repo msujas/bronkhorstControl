@@ -34,3 +34,13 @@ MFCclient(3,'\<hostname or ip address\>', multi=True).pollAll()
 There are also 2 other functions in bronkhorstClient called barPlot() and timePlot() which can be run in conjunction with the bronkhorstMultiServer. Takes host as a required argument. These are also packaged as executables, so run e.g. 'timePlot \<hostname\>'
 
 I should mention this article https://realpython.com/python-sockets/ and the associated repository which helped me to make this.
+
+Can also be controlled more directly, without the server, using the MFC class in the bronkhorst.py module, but the plotting programs won't work in that case. e.g.
+
+from bronkhorstControlbm31.bronkhorst import MFC, startMfc
+
+mfcmain = startMfc()
+
+mfc1 = MFC(1,mfcmain)
+
+mfc1.readName()
