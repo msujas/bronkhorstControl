@@ -134,6 +134,9 @@ def service_connection(key,mask,sel,mfcMain):
                 bytemessage += bytes(fullmessage,encoding='utf-8')
             except (ValueError, KeyError):
                 bytemessage = b'invalid message!'
+            except ConnectionResetError:
+                bytemessage = b''
+                closeConnection()
         else:
             closeConnection()
     if mask & selectors.EVENT_WRITE:

@@ -186,7 +186,7 @@ class MFCclient():
                 data.outb = data.outb[sent:]      
 
 def barPlot(host=HOST, port = PORT,waittime = 0.5, multi = True, connid = 'plotLoop'):
-    host,port,connid, waittime, xlim=getArgs(host=host,port=port,connid=connid, waitTime=waittime,plotTime=1)
+    host,port,connid, waittime, _ =getArgs(host=host,port=port,connid=connid, waitTime=waittime,plotTime=1)
     fig,(ax1,ax2) = plt.subplots(2,1)
 
     while True:
