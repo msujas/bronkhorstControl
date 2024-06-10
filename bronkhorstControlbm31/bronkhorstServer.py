@@ -135,6 +135,7 @@ def service_connection(key,mask,sel,mfcMain):
             except (ValueError, KeyError):
                 bytemessage = b'invalid message!'
             except ConnectionResetError:
+                print('connection to client lost')
                 bytemessage = b''
                 closeConnection()
         else:
@@ -143,8 +144,13 @@ def service_connection(key,mask,sel,mfcMain):
 
         if bytemessage:
             print(f'sending {bytemessage} to {data.addr}')
-            sent = sock.send(bytemessage)
-            bytemessage = bytemessage[sent:]
+            try:
+                sent = sock.send(bytemessage)
+                bytemessage = bytemessage[sent:]
+            except ConnectionResetError:
+                print('connection to client lost')
+                bytemessage = b''
+                closeConnection()
 
 
 
