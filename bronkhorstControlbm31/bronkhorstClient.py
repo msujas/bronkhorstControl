@@ -195,7 +195,7 @@ def barPlot(host=HOST, port = PORT,waittime = 0.5, multi = True, connid = 'plotL
             ax2.set_ylabel('MFC/BPR Setpoint')
 
             df = MFCclient(1,host,port,multi=multi, connid=connid).pollAll()
-
+            df = df.astype({'fMeasure':float, 'fSetpoint':float})
             df.plot.bar(x='User tag', y='fMeasure',ax=ax1)
             df.plot.bar(x='User tag', y='fSetpoint',ax=ax2)
             plt.tight_layout()
@@ -218,7 +218,7 @@ def timePlot(host=HOST, port = PORT,waittime = 0.5, multi = True, connid = 'time
         try:
             tlist.append(time.time())
             df = MFCclient(1,host,port,multi=multi, connid=connid).pollAll()
-
+            df = df.astype({'fMeasure':float})
             if c == 0:
                 for a in df['address'].values:
                     measure[a] = []
