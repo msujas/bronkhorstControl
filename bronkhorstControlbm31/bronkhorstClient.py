@@ -19,8 +19,9 @@ def getArgs(host=HOST, port=PORT, connid = socket.gethostname(),waitTime = 0.5, 
     parser.add_argument('-c','--connid',default=connid, type = str, help='name for connection')
     parser.add_argument('-wt','--waittime',default=waitTime, type = float, help = 'time to wait between iterations (default 0.5 s)')
     parser.add_argument('-pt','--plotTime',default=plotTime, type = float, 
-                        help = 'total time to plot on x-axis (only for timePlot, default 1 hour)')
-    parser.add_argument('-l','--log', default = log, type = bool, help='whether or not to log time plot data (default True, file saved in <homedir>/bronkhorstClientLog/<date>.log)')
+                        help = 'timePlot only. Total time to plot on x-axis (only for timePlot, default 1 hour)')
+    parser.add_argument('-l','--log', default = log, type = bool, 
+                        help='timePlot only, boolean. Whether or not to log the data (default True, file saved in <homedir>/bronkhorstClientLog/<yyyymmdd>.log)')
     args = parser.parse_args()
 
     host = args.host

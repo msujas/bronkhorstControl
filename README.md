@@ -22,7 +22,7 @@ To change setpoint on MFC address 3:
 
 MFCclient(3,'\<hostname or ip address\>').writeSetpoint(value)
 
-There are also 2 other programs called barPlot and timePlot which can be run in conjunction with the bronkhorstMultiServer. Takes host as a positional argument (default 'localhost'). Run e.g. 'timePlot \<hostname\>'
+There are also 2 other programs called barPlot and timePlot which can be run in conjunction with the bronkhorstMultiServer. Takes host as a positional argument (default 'localhost'). Run e.g. 'timePlot \<hostname\>'. Use --help to display options.
 
 I should mention this article https://realpython.com/python-sockets/ and the associated repository which helped me to make this.
 
