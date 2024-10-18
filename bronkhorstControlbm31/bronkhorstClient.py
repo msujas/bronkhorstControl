@@ -5,11 +5,13 @@ import selectors,types
 import matplotlib
 matplotlib.rcParams.update({'font.size':14})
 import time
+from datetime import datetime
 import argparse
+import os, pathlib
 from bronkhorstControlbm31.bronkhorstServer import PORT, HOST
 
 
-def getArgs(host=HOST, port=PORT, connid = socket.gethostname(),waitTime = 0.5, plotTime = 1):
+def getArgs(host=HOST, port=PORT, connid = socket.gethostname(),waitTime = 0.5, plotTime = 1, log = True):
     parser = argparse.ArgumentParser()
 
     parser.add_argument('host',nargs='?', default=host, type= str, help = 'host name/address')
@@ -18,6 +20,7 @@ def getArgs(host=HOST, port=PORT, connid = socket.gethostname(),waitTime = 0.5, 
     parser.add_argument('-wt','--waittime',default=waitTime, type = float, help = 'time to wait between iterations (default 0.5 s)')
     parser.add_argument('-pt','--plotTime',default=plotTime, type = float, 
                         help = 'total time to plot on x-axis (only for timePlot, default 1 hour)')
+    parser.add_argument('-l','--log', default = log, type = bool, help='whether or not to log time plot data (default True, file saved in <homedir>/bronkhorstClientLog/<date>.log)')
     args = parser.parse_args()
 
     host = args.host
@@ -25,11 +28,12 @@ def getArgs(host=HOST, port=PORT, connid = socket.gethostname(),waitTime = 0.5, 
     connid = args.connid
     waitTime = args.waittime
     plotTime = args.plotTime
+    log = args.log
 
     print(host)
     print(port)
     print(connid)
-    return host, port, connid, waitTime, plotTime
+    return host, port, connid, waitTime, plotTime, log
 
 def connect(host=HOST, port=PORT):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -186,7 +190,7 @@ class MFCclient():
                 data.outb = data.outb[sent:]      
 
 def barPlot(host=HOST, port = PORT,waittime = 0.5, multi = True, connid = 'plotLoop'):
-    host,port,connid, waittime, _ =getArgs(host=host,port=port,connid=connid, waitTime=waittime,plotTime=1)
+    host,port,connid, waittime, _, _log =getArgs(host=host,port=port,connid=connid, waitTime=waittime,plotTime=1, log = False)
     fig,(ax1,ax2) = plt.subplots(2,1)
 
     while True:
@@ -206,14 +210,28 @@ def barPlot(host=HOST, port = PORT,waittime = 0.5, multi = True, connid = 'plotL
         except (KeyboardInterrupt, AttributeError):
             plt.close(fig)
             return
+        
+def writeLog(file,string):
+    f = open(file,'a')
+    f.write(string)
+    f.close()
 
-def timePlot(host=HOST, port = PORT,waittime = 0.5, multi = True, connid = 'timePlot',xlim = 1):
-    host,port,connid, waittime, xlim=getArgs(host=host,port=port,connid=connid, waitTime=waittime,plotTime=xlim)
+def timePlot(host=HOST, port = PORT,waittime = 0.5, multi = True, connid = 'timePlot',xlim = 1, log = True):
+    host,port,connid, waittime, xlim, log = getArgs(host=host,port=port,connid=connid, waitTime=waittime,plotTime=xlim, log = log)
     measure = {}
     c=0
     fig,ax = plt.subplots()
     tlist = []
     xlims = xlim*3600
+    homedir = pathlib.Path.home()
+    logdir = f'{homedir}/bronkhorstClientLog/'
+    t = time.time()
+    dt = datetime.fromtimestamp(t)
+    dtstring = f'{dt.year:04d}{dt.month:02d}{dt.day:02d}'
+    logfile = f'{logdir}/{dtstring}.log'
+    if not os.path.exists(logdir) and log:
+        os.makedirs(logdir)
+
     while True:
         try:
             tlist.append(time.time())
@@ -223,6 +241,15 @@ def timePlot(host=HOST, port = PORT,waittime = 0.5, multi = True, connid = 'time
                 for a in df['address'].values:
                     measure[a] = []
                 c = 1
+                if log:
+                    names = []
+                    headerString = f'datetime unixTime(s)'
+                    for i in df.index.values:
+                        name = df.loc[i]['User tag'].replace(' ','_')
+                        names.append(name)
+                        headerString += f' {name}Setpoint {name}Measure'
+                    headerString += '\n'
+                    writeLog(logfile,headerString)
             userTags = {}
             for a in measure:
                 userTags[a] = df[df['address'] == a]['User tag'].values[0]
@@ -232,6 +259,25 @@ def timePlot(host=HOST, port = PORT,waittime = 0.5, multi = True, connid = 'time
             if tlist[-1] -tlist[0] > xlims:
                 tlist.pop(0)
             tlistPlot = [t-tlist[-1] for t in tlist]
+            if log:
+                curtime = time.time()
+                dt = datetime.fromtimestamp(curtime)
+                dtstring = f'{dt.year:04d}/{dt.month:02d}/{dt.day:02d}_{dt.hour:02d}:{dt.minute:02d}:{dt.second:02d}'
+                logString = f'{dtstring} {int(curtime)}'
+                newHeaderString = f'datetime unixTime(s)'
+                for i in df.index.values:
+                    name = df.loc[i]['User tag'].replace(' ','')
+                    newHeaderString += f' {name}Setpoint {name}Measure'
+                    meas = df.loc[i]['fMeasure']
+                    sp = df.loc[i]['fSetpoint']
+                    logString += f' {sp} {meas}'
+                newHeaderString += '\n'
+                logString += '\n'                 
+                if newHeaderString != headerString:
+                    headerString = newHeaderString
+                    writeLog(logfile,headerString)
+                writeLog(logfile,logString)
+                    
             for a in measure:
                 ax.plot(tlistPlot,measure[a],'o-',label = userTags[a],markersize = 3)
             ax.set_title(f'measure, tscale: {xlim} hours')
