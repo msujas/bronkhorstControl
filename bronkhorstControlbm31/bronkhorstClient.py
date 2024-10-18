@@ -270,7 +270,7 @@ def timePlot(host=HOST, port = PORT,waittime = 0.5, multi = True, connid = 'time
                     newHeaderString += f' {name}Setpoint {name}Measure'
                     meas = df.loc[i]['fMeasure']
                     sp = df.loc[i]['fSetpoint']
-                    logString += f' {sp} {meas}'
+                    logString += f' {sp:.3f} {meas:.3f}'
                 newHeaderString += '\n'
                 logString += '\n'                 
                 if newHeaderString != headerString:
