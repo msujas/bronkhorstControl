@@ -11,7 +11,7 @@ import os, pathlib
 from bronkhorstControlbm31.bronkhorstServer import PORT, HOST
 
 
-def getArgs(host=HOST, port=PORT, connid = socket.gethostname(),waitTime = 0.5, plotTime = 1, log = True):
+def getArgs(host=HOST, port=PORT, connid = socket.gethostname(),waitTime = 0.5, plotTime = 1, log = True, logInterval = 5):
     parser = argparse.ArgumentParser()
 
     parser.add_argument('host',nargs='?', default=host, type= str, help = 'host name/address')
@@ -22,6 +22,7 @@ def getArgs(host=HOST, port=PORT, connid = socket.gethostname(),waitTime = 0.5, 
                         help = 'timePlot only. Total time to plot on x-axis (only for timePlot, default 1 hour)')
     parser.add_argument('-l','--log', default = log, type = bool, 
                         help='timePlot only, boolean. Whether or not to log the data (default True, file saved in <homedir>/bronkhorstClientLog/<yyyymmdd>.log)')
+    parser.add_argument('-li', '--logInterval', default = logInterval, type = int, help='timePlot only. Integer, time interval between each log entry (default 5 s)')
     args = parser.parse_args()
 
     host = args.host
@@ -30,11 +31,12 @@ def getArgs(host=HOST, port=PORT, connid = socket.gethostname(),waitTime = 0.5, 
     waitTime = args.waittime
     plotTime = args.plotTime
     log = args.log
+    logInterval = args.logInterval
 
     print(host)
     print(port)
     print(connid)
-    return host, port, connid, waitTime, plotTime, log
+    return host, port, connid, waitTime, plotTime, log, logInterval
 
 def connect(host=HOST, port=PORT):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -191,7 +193,7 @@ class MFCclient():
                 data.outb = data.outb[sent:]      
 
 def barPlot(host=HOST, port = PORT,waittime = 0.5, multi = True, connid = 'plotLoop'):
-    host,port,connid, waittime, _, _log =getArgs(host=host,port=port,connid=connid, waitTime=waittime,plotTime=1, log = False)
+    host,port,connid, waittime, _, _log, _li =getArgs(host=host,port=port,connid=connid, waitTime=waittime,plotTime=1, log = False)
     fig,(ax1,ax2) = plt.subplots(2,1)
 
     while True:
@@ -217,8 +219,8 @@ def writeLog(file,string):
     f.write(string)
     f.close()
 
-def timePlot(host=HOST, port = PORT,waittime = 0.5, multi = True, connid = 'timePlot',xlim = 1, log = True):
-    host,port,connid, waittime, xlim, log = getArgs(host=host,port=port,connid=connid, waitTime=waittime,plotTime=xlim, log = log)
+def timePlot(host=HOST, port = PORT,waittime = 0.5, multi = True, connid = 'timePlot',xlim = 1, log = True, logInterval = 5):
+    host,port,connid, waittime, xlim, log, logInterval = getArgs(host=host,port=port,connid=connid, waitTime=waittime,plotTime=xlim, log = log, logInterval=logInterval)
     measure = {}
     c=0
     fig,ax = plt.subplots()
@@ -227,6 +229,7 @@ def timePlot(host=HOST, port = PORT,waittime = 0.5, multi = True, connid = 'time
     homedir = pathlib.Path.home()
     logdir = f'{homedir}/bronkhorstClientLog/'
     t = time.time()
+    tlog = 0
     dt = datetime.fromtimestamp(t)
     dtstring = f'{dt.year:04d}{dt.month:02d}{dt.day:02d}'
     logfile = f'{logdir}/{dtstring}.log'
@@ -260,7 +263,7 @@ def timePlot(host=HOST, port = PORT,waittime = 0.5, multi = True, connid = 'time
             if tlist[-1] -tlist[0] > xlims:
                 tlist.pop(0)
             tlistPlot = [t-tlist[-1] for t in tlist]
-            if log:
+            if log and time.time() - tlog > logInterval:
                 curtime = time.time()
                 dt = datetime.fromtimestamp(curtime)
                 dtstring = f'{dt.year:04d}/{dt.month:02d}/{dt.day:02d}_{dt.hour:02d}:{dt.minute:02d}:{dt.second:02d}'
@@ -278,6 +281,7 @@ def timePlot(host=HOST, port = PORT,waittime = 0.5, multi = True, connid = 'time
                     headerString = newHeaderString
                     writeLog(logfile,headerString)
                 writeLog(logfile,logString)
+                tlog = time.time()
                     
             for a in measure:
                 ax.plot(tlistPlot,measure[a],'o-',label = userTags[a],markersize = 3)
