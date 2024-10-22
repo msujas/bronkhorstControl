@@ -206,7 +206,7 @@ def barPlot(host=HOST, port = PORT,waittime = 0.5, multi = True, connid = 'plotL
             df.plot.bar(x='User tag', y='fMeasure',ax=ax1)
             df.plot.bar(x='User tag', y='fSetpoint',ax=ax2)
             plt.tight_layout()
-            plt.show(block = False)
+            #plt.show(block = False)
             plt.pause(waittime)
             ax1.cla()
             ax2.cla()
@@ -291,7 +291,7 @@ def timePlot(host=HOST, port = PORT,waittime = 0.5, multi = True, connid = 'time
             ax.set_ylabel('MFC/BPR measure')
 
             plt.tight_layout()
-            plt.show(block = False)
+            #plt.show(block = False)
             plt.pause(waittime)
             ax.cla()
         except (KeyboardInterrupt,AttributeError):
