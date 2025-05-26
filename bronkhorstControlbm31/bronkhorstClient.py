@@ -203,14 +203,18 @@ def barPlot(host=HOST, port = PORT,waittime = 0.5, multi = True, connid = 'plotL
 
             df = MFCclient(1,host,port,multi=multi, connid=connid).pollAll()
             df = df.astype({'fMeasure':float, 'fSetpoint':float})
-            df.plot.bar(x='User tag', y='fMeasure',ax=ax1)
-            df.plot.bar(x='User tag', y='fSetpoint',ax=ax2)
+            p1 = ax1.bar(df['User tag'].values, df['fMeasure'].values)
+            p2 = ax2.bar(df['User tag'].values, df['fSetpoint'].values)
+            #p1 = df.plot.bar(x='User tag', y='fMeasure',ax=ax1)
+            #p2 = df.plot.bar(x='User tag', y='fSetpoint',ax=ax2)
+            ax1.bar_label(p1, fmt = '%.2f')
             plt.tight_layout()
             #plt.show(block = False)
             plt.pause(waittime)
             ax1.cla()
             ax2.cla()
-        except (KeyboardInterrupt, AttributeError):
+        except (KeyboardInterrupt, AttributeError) as e:
+            print(e)
             plt.close(fig)
             return
         
