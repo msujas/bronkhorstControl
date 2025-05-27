@@ -109,6 +109,13 @@ class MFC():
             dfstring += '\n'
             dfstring += ';'.join([str(x) for x in df.loc[i]])
         return dfstring
+    def readMeasure_pct(self):
+        m = self.readParam('Measure')
+        m_pct = m*100/32000
+        return m_pct
+    def readSetpoint_pct(self):
+        sp = self.readParam('Setpoint')
+        sp_pct = sp*100/32000
     def strToMethod(self,inputString):
         stringSplit = inputString.split(';')
         #address = stringSplit[0]
@@ -120,7 +127,8 @@ class MFC():
                      'getAddresses': self.getAddresses, 'pollAll':self.pollAll,
                      'readControlMode': self.readControlMode, 'writeControlMode': self.writeControlMode,
                      'readFluidType':self.readFluidType, 'writeFluidIndex':self.writeFluidIndex,
-                     'writeName':self.writeName}
+                     'writeName':self.writeName, 'readMeasure_pct': self.readMeasure_pct,
+                     'readSetpoint_pct': self.readSetpoint_pct}
         method = methodDct[methodName]
         val = method(*args)
         return val

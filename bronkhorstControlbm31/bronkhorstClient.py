@@ -101,6 +101,14 @@ class MFCclient():
         string = self.makeMessage(self.address, 'writeFluidIndex',value)
         data = self.sendMessage(string)
         return data
+    def readMeasure_pct(self):
+        string = self.makeMessage(self.address,'readMeasure_pct')
+        data = self.sendMessage(string)
+        return float(data)
+    def readSetpoint_pct(self):
+        string = self.makeMessage(self.address,'readSetpoint_pct')
+        data = self.sendMessage(string)
+        return float(data)
     def pollAll(self):
         string = self.makeMessage(self.address, 'pollAll')
         data = self.sendMessage(string)
