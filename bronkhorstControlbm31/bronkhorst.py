@@ -116,6 +116,7 @@ class MFC():
     def readSetpoint_pct(self):
         sp = self.readParam('Setpoint')
         sp_pct = sp*100/32000
+        return sp_pct
     def strToMethod(self,inputString):
         stringSplit = inputString.split(';')
         #address = stringSplit[0]
