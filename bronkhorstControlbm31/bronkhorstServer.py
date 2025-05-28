@@ -1,5 +1,5 @@
 import socket
-from bronkhorstControlbm31.bronkhorst import MFC, startMfc
+from bronkhorstControlbm31.bronkhorst import MFC, startMfc, configfile
 import os, pathlib
 import argparse
 import selectors, types
@@ -25,8 +25,7 @@ def isValidIP(ipaddress):
     except:
         return False
     
-homedir = pathlib.Path.home()
-configfile = f'{homedir}/bronkhorstServerConfig/comConfg.log'
+
 if not os.path.exists(os.path.dirname(configfile)):
     os.makedirs(os.path.dirname(configfile))
 
@@ -109,7 +108,7 @@ def accept_wrapper(sock,sel):
     events = selectors.EVENT_READ | selectors.EVENT_WRITE
     sel.register(conn,events,data=data)
 
-def service_connection(key,mask,sel,mfcMain):
+def service_connection(key,mask,sel,mfcMain, com):
     sock = key.fileobj
     data = key.data
     bytemessage = b''
@@ -128,7 +127,7 @@ def service_connection(key,mask,sel,mfcMain):
             strmessage = data.outb.decode()
             try:
                 address = int(strmessage.split(';')[0])
-                mainmessage = MFC(address,mfcMain).strToMethod(strmessage)
+                mainmessage = MFC(address,mfcMain, com).strToMethod(strmessage)
                 #endmessageMarker = '!'
                 fullmessage = f'{mainmessage}!'
                 bytemessage += bytes(fullmessage,encoding='utf-8')
@@ -174,7 +173,7 @@ def multiServer():
                 if key.data is None:
                     accept_wrapper(key.fileobj,sel)
                 else:
-                    service_connection(key, mask,sel,mfcMain)
+                    service_connection(key, mask,sel,mfcMain, com)
 
     except KeyboardInterrupt:
         print("caught keyboard interrupt, exiting")

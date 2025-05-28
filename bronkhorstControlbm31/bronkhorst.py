@@ -1,5 +1,9 @@
 import propar
 import pandas as pd
+import pathlib, os
+
+homedir = pathlib.Path.home()
+configfile = f'{homedir}/bronkhorstServerConfig/comConfg.log'
 
 def getParamDF():
     paramDF = pd.DataFrame(columns=['proc_nr','parm_nr','parm_type'])
@@ -26,12 +30,19 @@ def startMfc(com = 'COM1'):
 
 
 class MFC():
-    def __init__(self,address, mfcMain, com):
+    def __init__(self,address, mfcMain, com = None):
         self.address = address
         self.mfcMain = mfcMain
-        self.com = com
+        self.com = self.getCom(com)
     def __str__(self):
         return self.readName()
+    def getCom(self, com=None):
+        if not com and os.path.exists(configfile):
+            f = open(configfile,'r')
+            comno = f.read()
+            f.close()
+            return f'COM{comno}'
+        return com
     def getNumbers(self,name):
         proc_nr = paramDF.loc[name]['proc_nr']
         parm_nr = paramDF.loc[name]['parm_nr']
