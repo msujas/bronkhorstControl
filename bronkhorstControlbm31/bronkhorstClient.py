@@ -118,6 +118,10 @@ class MFCclient():
         df = pd.DataFrame(data = array,columns=columns)
         df = df.astype({'address':'int8'})
         return df
+    def wink(self):
+        string = self.makeMessage(self.address,'wink')
+        data = self.sendMessage(string)
+        return data
     def sendMessage(self,message):
         bytemessage = bytes(message,encoding='utf-8')
         if not self.multi:

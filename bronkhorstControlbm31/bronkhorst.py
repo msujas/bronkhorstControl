@@ -24,10 +24,12 @@ def startMfc(com = 'COM1'):
     mfcMain = propar.instrument(com)
     return mfcMain
 
+
 class MFC():
-    def __init__(self,address, mfcMain):
+    def __init__(self,address, mfcMain, com):
         self.address = address
         self.mfcMain = mfcMain
+        self.com = com
     def __str__(self):
         return self.readName()
     def getNumbers(self,name):
@@ -120,6 +122,8 @@ class MFC():
         sp = self.readParam('Setpoint')
         sp_pct = sp*100/32000
         return sp_pct
+    def wink(self):
+        return propar.instrument(self.com, self.address).wink()
     def strToMethod(self,inputString):
         stringSplit = inputString.split(';')
         #address = stringSplit[0]
@@ -132,7 +136,7 @@ class MFC():
                      'readControlMode': self.readControlMode, 'writeControlMode': self.writeControlMode,
                      'readFluidType':self.readFluidType, 'writeFluidIndex':self.writeFluidIndex,
                      'writeName':self.writeName, 'readMeasure_pct': self.readMeasure_pct,
-                     'readSetpoint_pct': self.readSetpoint_pct}
+                     'readSetpoint_pct': self.readSetpoint_pct, 'wink':self.wink}
         method = methodDct[methodName]
         val = method(*args)
         return val

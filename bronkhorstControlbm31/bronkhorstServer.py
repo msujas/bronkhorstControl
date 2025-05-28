@@ -92,7 +92,7 @@ def run(port = PORT):
                     try:
                         address = int(strdata.split(';')[0])
                         print(strdata)
-                        result = MFC(address, mfcMain).strToMethod(strdata)
+                        result = MFC(address, mfcMain, com).strToMethod(strdata)
                         result += '!'
                         print(result)
                     except (ValueError, KeyError):
