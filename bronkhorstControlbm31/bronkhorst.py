@@ -134,6 +134,9 @@ class MFC():
         sp_pct = sp*100/32000
         return sp_pct
     def wink(self):
+        if not self.com:
+            print('com needs to be defined to run this')
+            return
         return propar.instrument(self.com, self.address).wink()
     def strToMethod(self,inputString):
         stringSplit = inputString.split(';')
