@@ -120,6 +120,7 @@ def service_connection(key,mask,sel,mfcMain, com):
         try:
             recvData = sock.recv(1024)
         except (ConnectionAbortedError, ConnectionResetError):
+            print(f'connection lost with client: {data.addr}')
             recvData = b''
         if recvData:
             print(recvData)

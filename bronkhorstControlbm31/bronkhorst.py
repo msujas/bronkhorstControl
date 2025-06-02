@@ -133,6 +133,9 @@ class MFC():
         sp = self.readParam('Setpoint')
         sp_pct = sp*100/32000
         return sp_pct
+    def writeSetpoint_pct(self,value_pct):
+        value = int(value_pct*32000/100)
+        self.writeParam('Setpoint', value)
     def wink(self):
         if not self.com:
             print('com needs to be defined to run this')
