@@ -119,7 +119,7 @@ def service_connection(key,mask,sel,mfcMain, com):
     if mask & selectors.EVENT_READ:
         try:
             recvData = sock.recv(1024)
-        except ConnectionAbortedError:
+        except (ConnectionAbortedError, ConnectionResetError):
             recvData = b''
         if recvData:
             print(recvData)
