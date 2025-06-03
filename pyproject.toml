@@ -17,8 +17,9 @@ classifiers = [
 "Programming Language :: Python :: 3.12"]
 
 [project.scripts]
-bronkhorstServer = "bronkhorstControlbm31.bronkhorstServer:run"
+bronkhorstServer = "bronkhorstControlbm31.bronkhorstServer:multiServer"
 bronkhorstMultiServer = "bronkhorstControlbm31.bronkhorstServer:multiServer"
+bronkhorstSingleServer = "bronkhorstControlbm31.bronkhorstServer:run"
 timePlot = "bronkhorstControlbm31.bronkhorstClient:timePlot"
 barPlot = "bronkhorstControlbm31.bronkhorstClient:barPlot"
 

@@ -204,7 +204,7 @@ class MFCclient():
                 sent = sock.send(data.outb)  # Should be ready to write
                 data.outb = data.outb[sent:]      
 
-def barPlot(host=HOST, port = PORT,waittime = 0.5, multi = True, connid = 'plotLoop'):
+def barPlot(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'plotLoop'):
     host,port,connid, waittime, _, _log, _li =getArgs(host=host,port=port,connid=connid, waitTime=waittime,plotTime=1, log = False)
     fig,(ax1,ax2) = plt.subplots(2,1)
 
@@ -234,7 +234,7 @@ def writeLog(file,string):
     f.write(string)
     f.close()
 
-def timePlot(host=HOST, port = PORT,waittime = 0.5, multi = True, connid = 'timePlot',xlim = 1, log = True, logInterval = 5):
+def timePlot(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'timePlot',xlim = 1, log = True, logInterval = 5):
     host,port,connid, waittime, xlim, log, logInterval = getArgs(host=host,port=port,connid=connid, waitTime=waittime,plotTime=xlim, log = log, logInterval=logInterval)
     measure = {}
     c=0

@@ -69,7 +69,6 @@ def getArgs(port=PORT):
     return com, port, host
 
 def run(port = PORT):
-
     com, port, host = getArgs()
     mfcMain = startMfc(com)
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -83,7 +82,8 @@ def run(port = PORT):
                 while True:
                     try:
                         data = conn.recv(1024)
-                    except ConnectionAbortedError:
+                    except (ConnectionAbortedError, ConnectionResetError):
+                        print('connection lost with client')
                         data = b''
                     if not data:
                         break
@@ -98,7 +98,6 @@ def run(port = PORT):
                         byteResult = b'invalid input!'
                     byteResult = bytes(str(result),encoding = 'utf-8')
                     conn.sendall(byteResult)
-
 
 def accept_wrapper(sock,sel):
     conn,addr =sock.accept()
@@ -151,9 +150,6 @@ def service_connection(key,mask,sel,mfcMain, com):
                 print('connection to client lost')
                 bytemessage = b''
                 closeConnection()
-
-
-
 
 def multiServer():
     com,port, host = getArgs()
