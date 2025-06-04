@@ -66,7 +66,7 @@ def getArgs(port=PORT):
         print('host must must be "local", "remote", "remoteip" or nothing (local)')
         return
     print(host)
-    return com, port, host
+    return com, PORT, host
 
 def run(port = PORT):
     com, port, host = getArgs()
