@@ -8,6 +8,8 @@ bronkhorstServer remote -c 7
 ```
 Use remoteip or the IP address itself instead of remote to use the IP address as the hostname, sometimes it works better in cases where the PC has multiple connections.
 
+Use ctrl+c to close the server. May take 10 s to take effect.
+
 To send commands import the MFCclient class and connect function, then run it's methods. Initial arguments are MFC address (will be an integer), the IP address (default localhost) and the port (default is that in the script). 
 
 E.g.
@@ -28,7 +30,7 @@ I should mention this article https://realpython.com/python-sockets/ and the ass
 
 Can also be controlled more directly, without the server, using the MFC class in the bronkhorst.py module, but the plotting programs won't work in that case, and it must be on the same PC as the MFCs. e.g.
 ```python
-from bronkhorstControlbm31.bronkhorst import MFC, startMfc
+from bronkhorstControlbm31 import MFC, startMfc
 
 mfcmain = startMfc()
 mfc1 = MFC(1,mfcmain)

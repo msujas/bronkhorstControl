@@ -1,6 +1,6 @@
 import socket
 from bronkhorstControlbm31.bronkhorst import MFC, startMfc, configfile
-import os, pathlib
+import os
 import argparse
 import selectors, types
 import subprocess
@@ -18,10 +18,7 @@ def getIP():
 def isValidIP(ipaddress):
     try:
         hostname = socket.gethostbyaddr(ipaddress)[0].split('.')[0]
-        if hostname.lower() == socket.gethostname().lower():
-            return True
-        else:
-            return False
+        return hostname.lower() == socket.gethostname().lower()
     except:
         return False
     
@@ -45,14 +42,23 @@ def getArgs(port=PORT):
                                                                 'If unsure, check in Device Manager under Ports. Default is last used'))
     parser.add_argument('-p','--port',default=port, type=int, help= ('port number. There is a default, but you can choose. Anything from '
                                                                 '49152-65535 should be fine'))
+    #parser.add_argument('-a','--accepted-hosts', default = None, type = str, help= ('list of comma separated hosts that can be'
+    #                                                                                'accepted (default None - accept all)'))
+
     args = parser.parse_args()
     f = open(configfile,'w')
     f.write(str(args.com))
     f.close()
     com = f'COM{args.com}'
     PORT = args.port
+    print(f'MFCs on {com}')
     print(f'port: {PORT}')
     host = args.host
+    '''
+    acceptedHosts = None
+    if args.accepted_hosts:
+        acceptedHosts = args.accepted_hosts.split(',')
+    '''
     if host == 'local':
         host = 'localhost'
     elif host == 'remote':
@@ -134,7 +140,7 @@ def service_connection(key,mask,sel,mfcMain, com):
             except (ValueError, KeyError):
                 bytemessage = b'invalid message!'
             except ConnectionResetError:
-                print('connection to client lost')
+                print(f'connection lost with client: {data.addr}')
                 bytemessage = b''
                 closeConnection()
         else:
@@ -142,18 +148,24 @@ def service_connection(key,mask,sel,mfcMain, com):
     if mask & selectors.EVENT_WRITE:
 
         if bytemessage:
-            print(f'sending {bytemessage} to {data.addr}')
+            print(f'sending data to {data.addr}')
             try:
                 sent = sock.send(bytemessage)
                 bytemessage = bytemessage[sent:]
             except ConnectionResetError:
-                print('connection to client lost')
+                print(f'connection lost with client: {data.addr}')
                 bytemessage = b''
                 closeConnection()
 
 def multiServer():
     com,port, host = getArgs()
-    
+    '''
+    if not acceptedHosts:
+        ahstring = 'all'
+    else:
+        ahstring = ','.join(acceptedHosts)
+    print(f'accepted hosts: {ahstring}')
+    '''
     mfcMain = startMfc(com)
     sel = selectors.DefaultSelector()
     print('running multiServer')
@@ -165,18 +177,16 @@ def multiServer():
 
     try:
         while True:
-            events = sel.select(timeout=None)
+            events = sel.select(timeout=10)
             for key, mask in events:
                 if key.data is None:
                     accept_wrapper(key.fileobj,sel)
                 else:
                     service_connection(key, mask,sel,mfcMain, com)
-
     except KeyboardInterrupt:
         print("caught keyboard interrupt, exiting")
     finally:
         sel.close()
-
 
 if __name__ == '__main__':
     run()
