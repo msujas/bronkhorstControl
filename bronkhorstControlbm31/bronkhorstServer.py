@@ -75,15 +75,25 @@ def getArgs(port=PORT):
     return com, PORT, host, acceptedHosts
 
 def run(port = PORT):
-    com, port, host = getArgs()
+    com, port, host, acceptedHosts = getArgs()
+    if not acceptedHosts:
+        ahstring = 'all'
+    else:
+        ahstring = ','.join(acceptedHosts)
+        acceptedIPs = [socket.gethostbyname(h) for h in acceptedHosts]
+    print(f'accepted hosts: {ahstring}')
+    print('running single client server')
     mfcMain = startMfc(com)
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-
         s.bind((host, port))
         s.listen()
         while True:
             conn, addr = s.accept()
             with conn:
+                hostName = addr[0]
+                if acceptedHosts and hostName not in acceptedHosts and hostName not in acceptedIPs:
+                    print(f'{hostName} not in accepted hosts, closing connection')
+                    continue
                 print(f"Connected by {addr}")
                 while True:
                     try:
@@ -99,10 +109,11 @@ def run(port = PORT):
                         print(strdata)
                         result = MFC(address, mfcMain, com).strToMethod(strdata)
                         result += '!'
-                        print(result)
+                        
                     except (ValueError, KeyError):
                         byteResult = b'invalid input!'
                     byteResult = bytes(str(result),encoding = 'utf-8')
+                    print(f'sending data to {addr}')
                     conn.sendall(byteResult)
 
 def accept_wrapper(sock,sel):

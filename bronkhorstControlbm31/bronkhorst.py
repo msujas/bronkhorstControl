@@ -119,12 +119,17 @@ class MFC():
         df['Setpoint'] = df['Setpoint'].apply(lambda x: x*100/32000)
         df = df.rename({'Measure':'Measure_pct', 'Setpoint':'Setpoint_pct'}, axis = 1)
         self.paramDf = df
+        return df
+
+    def pollAllServer(self):
+        df = self.pollAll()
         print(df)
         dfstring = ';'.join(df.columns)
         for i in df.index.values:
             dfstring += '\n'
             dfstring += ';'.join([str(x) for x in df.loc[i]])
         return dfstring
+    
     def readMeasure_pct(self):
         m = self.readParam('Measure')
         m_pct = m*100/32000
@@ -149,7 +154,7 @@ class MFC():
         methodDct = {'readName': self.readName, 'readParam':self.readParam,
                      'readSetpoint':self.readSetpoint, 'writeSetpoint':self.writeSetpoint,
                      'writeParam':self.writeParam, 'readFlow':self.readFlow,
-                     'getAddresses': self.getAddresses, 'pollAll':self.pollAll,
+                     'getAddresses': self.getAddresses, 'pollAll':self.pollAllServer,
                      'readControlMode': self.readControlMode, 'writeControlMode': self.writeControlMode,
                      'readFluidType':self.readFluidType, 'writeFluidIndex':self.writeFluidIndex,
                      'writeName':self.writeName, 'readMeasure_pct': self.readMeasure_pct,

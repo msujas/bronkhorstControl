@@ -109,12 +109,19 @@ class MFCclient():
         string = self.makeMessage(self.address,'readSetpoint_pct')
         data = self.sendMessage(string)
         return float(data)
+    def strToData(self,datastring : str):
+        if datastring.isdigit():
+            return int(datastring)
+        elif datastring.replace('.','',1).isdigit():
+            return float(datastring)
+        else:
+            return datastring
     def pollAll(self):
         string = self.makeMessage(self.address, 'pollAll')
         data = self.sendMessage(string)
         datalines = data.split('\n')
         columns = datalines[0].split(';')
-        array = [[float(i) if i.replace('.','',1).isdigit() else i for i in line.split(';')] for line in datalines[1:] if line]
+        array = [[self.strToData(i) for i in line.split(';')] for line in datalines[1:] if line]
         df = pd.DataFrame(data = array,columns=columns)
         df = df.astype({'address':'int8'})
         return df
