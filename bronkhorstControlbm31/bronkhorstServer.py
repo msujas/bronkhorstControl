@@ -42,8 +42,8 @@ def getArgs(port=PORT):
                                                                 'If unsure, check in Device Manager under Ports. Default is last used'))
     parser.add_argument('-p','--port',default=port, type=int, help= ('port number. There is a default, but you can choose. Anything from '
                                                                 '49152-65535 should be fine'))
-    #parser.add_argument('-a','--accepted-hosts', default = None, type = str, help= ('list of comma separated hosts that can be'
-    #                                                                                'accepted (default None - accept all)'))
+    parser.add_argument('-a','--accepted-hosts', default = None, type = str, help= ('list of comma separated hosts that can be'
+                                                                                    'accepted (default - accept all). E.g. -a pc1,pc2'))
 
     args = parser.parse_args()
     f = open(configfile,'w')
@@ -54,11 +54,11 @@ def getArgs(port=PORT):
     print(f'MFCs on {com}')
     print(f'port: {PORT}')
     host = args.host
-    '''
+    
     acceptedHosts = None
     if args.accepted_hosts:
         acceptedHosts = args.accepted_hosts.split(',')
-    '''
+    
     if host == 'local':
         host = 'localhost'
     elif host == 'remote':
@@ -72,7 +72,7 @@ def getArgs(port=PORT):
         print('host must must be "local", "remote", "remoteip" or nothing (local)')
         return
     print(host)
-    return com, PORT, host
+    return com, PORT, host, acceptedHosts
 
 def run(port = PORT):
     com, port, host = getArgs()
@@ -113,14 +113,22 @@ def accept_wrapper(sock,sel):
     events = selectors.EVENT_READ | selectors.EVENT_WRITE
     sel.register(conn,events,data=data)
 
-def service_connection(key,mask,sel,mfcMain, com):
+def service_connection(key,mask,sel,mfcMain, com, acceptedHosts = None):
     sock = key.fileobj
     data = key.data
+
     bytemessage = b''
     def closeConnection():
         print(f'closing connection to {data.addr}')
         sel.unregister(sock)
         sock.close()
+    if acceptedHosts:
+        acceptedIPs = [socket.gethostbyname(h) for h in acceptedHosts]
+        hostName = data.addr[0]
+        if hostName not in acceptedHosts and hostName not in acceptedIPs:
+            print('host name not in accepted hosts')
+            closeConnection()
+            return
     if mask & selectors.EVENT_READ:
         try:
             recvData = sock.recv(1024)
@@ -158,14 +166,13 @@ def service_connection(key,mask,sel,mfcMain, com):
                 closeConnection()
 
 def multiServer():
-    com,port, host = getArgs()
-    '''
+    com,port, host, acceptedHosts = getArgs()
+    
     if not acceptedHosts:
         ahstring = 'all'
     else:
         ahstring = ','.join(acceptedHosts)
     print(f'accepted hosts: {ahstring}')
-    '''
     mfcMain = startMfc(com)
     sel = selectors.DefaultSelector()
     print('running multiServer')
@@ -182,7 +189,7 @@ def multiServer():
                 if key.data is None:
                     accept_wrapper(key.fileobj,sel)
                 else:
-                    service_connection(key, mask,sel,mfcMain, com)
+                    service_connection(key, mask,sel,mfcMain, com, acceptedHosts)
     except KeyboardInterrupt:
         print("caught keyboard interrupt, exiting")
     finally:
