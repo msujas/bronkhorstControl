@@ -106,9 +106,15 @@ class MFC():
         x = self.writeParam('Fluidset index',value)
         self.readFluidType()
         return x
+    def readValve(self):
+        value = self.readParam('Valve output')
+        valve = value/2**24
+        return valve
+    
     def pollAll(self):
         self.getAddresses()
-        params = ['User tag', 'Control mode', 'Fluid name', 'Fluidset index','fMeasure', 'fSetpoint', 'Measure', 'Setpoint']
+        params = ['User tag', 'Control mode', 'Fluid name', 'Fluidset index','fMeasure', 'fSetpoint', 
+                  'Measure', 'Setpoint', 'Valve output']
         df = pd.DataFrame(columns=['address']+params)
         for a in self.addresses:
             values = [a]
@@ -117,6 +123,7 @@ class MFC():
             df.loc[a] = values
         df['Measure'] = df['Measure'].apply(lambda x: x*100/32000)
         df['Setpoint'] = df['Setpoint'].apply(lambda x: x*100/32000)
+        df['Valve output'] = df['Valve output'].apply(lambda x: x/2**24)
         df = df.rename({'Measure':'Measure_pct', 'Setpoint':'Setpoint_pct'}, axis = 1)
         self.paramDf = df
         return df
@@ -158,7 +165,8 @@ class MFC():
                      'readControlMode': self.readControlMode, 'writeControlMode': self.writeControlMode,
                      'readFluidType':self.readFluidType, 'writeFluidIndex':self.writeFluidIndex,
                      'writeName':self.writeName, 'readMeasure_pct': self.readMeasure_pct,
-                     'readSetpoint_pct': self.readSetpoint_pct, 'wink':self.wink}
+                     'readSetpoint_pct': self.readSetpoint_pct, 'wink':self.wink,
+                     'readValve': self.readValve}
         method = methodDct[methodName]
         val = method(*args)
         return val

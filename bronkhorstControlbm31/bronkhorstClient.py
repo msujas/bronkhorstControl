@@ -9,6 +9,7 @@ from datetime import datetime
 import argparse
 import os, pathlib
 from bronkhorstControlbm31.bronkhorstServer import PORT, HOST
+from PyQt6 import QtCore
 
 
 def getArgs(host=HOST, port=PORT, connid = socket.gethostname(),waitTime = 0.5, plotTime = 1, log = True, logInterval = 5):
@@ -107,6 +108,10 @@ class MFCclient():
         return float(data)
     def readSetpoint_pct(self):
         string = self.makeMessage(self.address,'readSetpoint_pct')
+        data = self.sendMessage(string)
+        return float(data)
+    def readValve(self):
+        string = self.makeMessage(self.address,'readValve')
         data = self.sendMessage(string)
         return float(data)
     def strToData(self,datastring : str):
@@ -209,7 +214,59 @@ class MFCclient():
             if data.outb:
                 print(f"Sending {data.outb} to connection {data.connid}")
                 sent = sock.send(data.outb)  # Should be ready to write
-                data.outb = data.outb[sent:]      
+                data.outb = data.outb[sent:]
+
+'''
+class Worker(QtCore.QThread):
+    outputs = QtCore.pyqtSignal(list)
+    def __init__(self, host, port):
+        super(Worker,self).__init__()
+        self.host = host
+        self.port = port
+    def run(self):
+        while True:
+            df = MFCclient(1,self.host,self.port).pollAll()
+            self.outputs.emit(df)
+    def stop(self):
+        self.terminate()
+def getdf(df):
+    print(df)
+
+def startWorker(host=HOST,port=PORT):
+    thread = Worker(host,port)
+    thread.start()
+    thread.outputs.connect(getdf)
+'''
+
+import threading
+def gettmpDFfile():
+    homedir = pathlib.Path.home()
+    filedir = f'{homedir}/bronkhorstClientLog/'
+    return f'{filedir}/tmpdf.txt'
+
+def getdf(host,port):
+    df = MFCclient(1,host,port).pollAll()
+    df.to_csv(gettmpDFfile(),sep = ';', index=False)
+    return df
+
+def getdfThread(host,port=PORT, connid= socket.gethostname()):
+    t = threading.Thread(target=getdf, args = (host,port))
+    t.start()
+    t.join()
+    fname = gettmpDFfile()
+    df = pd.read_csv(fname,sep=';')
+    return df
+
+def barPlotSingle(df, ax1,ax2, title1 = True, title2 = True):
+    p1 = ax1.bar(df['User tag'].values, df['fMeasure'].values)
+    p2 = ax2.bar(df['User tag'].values, df['fSetpoint'].values)
+    ax1.bar_label(p1, fmt = '%.2f')
+    ax2.bar_label(p2, fmt = '%.2f')
+    if title1:
+        ax1.set_ylabel('MFC/BPR Measure')
+    if title2:
+        ax2.set_ylabel('MFC/BPR Setpoint')
+
 
 def barPlot(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'plotLoop'):
     host,port,connid, waittime, _, _log, _li =getArgs(host=host,port=port,connid=connid, waitTime=waittime,plotTime=1, log = False)
@@ -217,18 +274,13 @@ def barPlot(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'plotLoo
 
     while True:
         try:
-            ax1.set_ylabel('MFC/BPR Measure')
-            ax2.set_ylabel('MFC/BPR Setpoint')
-
             df = MFCclient(1,host,port,multi=multi, connid=connid).pollAll()
-            df = df.astype({'fMeasure':float, 'fSetpoint':float})
-            p1 = ax1.bar(df['User tag'].values, df['fMeasure'].values)
-            p2 = ax2.bar(df['User tag'].values, df['fSetpoint'].values)
-            ax1.bar_label(p1, fmt = '%.2f')
-            ax2.bar_label(p2, fmt = '%.2f')
+            #df = getdfThread(host,port,connid)
+            barPlotSingle(df,ax1,ax2)
             plt.tight_layout()
-            #plt.show(block = False)
+            plt.show(block = False)
             plt.pause(waittime)
+            #time.sleep(waittime)
             ax1.cla()
             ax2.cla()
         except (KeyboardInterrupt, AttributeError) as e:
@@ -241,6 +293,66 @@ def writeLog(file,string):
     f.write(string)
     f.close()
 
+def logMFCs(logfile, df, headerString):
+    curtime = time.time()
+    dt = datetime.fromtimestamp(curtime)
+    dtstring = f'{dt.year:04d}/{dt.month:02d}/{dt.day:02d}_{dt.hour:02d}:{dt.minute:02d}:{dt.second:02d}'
+    logString = f'{dtstring} {int(curtime)}'
+    newHeaderString = f'datetime unixTime(s)'
+    for i in df.index.values:
+        name = df.loc[i]['User tag'].replace(' ','')
+        newHeaderString += f' {name}Setpoint {name}Measure'
+        meas = df.loc[i]['fMeasure']
+        sp = df.loc[i]['fSetpoint']
+        logString += f' {sp:.3f} {meas:.3f}'
+    newHeaderString += '\n'
+    logString += '\n'                 
+    if newHeaderString != headerString:
+        headerString = newHeaderString
+        writeLog(logfile,headerString)
+    writeLog(logfile,logString)
+
+
+def timePlotSingle(df, ax, measure, tlist, xlim, colName = 'fMeasure', ylabel = 'MFC/BPR measure', title = True, xlabel = True):
+    xlims = xlim*3600
+    userTags = df['User tag'].to_list()
+    for i in df.index.values:
+        measure[i].append(df.loc[i][colName])
+        if tlist[-1] -tlist[0] > xlims:
+            measure[a].pop(0)
+
+    tlistPlot = [t-tlist[-1] for t in tlist] 
+    for a in measure:
+        ax.plot(tlistPlot,measure[a],'o-',label = userTags[a],markersize = 3)
+    if title:
+        ax.set_title(f'measure, tscale: {xlim} hours')
+    ax.legend()
+    if xlabel:
+        ax.set_xlabel('t-current time (s)')
+    ax.set_ylabel(ylabel)
+
+def getLogFile():
+    homedir = pathlib.Path.home()
+    logdir = f'{homedir}/bronkhorstClientLog/'
+    t = time.time()
+    dt = datetime.fromtimestamp(t)
+    dtstring = f'{dt.year:04d}{dt.month:02d}{dt.day:02d}'
+    logfile = f'{logdir}/{dtstring}.log'
+    if not os.path.exists(logdir):
+        os.makedirs(logdir)
+    return logfile
+
+def logHeader(logfile, df):
+    names = []
+    headerString = f'datetime unixTime(s)'
+    for i in df.index.values:
+        name = df.loc[i]['User tag'].replace(' ','_')
+        names.append(name)
+        headerString += f' {name}Setpoint {name}Measure'
+    headerString += '\n'
+    writeLog(logfile,headerString)
+    return headerString
+
 def timePlot(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'timePlot',xlim = 1, log = True, logInterval = 5):
     host,port,connid, waittime, xlim, log, logInterval = getArgs(host=host,port=port,connid=connid, waitTime=waittime,plotTime=xlim, log = log, logInterval=logInterval)
     measure = {}
@@ -248,15 +360,9 @@ def timePlot(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'timePl
     fig,ax = plt.subplots()
     tlist = []
     xlims = xlim*3600
-    homedir = pathlib.Path.home()
-    logdir = f'{homedir}/bronkhorstClientLog/'
-    t = time.time()
+    if log:
+        logfile = getLogFile()
     tlog = 0
-    dt = datetime.fromtimestamp(t)
-    dtstring = f'{dt.year:04d}{dt.month:02d}{dt.day:02d}'
-    logfile = f'{logdir}/{dtstring}.log'
-    if not os.path.exists(logdir) and log:
-        os.makedirs(logdir)
 
     while True:
         try:
@@ -264,59 +370,86 @@ def timePlot(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'timePl
             df = MFCclient(1,host,port,multi=multi, connid=connid).pollAll()
             df = df.astype({'fMeasure':float})
             if c == 0:
-                for a in df['address'].values:
-                    measure[a] = []
+                for i in df.index.values:
+                    measure[i] = []
                 c = 1
                 if log:
-                    names = []
-                    headerString = f'datetime unixTime(s)'
-                    for i in df.index.values:
-                        name = df.loc[i]['User tag'].replace(' ','_')
-                        names.append(name)
-                        headerString += f' {name}Setpoint {name}Measure'
-                    headerString += '\n'
-                    writeLog(logfile,headerString)
-            userTags = {}
-            for a in measure:
-                userTags[a] = df[df['address'] == a]['User tag'].values[0]
-                measure[a].append(df[df['address'] == a]['fMeasure'].values[0])
-                if tlist[-1] -tlist[0] > xlims:
-                    measure[a].pop(0)
+                    headerString = logHeader(logfile, df)
+            timePlotSingle(df,ax,measure, tlist, xlims)
             if tlist[-1] -tlist[0] > xlims:
                 tlist.pop(0)
-            tlistPlot = [t-tlist[-1] for t in tlist]
             if log and time.time() - tlog > logInterval:
-                curtime = time.time()
-                dt = datetime.fromtimestamp(curtime)
-                dtstring = f'{dt.year:04d}/{dt.month:02d}/{dt.day:02d}_{dt.hour:02d}:{dt.minute:02d}:{dt.second:02d}'
-                logString = f'{dtstring} {int(curtime)}'
-                newHeaderString = f'datetime unixTime(s)'
-                for i in df.index.values:
-                    name = df.loc[i]['User tag'].replace(' ','')
-                    newHeaderString += f' {name}Setpoint {name}Measure'
-                    meas = df.loc[i]['fMeasure']
-                    sp = df.loc[i]['fSetpoint']
-                    logString += f' {sp:.3f} {meas:.3f}'
-                newHeaderString += '\n'
-                logString += '\n'                 
-                if newHeaderString != headerString:
-                    headerString = newHeaderString
-                    writeLog(logfile,headerString)
-                writeLog(logfile,logString)
+                logMFCs(logfile,df, headerString)
                 tlog = time.time()
-                    
-            for a in measure:
-                ax.plot(tlistPlot,measure[a],'o-',label = userTags[a],markersize = 3)
-            ax.set_title(f'measure, tscale: {xlim} hours')
-            ax.legend()
-            ax.set_xlabel('t-current time (s)')
-            ax.set_ylabel('MFC/BPR measure')
-
+                
             plt.tight_layout()
-            #plt.show(block = False)
+            plt.show(block = False)
             plt.pause(waittime)
             ax.cla()
         except (KeyboardInterrupt,AttributeError):
             plt.close(fig)
             return
+        
+def plotValvesBar(df, ax):
+    p1 = ax.bar(df['User tag'].values, df['Valve output'].values)
+    ax.bar_label(p1, fmt = '%.2f')
+    ax.set_ylabel('MFC/BPR Measure')
+
+
+        
+def plotAll(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'allPlot',xlim = 1, log = True, logInterval = 5):
+    host,port,connid, waittime, xlim, log, logInterval = getArgs(host=host,port=port,connid=connid, 
+                                                                 waitTime=waittime,plotTime=xlim, log = log, logInterval=logInterval)
+    plt.ion()
+    xlims = xlim*3600
+    fig, ax = plt.subplots(2,2, width_ratios=[1.3,1], gridspec_kw={'wspace': 0.15, 'hspace':0.15})
+    #fig.delaxes(ax[1,0])
+    df = MFCclient(1,host,port).pollAll()
+    measureFlow = {}
+    measureValve = {}
+    c=0
+    tlist = []
+    if log:
+        logfile = getLogFile()
+    tlog = 0
+    while True:
+        try:
+            tlist.append(time.time())
+            df = MFCclient(1,host,port).pollAll()
+            barPlotSingle(df,ax[0,1], ax[1,1], title1=False)
+            if c == 0:
+                for i in df.index.values:
+                    measureFlow[i] = []
+                    measureValve[i] = []
+
+                c=1
+                if log:
+                    headerString = logHeader(logfile,df)
+            timePlotSingle(df,ax[0,0],measureFlow,tlist,xlim, xlabel=False)
+
+            if log and time.time() - tlog > logInterval:
+                logMFCs(logfile, df, headerString)
+
+            #plt.tight_layout()
+            #plotValvesBar(df,ax[1,0])
+            timePlotSingle(df,ax[1,0], measureValve, tlist, xlim, colName='Valve output', ylabel='MFC/BPR valve output',
+                           title=False)
+            if tlist[-1] -tlist[0] > xlims:
+                tlist.pop(0)
+            plt.show(block = False)
+            plt.pause(waittime)
+            #time.sleep(waittime)
+            ax[0,0].cla()
+            ax[1,0].cla()
+            ax[0,1].cla()
+            ax[1,1].cla()
+        except (KeyboardInterrupt, AttributeError):
+            plt.close(fig)
+            return
+
+
+
+
+
+
     
