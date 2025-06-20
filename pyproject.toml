@@ -23,6 +23,7 @@ bronkhorstSingleServer = "bronkhorstControlbm31.bronkhorstServer:run"
 timePlot = "bronkhorstControlbm31.bronkhorstClient:timePlot"
 barPlot = "bronkhorstControlbm31.bronkhorstClient:barPlot"
 mfcPlotAll = "bronkhorstControlbm31.bronkhorstClient:plotAll"
+mfcgui = "bronkhorstControlbm31.bronkhorstGui:main"
 
 [tool.setuptools]
 packages = ["bronkhorstControlbm31"]
