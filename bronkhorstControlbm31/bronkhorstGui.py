@@ -124,6 +124,12 @@ class Ui_MainWindow(object):
         self.writespLabel.setText('write\nsetpoint')
         self.writespLabel.adjustSize()
 
+        self.userTagLabel = QtWidgets.QLabel(self.centralwidget)
+        self.userTagLabel.setObjectName('userTagLabel')
+        self.userTagLabel.setGeometry(QtCore.QRect(self.box1x-int(self.xspacing*0.6), self.box1y+int(self.yspacing*7), 50,20))
+        self.userTagLabel.setText('user tag')
+        self.userTagLabel.adjustSize()
+
         '''
         self.writesppctLabel = QtWidgets.QLabel(self.centralwidget)
         self.writesppctLabel.setObjectName('writesppctLabel')
@@ -140,6 +146,7 @@ class Ui_MainWindow(object):
         self.valveBoxes = {}
         self.writeSetpointBoxes = {}
         self.writeSetpointpctBoxes = {}
+        self.userTags = {}
 
         self.running = False
         for i in range(self.maxMFCs):
@@ -195,6 +202,13 @@ class Ui_MainWindow(object):
             self.writeSetpointBoxes[i].setKeyboardTracking(False)
             self.writeSetpointBoxes[i].valueChanged.connect(partial(self.setFlow, i))
 
+            self.userTags[i] = QtWidgets.QLineEdit(self.centralwidget)
+            self.userTags[i].setObjectName(f'userTag{i}')
+            self.userTags[i].setGeometry(QtCore.QRect(self.box1x+self.xspacing*i, self.box1y+self.yspacing*7, 80, 20))
+            self.userTags[i].setEnabled(False)
+            #self.userTags[i].setKeyboardTracking(False)
+            self.userTags[i].returnPressed.connect(partial(self.setUserTag, i))
+
             '''
             self.writeSetpointpctBoxes[i] = QtWidgets.QDoubleSpinBox(self.centralwidget)
             self.writeSetpointpctBoxes[i].setObjectName(f'writeSetpointpctBox{i}')
@@ -221,12 +235,16 @@ class Ui_MainWindow(object):
             print("couldn't find server. Try starting it or checking host and port settings")
             raise OSError(e)
         #print(df)
-        self.updateMFCs(df)
+        
         self.enabledMFCs = []
+        self.originalUserTags = {}
         for i in df.index.values:
             self.writeSetpointBoxes[i].setValue(df.loc[i]['fSetpoint'])
             #self.writeSetpointpctBoxes[i].setValue(df.loc[i]['Setpoint_pct'])
             self.enabledMFCs.append(i)
+            self.originalUserTags[i] = df.loc[i]['User tag']
+            self.userTags[i].setText(self.originalUserTags[i])
+        self.updateMFCs(df)
 
     def updateMFCs(self,df):
         if len(df.columns) == 0:
@@ -241,6 +259,11 @@ class Ui_MainWindow(object):
             self.setpointpctBoxes[i].setValue(df.loc[i]['Setpoint_pct'])
             self.measurepctBoxes[i].setValue(df.loc[i]['Measure_pct'])
             self.writeSetpointBoxes[i].setEnabled(True)
+            newUserTag = df.loc[i]['User tag']
+            if newUserTag != self.originalUserTags[i]:
+                self.userTags[i].setText(df.loc[i]['User tag'])
+                self.originalUserTags[i] = newUserTag
+            self.userTags[i].setEnabled(True)
 
     def connectLoop(self):
         if not self.running:
@@ -286,6 +309,14 @@ class Ui_MainWindow(object):
         address = self.addressLabels[i].value()
         print(f'setting flow to {value} on address {address}')
         MFCclient(address,self.host, self.port).writeSetpoint(value)
+
+    def setUserTag(self,i):
+        if not self.running:
+            return
+        value = self.userTags[i].text()
+        address = self.addressLabels[i].value()
+        print(f'setting flow to {value} on address {address}')
+        MFCclient(address,self.host, self.port).writeName(value)
 
     def setFlowAll(self):
         if not self.running:
