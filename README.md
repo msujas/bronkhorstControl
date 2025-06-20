@@ -31,7 +31,7 @@ mfcPlotAll
 
 There is also a gui called mfcgui. Run in the terminal.
 
-![alt text](gui-1.png)
+![image](https://github.com/user-attachments/assets/d6e73338-d5de-499c-ae60-87e3848f3f1d)
 
 I should mention this article https://realpython.com/python-sockets/ and the associated repository which helped me to make this.
 
