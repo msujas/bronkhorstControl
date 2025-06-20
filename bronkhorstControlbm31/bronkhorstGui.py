@@ -58,7 +58,7 @@ class Ui_MainWindow(object):
 
         self.startButton = QtWidgets.QPushButton(self.centralwidget)
         self.startButton.setObjectName('startButton')
-        self.startButton.setGeometry(QtCore.QRect(self.box1x-int(self.yspacing*0.7), self.box1y+int(self.yspacing*8), 120, 20))
+        self.startButton.setGeometry(QtCore.QRect(self.box1x-int(self.yspacing*1), self.box1y+int(self.yspacing*8), 120, 30))
         self.startButton.setText('connect MFCs')
         #self.startButton.adjustSize()
 
