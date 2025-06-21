@@ -56,7 +56,7 @@ class Ui_MainWindow(object):
         self.xspacing = 90
         self.yspacing = 35
 
-        spinboxsizex = 70
+        spinboxsizex = 100
 
         rows = {'address':0,
                 'setpoint':1,
@@ -70,14 +70,12 @@ class Ui_MainWindow(object):
         self.scrollArea = QtWidgets.QScrollArea()
         self.scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
-        #self.scrollArea.setGeometry(QtCore.QRect(self.box1x,self.box1y,self.xspacing*(self.maxMFCs+1),self.yspacing*8))
         
         self.outerLayout = QtWidgets.QVBoxLayout()
 
         self.group = QtWidgets.QGroupBox()
 
         self.gridLayout = QtWidgets.QGridLayout()
-        #self.gridLayout.setVerticalSpacing(10)
 
         self.bottomLayout = QtWidgets.QGridLayout()
         self.bottomLayout.setVerticalSpacing(0)
@@ -85,30 +83,24 @@ class Ui_MainWindow(object):
         
         self.startButton = QtWidgets.QPushButton(self.centralwidget)
         self.startButton.setObjectName('startButton')
-        #self.startButton.setGeometry(QtCore.QRect(self.box1x-int(self.yspacing*1), self.box1y+int(self.yspacing*9), 120, 30))
         self.startButton.setMinimumWidth(150)
-        #self.startButton.setMaximumWidth(150)
         self.startButton.setText('connect MFCs')
-        #self.startButton.adjustSize()
         self.bottomLayout.addWidget(self.startButton,0,0)
 
         self.hostInput = QtWidgets.QLineEdit(self.centralwidget)
         self.hostInput.setObjectName('hostInput')
-        #self.hostInput.setGeometry(QtCore.QRect(self.box1x+self.xspacing,self.box1y+self.yspacing*9, 100,20))
         self.hostInput.setMinimumWidth(120)
         self.hostInput.setText(HOST)
         self.bottomLayout.addWidget(self.hostInput, 0, 1)
 
         self.hostLabel = QtWidgets.QLabel(self.centralwidget)
         self.hostLabel.setObjectName('hostLabel')
-        #self.hostLabel.setGeometry(QtCore.QRect(self.box1x+int(self.xspacing*1.1),self.box1y+int(self.yspacing*9.7), 100,20))
         self.hostLabel.setText('host name')
         self.bottomLayout.addWidget(self.hostLabel,1,1)
 
 
         self.portInput = QtWidgets.QSpinBox(self.centralwidget)
         self.portInput.setObjectName('portInput')
-        #self.portInput.setGeometry(QtCore.QRect(self.box1x+int(self.xspacing*2.2),self.box1y+int(self.yspacing*9), 100,20))
         self.portInput.setMinimumWidth(120)
         self.portInput.setMaximum(2**16)
         self.portInput.setMinimum(8000)
@@ -117,71 +109,54 @@ class Ui_MainWindow(object):
 
         self.portLabel = QtWidgets.QLabel(self.centralwidget)
         self.portLabel.setObjectName('portLabel')
-        #self.portLabel.setGeometry(QtCore.QRect(self.box1x+int(self.xspacing*2.3),self.box1y+int(self.yspacing*9.7), 100,20))
         self.portLabel.setText('port value')
         self.bottomLayout.addWidget(self.portLabel,1,2)
 
         self.addressLabel = QtWidgets.QLabel()
         self.addressLabel.setObjectName('addressLabel')
-        #self.addressLabel.setGeometry(QtCore.QRect(self.box1x-int(self.xspacing*0.7), self.box1y, 50,20))
         self.addressLabel.setText('addresses')
         self.addressLabel.adjustSize()
         self.gridLayout.addWidget(self.addressLabel, rows['address'],0)
 
         self.spLabel = QtWidgets.QLabel()
         self.spLabel.setObjectName('spLabel')
-        #self.spLabel.setGeometry(QtCore.QRect(self.box1x-int(self.xspacing*0.6), self.box1y+self.yspacing, 50,20))
         self.spLabel.setText('setpoint')
         self.gridLayout.addWidget(self.spLabel,rows['setpoint'],0)
 
         self.measureLabel = QtWidgets.QLabel()
         self.measureLabel.setObjectName('measureLabel')
-        #self.measureLabel.setGeometry(QtCore.QRect(self.box1x-int(self.xspacing*0.6), self.box1y+self.yspacing*2, 50,20))
         self.measureLabel.setText('measure')
         self.gridLayout.addWidget(self.measureLabel,rows['measure'],0)
 
         self.sppctLabel = QtWidgets.QLabel()
         self.sppctLabel.setObjectName('sppctLabel')
-        #self.sppctLabel.setGeometry(QtCore.QRect(self.box1x-int(self.xspacing*0.7), self.box1y+self.yspacing*3, 50,20))
         self.sppctLabel.setText('setpoint(%)')
         self.sppctLabel.adjustSize()
         self.gridLayout.addWidget(self.sppctLabel,rows['setpointpct'],0)
 
         self.measurepctLabel = QtWidgets.QLabel()
         self.measurepctLabel.setObjectName('measurepctLabel')
-        #self.measurepctLabel.setGeometry(QtCore.QRect(self.box1x-int(self.xspacing*0.7), self.box1y+self.yspacing*4, 50,20))
         self.measurepctLabel.setText('measure(%)')
         self.measurepctLabel.adjustSize()
         self.gridLayout.addWidget(self.measurepctLabel,rows['measurepct'],0)
 
         self.valveLabel = QtWidgets.QLabel()
         self.valveLabel.setObjectName('valveLabel')
-        #self.valveLabel.setGeometry(QtCore.QRect(self.box1x-int(self.xspacing*0.6), self.box1y+int(self.yspacing*4.8), 50,20))
         self.valveLabel.setText('valve output')
         self.valveLabel.adjustSize()
         self.gridLayout.addWidget(self.valveLabel,rows['valve'],0)
 
         self.writespLabel = QtWidgets.QLabel()
         self.writespLabel.setObjectName('writespLabel')
-        #self.writespLabel.setGeometry(QtCore.QRect(self.box1x-int(self.xspacing*0.6), self.box1y+int(self.yspacing*5.8), 50,20))
         self.writespLabel.setText('write setpoint')
         self.writespLabel.adjustSize()
         self.gridLayout.addWidget(self.writespLabel,rows['writesp'],0)
 
         self.userTagLabel = QtWidgets.QLabel()
         self.userTagLabel.setObjectName('userTagLabel')
-        #self.userTagLabel.setGeometry(QtCore.QRect(self.box1x-int(self.xspacing*0.6), self.box1y+int(self.yspacing*7), 50,20))
         self.userTagLabel.setText('user tag')
         self.userTagLabel.adjustSize()
         self.gridLayout.addWidget(self.userTagLabel,rows['usertag'],0)
-
-        '''
-        self.writesppctLabel = QtWidgets.QLabel(self.centralwidget)
-        self.writesppctLabel.setObjectName('writesppctLabel')
-        self.writesppctLabel.setGeometry(QtCore.QRect(self.box1x-int(self.xspacing*0.7), self.box1y+int(self.yspacing*6.8), 50,20))
-        self.writesppctLabel.setText('write\nsetpoint(%)')
-        self.writesppctLabel.adjustSize()
-        '''
 
 
         
@@ -203,67 +178,67 @@ class Ui_MainWindow(object):
             self.addressLabels[i].setMinimum(-1)
             self.addressLabels[i].setMaximum(99)
             self.addressLabels[i].setValue(-1)
-            #self.addressLabels[i].setGeometry(QtCore.QRect(self.box1x+self.xspacing*i, self.box1y, spinboxsizex, 20))
+            self.addressLabels[i].setMaximumWidth(spinboxsizex)
             self.addressLabels[i].setEnabled(False)
             self.gridLayout.addWidget(self.addressLabels[i], rows['address'], i+1)
 
             self.setpointBoxes[i] = QtWidgets.QDoubleSpinBox()
             self.setpointBoxes[i].setObjectName(f'setpointBox{i}')
-            #self.setpointBoxes[i].setGeometry(QtCore.QRect(self.box1x+self.xspacing*i, self.box1y+self.yspacing, spinboxsizex, 20))
             self.setpointBoxes[i].setEnabled(False)
             self.setpointBoxes[i].setKeyboardTracking(False)
             self.setpointBoxes[i].setStyleSheet('color: black;')
             self.setpointBoxes[i].setMaximum(100)
+            self.setpointBoxes[i].setMaximumWidth(spinboxsizex)
             self.gridLayout.addWidget(self.setpointBoxes[i], rows['setpoint'], i+1)
 
             self.measureBoxes[i] = QtWidgets.QDoubleSpinBox()
             self.measureBoxes[i].setObjectName(f'measureBox{i}')
-            #self.measureBoxes[i].setGeometry(QtCore.QRect(self.box1x+self.xspacing*i, self.box1y+self.yspacing*2, spinboxsizex, 20))
             self.measureBoxes[i].setEnabled(False)
             self.measureBoxes[i].setStyleSheet('color: black;')
             self.measureBoxes[i].setMaximum(100)
+            self.measureBoxes[i].setMaximumWidth(120)
             self.gridLayout.addWidget(self.measureBoxes[i], rows['measure'],i+1)
 
             self.setpointpctBoxes[i] = QtWidgets.QDoubleSpinBox()
             self.setpointpctBoxes[i].setObjectName(f'setpointpctBox{i}')
-            #self.setpointpctBoxes[i].setGeometry(QtCore.QRect(self.box1x+self.xspacing*i, self.box1y+self.yspacing*3, spinboxsizex, 20))
             self.setpointpctBoxes[i].setEnabled(False)
             self.setpointpctBoxes[i].setStyleSheet('color: black;')
             self.setpointpctBoxes[i].setMaximum(100)
+            self.setpointpctBoxes[i].setMaximumWidth(spinboxsizex)
             self.gridLayout.addWidget(self.setpointpctBoxes[i],rows['setpointpct'],i+1)
 
             self.measurepctBoxes[i] = QtWidgets.QDoubleSpinBox()
             self.measurepctBoxes[i].setObjectName(f'measurepctBox{i}')
-            #self.measurepctBoxes[i].setGeometry(QtCore.QRect(self.box1x+self.xspacing*i, self.box1y+self.yspacing*4, spinboxsizex, 20))
             self.measurepctBoxes[i].setEnabled(False)
             self.measurepctBoxes[i].setStyleSheet('color: black;')
             self.measurepctBoxes[i].setMaximum(100)
+            self.measurepctBoxes[i].setMaximumWidth(spinboxsizex)
             self.gridLayout.addWidget(self.measurepctBoxes[i], rows['measurepct'],i+1)
 
             self.valveBoxes[i] = QtWidgets.QDoubleSpinBox()
             self.valveBoxes[i].setObjectName(f'valveBox{i}')
-            #self.valveBoxes[i].setGeometry(QtCore.QRect(self.box1x+self.xspacing*i, self.box1y+self.yspacing*5, spinboxsizex, 20))
             self.valveBoxes[i].setEnabled(False)
             self.valveBoxes[i].setStyleSheet('color: black;')
+            self.valveBoxes[i].setMaximumWidth(spinboxsizex)
             self.gridLayout.addWidget(self.valveBoxes[i], rows['valve'],i+1)
 
             self.writeSetpointBoxes[i] = QtWidgets.QDoubleSpinBox()
             self.writeSetpointBoxes[i].setObjectName(f'writeSetpointBox{i}')
-            #self.writeSetpointBoxes[i].setGeometry(QtCore.QRect(self.box1x+self.xspacing*i, self.box1y+self.yspacing*6, spinboxsizex, 20))
             self.writeSetpointBoxes[i].setEnabled(False)
             self.writeSetpointBoxes[i].setStyleSheet('color: black;')
             self.writeSetpointBoxes[i].setMaximum(100)
             self.writeSetpointBoxes[i].setKeyboardTracking(False)
             self.writeSetpointBoxes[i].valueChanged.connect(partial(self.setFlow, i))
+            self.writeSetpointBoxes[i].setMaximumWidth(spinboxsizex)
             self.gridLayout.addWidget(self.writeSetpointBoxes[i],rows['writesp'],i+1)
 
             self.userTags[i] = QtWidgets.QLineEdit()
             self.userTags[i].setObjectName(f'userTag{i}')
-            #self.userTags[i].setGeometry(QtCore.QRect(self.box1x+self.xspacing*i, self.box1y+self.yspacing*7, spinboxsizex, 20))
             self.userTags[i].setEnabled(False)
             self.userTags[i].returnPressed.connect(partial(self.setUserTag, i))
+            self.userTags[i].setMaximumWidth(spinboxsizex)
             self.gridLayout.addWidget(self.userTags[i],rows['usertag'],i+1)
-
+ 
         self.group.setLayout(self.gridLayout)
         self.scrollArea.setWidget(self.group)
         self.scrollArea.setFixedHeight(self.yspacing*8)
@@ -277,16 +252,9 @@ class Ui_MainWindow(object):
         self.scrollArea2.setWidget(self.group2)
 
         self.outerLayout.addWidget(self.scrollArea2)
-        #self.outerLayout.addLayout(self.bottomLayout)
-        
-        #self.scrollArea.setWidgetResizable(True)
-        #self.scrollArea.setFixedHeight(self.yspacing*7)
         self.centralwidget.setLayout(self.outerLayout)
         
         self.MainWindow.setCentralWidget(self.centralwidget)
-        #self.dockarea = QtCore.Qt.DockWidgetArea()
-        #self.MainWindow.addDockWidget(self.widget)
-        
         QtCore.QMetaObject.connectSlotsByName(self.MainWindow)
 
         self.startButton.clicked.connect(self.connectLoop)
@@ -299,13 +267,11 @@ class Ui_MainWindow(object):
         except OSError as e:
             print("couldn't find server. Try starting it or checking host and port settings")
             raise OSError(e)
-        #print(df)
         
         self.enabledMFCs = []
         self.originalUserTags = {}
         for i in df.index.values:
             self.writeSetpointBoxes[i].setValue(df.loc[i]['fSetpoint'])
-            #self.writeSetpointpctBoxes[i].setValue(df.loc[i]['Setpoint_pct'])
             self.enabledMFCs.append(i)
             self.originalUserTags[i] = df.loc[i]['User tag']
             self.userTags[i].setText(self.originalUserTags[i])
@@ -357,15 +323,6 @@ class Ui_MainWindow(object):
         self.startButton.setText('connect MFCs')
         for i in range(self.maxMFCs):
             self.writeSetpointBoxes[i].setEnabled(False)
-    '''
-    def setFlowPct(self,i):
-        #function does not exist yet
-        if not self.running:
-            return
-        value = self.writeSetpointpctBoxes[i].value()
-        address = self.addressLabels[i].value()
-        MFCclient(address, self.host, self.port).writeSetpointPct(value)
-    '''
 
     def setFlow(self,i):
         if not self.running:
