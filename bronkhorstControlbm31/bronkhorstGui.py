@@ -271,8 +271,8 @@ class Ui_MainWindow(object):
         self.group3 = QtWidgets.QGroupBox()
         self.group3.setLayout(self.leftLayout)
         
-        self.group3.setFixedHeight(self.yspacing*(len(rows)+1))
-        self.group.setFixedHeight(self.yspacing*(len(rows)+1))
+        self.group3.setFixedHeight(self.group.height())
+        #self.group.setFixedHeight(self.yspacing*(len(rows)+1))
         self.scrollArea3.setWidget(self.group3)
         self.scrollArea3.setFixedWidth(self.group3.width())
 
