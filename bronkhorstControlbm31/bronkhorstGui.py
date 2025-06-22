@@ -54,7 +54,7 @@ class Ui_MainWindow(object):
         self.box1x = 70
         self.box1y = 20
         self.xspacing = 90
-        self.yspacing = 35
+        self.yspacing = 25
 
         spinboxsizex = 100
 
@@ -75,7 +75,10 @@ class Ui_MainWindow(object):
 
         self.group = QtWidgets.QGroupBox()
 
+        self.topLayout = QtWidgets.QHBoxLayout()
         self.gridLayout = QtWidgets.QGridLayout()
+        self.leftLayout = QtWidgets.QGridLayout()
+        
 
         self.bottomLayout = QtWidgets.QGridLayout()
         self.bottomLayout.setVerticalSpacing(0)
@@ -116,47 +119,55 @@ class Ui_MainWindow(object):
         self.addressLabel.setObjectName('addressLabel')
         self.addressLabel.setText('addresses')
         self.addressLabel.adjustSize()
-        self.gridLayout.addWidget(self.addressLabel, rows['address'],0)
+        self.addressLabel.setMinimumHeight(self.yspacing)
+        self.leftLayout.addWidget(self.addressLabel, rows['address'],0)
 
         self.spLabel = QtWidgets.QLabel()
         self.spLabel.setObjectName('spLabel')
         self.spLabel.setText('setpoint')
-        self.gridLayout.addWidget(self.spLabel,rows['setpoint'],0)
+        self.spLabel.setMinimumHeight(self.yspacing)
+        self.leftLayout.addWidget(self.spLabel,rows['setpoint'],0)
 
         self.measureLabel = QtWidgets.QLabel()
         self.measureLabel.setObjectName('measureLabel')
         self.measureLabel.setText('measure')
-        self.gridLayout.addWidget(self.measureLabel,rows['measure'],0)
+        self.measureLabel.setMinimumHeight(self.yspacing)
+        self.leftLayout.addWidget(self.measureLabel,rows['measure'],0)
 
         self.sppctLabel = QtWidgets.QLabel()
         self.sppctLabel.setObjectName('sppctLabel')
         self.sppctLabel.setText('setpoint(%)')
         self.sppctLabel.adjustSize()
-        self.gridLayout.addWidget(self.sppctLabel,rows['setpointpct'],0)
+        self.sppctLabel.setMinimumHeight(self.yspacing)
+        self.leftLayout.addWidget(self.sppctLabel,rows['setpointpct'],0)
 
         self.measurepctLabel = QtWidgets.QLabel()
         self.measurepctLabel.setObjectName('measurepctLabel')
         self.measurepctLabel.setText('measure(%)')
         self.measurepctLabel.adjustSize()
-        self.gridLayout.addWidget(self.measurepctLabel,rows['measurepct'],0)
+        self.measurepctLabel.setMinimumHeight(self.yspacing)
+        self.leftLayout.addWidget(self.measurepctLabel,rows['measurepct'],0)
 
         self.valveLabel = QtWidgets.QLabel()
         self.valveLabel.setObjectName('valveLabel')
         self.valveLabel.setText('valve output')
         self.valveLabel.adjustSize()
-        self.gridLayout.addWidget(self.valveLabel,rows['valve'],0)
+        self.valveLabel.setMinimumHeight(self.yspacing)
+        self.leftLayout.addWidget(self.valveLabel,rows['valve'],0)
 
         self.writespLabel = QtWidgets.QLabel()
         self.writespLabel.setObjectName('writespLabel')
         self.writespLabel.setText('write setpoint')
         self.writespLabel.adjustSize()
-        self.gridLayout.addWidget(self.writespLabel,rows['writesp'],0)
+        self.writespLabel.setMinimumHeight(self.yspacing)
+        self.leftLayout.addWidget(self.writespLabel,rows['writesp'],0)
 
         self.userTagLabel = QtWidgets.QLabel()
         self.userTagLabel.setObjectName('userTagLabel')
         self.userTagLabel.setText('user tag')
         self.userTagLabel.adjustSize()
-        self.gridLayout.addWidget(self.userTagLabel,rows['usertag'],0)
+        self.userTagLabel.setMinimumHeight(self.yspacing)
+        self.leftLayout.addWidget(self.userTagLabel,rows['usertag'],0)
 
 
         
@@ -179,6 +190,7 @@ class Ui_MainWindow(object):
             self.addressLabels[i].setMaximum(99)
             self.addressLabels[i].setValue(-1)
             self.addressLabels[i].setMaximumWidth(spinboxsizex)
+            self.addressLabels[i].setMinimumHeight(self.yspacing)
             self.addressLabels[i].setEnabled(False)
             self.gridLayout.addWidget(self.addressLabels[i], rows['address'], i+1)
 
@@ -188,6 +200,7 @@ class Ui_MainWindow(object):
             self.setpointBoxes[i].setKeyboardTracking(False)
             self.setpointBoxes[i].setStyleSheet('color: black;')
             self.setpointBoxes[i].setMaximum(100)
+            self.setpointBoxes[i].setMinimumHeight(self.yspacing)
             self.setpointBoxes[i].setMaximumWidth(spinboxsizex)
             self.gridLayout.addWidget(self.setpointBoxes[i], rows['setpoint'], i+1)
 
@@ -196,6 +209,7 @@ class Ui_MainWindow(object):
             self.measureBoxes[i].setEnabled(False)
             self.measureBoxes[i].setStyleSheet('color: black;')
             self.measureBoxes[i].setMaximum(100)
+            self.measureBoxes[i].setMinimumHeight(self.yspacing)
             self.measureBoxes[i].setMaximumWidth(120)
             self.gridLayout.addWidget(self.measureBoxes[i], rows['measure'],i+1)
 
@@ -204,6 +218,7 @@ class Ui_MainWindow(object):
             self.setpointpctBoxes[i].setEnabled(False)
             self.setpointpctBoxes[i].setStyleSheet('color: black;')
             self.setpointpctBoxes[i].setMaximum(100)
+            self.setpointpctBoxes[i].setMinimumHeight(self.yspacing)
             self.setpointpctBoxes[i].setMaximumWidth(spinboxsizex)
             self.gridLayout.addWidget(self.setpointpctBoxes[i],rows['setpointpct'],i+1)
 
@@ -212,6 +227,7 @@ class Ui_MainWindow(object):
             self.measurepctBoxes[i].setEnabled(False)
             self.measurepctBoxes[i].setStyleSheet('color: black;')
             self.measurepctBoxes[i].setMaximum(100)
+            self.measurepctBoxes[i].setMinimumHeight(self.yspacing)
             self.measurepctBoxes[i].setMaximumWidth(spinboxsizex)
             self.gridLayout.addWidget(self.measurepctBoxes[i], rows['measurepct'],i+1)
 
@@ -220,6 +236,7 @@ class Ui_MainWindow(object):
             self.valveBoxes[i].setEnabled(False)
             self.valveBoxes[i].setStyleSheet('color: black;')
             self.valveBoxes[i].setMaximumWidth(spinboxsizex)
+            self.valveBoxes[i].setMinimumHeight(self.yspacing)
             self.gridLayout.addWidget(self.valveBoxes[i], rows['valve'],i+1)
 
             self.writeSetpointBoxes[i] = QtWidgets.QDoubleSpinBox()
@@ -230,6 +247,7 @@ class Ui_MainWindow(object):
             self.writeSetpointBoxes[i].setKeyboardTracking(False)
             self.writeSetpointBoxes[i].valueChanged.connect(partial(self.setFlow, i))
             self.writeSetpointBoxes[i].setMaximumWidth(spinboxsizex)
+            self.writeSetpointBoxes[i].setMinimumHeight(self.yspacing)
             self.gridLayout.addWidget(self.writeSetpointBoxes[i],rows['writesp'],i+1)
 
             self.userTags[i] = QtWidgets.QLineEdit()
@@ -237,12 +255,31 @@ class Ui_MainWindow(object):
             self.userTags[i].setEnabled(False)
             self.userTags[i].returnPressed.connect(partial(self.setUserTag, i))
             self.userTags[i].setMaximumWidth(spinboxsizex)
+            self.userTags[i].setMinimumHeight(self.yspacing)
             self.gridLayout.addWidget(self.userTags[i],rows['usertag'],i+1)
  
         self.group.setLayout(self.gridLayout)
         self.scrollArea.setWidget(self.group)
-        self.scrollArea.setFixedHeight(self.yspacing*8)
-        self.outerLayout.addWidget(self.scrollArea)
+        #self.scrollArea.setFixedHeight(self.yspacing*(len(rows)+1))
+        self.leftLayout.setVerticalSpacing(0)
+        self.scrollArea3 = QtWidgets.QScrollArea()
+        self.scrollArea3.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.scrollArea3.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        
+        #self.scrollArea3.setFrameStyle()
+        #self.scrollArea3.setFixedHeight(self.yspacing*(len(rows)+1))
+        self.group3 = QtWidgets.QGroupBox()
+        self.group3.setLayout(self.leftLayout)
+        
+        self.group3.setFixedHeight(self.yspacing*(len(rows)+1))
+        self.group.setFixedHeight(self.yspacing*(len(rows)+1))
+        self.scrollArea3.setWidget(self.group3)
+        self.scrollArea3.setFixedWidth(self.group3.width())
+
+        self.topLayout.addWidget(self.scrollArea3)
+        self.topLayout.addWidget(self.scrollArea)
+        self.topLayout.setSpacing(0)
+        self.outerLayout.addLayout(self.topLayout)
         
         self.group2 = QtWidgets.QGroupBox()
         self.group2.setLayout(self.bottomLayout)
