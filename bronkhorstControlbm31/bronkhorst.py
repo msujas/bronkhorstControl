@@ -6,14 +6,15 @@ homedir = pathlib.Path.home()
 configfile = f'{homedir}/bronkhorstServerConfig/comConfg.log'
 
 def getParamDF():
-    paramDF = pd.DataFrame(columns=['proc_nr','parm_nr','parm_type'])
+    paramDF = pd.DataFrame(columns=['dde_nr','proc_nr','parm_nr','parm_type'])
     db = propar.database().get_all_parameters()
     for dct in db:
         parmName = dct['parm_name']
+        ddeNr = dct['dde_nr']
         procNr = dct['proc_nr']
         parmNr = dct['parm_nr']
         parmType = dct['parm_type']
-        paramDF.loc[parmName] = [procNr,parmNr,parmType]
+        paramDF.loc[parmName] = [ddeNr,procNr,parmNr,parmType]
     return paramDF
 
 def strToFloat(string):
@@ -35,6 +36,10 @@ class MFC():
         self.address = address
         self.mfcMain = mfcMain
         self.com = self.getCom(com)
+        self.pollparams = ['User tag', 'Control mode', 'Fluid name', 'Fluidset index','fMeasure', 'fSetpoint', 
+                  'Measure', 'Setpoint', 'Valve output']
+        self.ddenrs = paramDF['dde_nr'].loc[self.pollparams].values
+        #self.pollparamList = propar.database().get_parameters(self.ddenrs)
     def __str__(self):
         return self.readName()
     def getCom(self, com=None):
@@ -49,12 +54,24 @@ class MFC():
         parm_nr = paramDF.loc[name]['parm_nr']
         parm_type = paramDF.loc[name]['parm_type']
         return proc_nr, parm_nr, parm_type
+    def getdde(self,name):
+        return paramDF.loc[name]['dde_nr']
     def readParam(self,name, address = None):
         if address == None:
             address = self.address
         proc_nr, parm_nr, parm_type = self.getNumbers(name)
         parValue = self.mfcMain.master.read(address,proc_nr,parm_nr,parm_type)
         return parValue
+    def readParams(self,ddeList, address=None):
+        if not address:
+            address = self.address
+        paramdctlist = propar.database().get_parameters(ddeList)
+        datalist = propar.instrument(self.com, address=address).read_parameters(paramdctlist)
+        datadct = {}
+        for d in datalist:
+            datadct[d['parm_name']] = d['data']
+        return datadct
+        
     def writeParam(self,name, value):
         proc_nr, parm_nr, parm_type = self.getNumbers(name)
         x = self.mfcMain.master.write(self.address,proc_nr,parm_nr,parm_type,value)
@@ -112,14 +129,12 @@ class MFC():
         valve = value/2**24
         return valve
     
-    def pollAll(self):
+    def pollAll_individual(self):
         self.getAddresses()
-        params = ['User tag', 'Control mode', 'Fluid name', 'Fluidset index','fMeasure', 'fSetpoint', 
-                  'Measure', 'Setpoint', 'Valve output']
-        df = pd.DataFrame(columns=['address']+params)
+        df = pd.DataFrame(columns=['address']+self.pollparams)
         for a in self.addresses:
             values = [a]
-            for p in params:
+            for p in self.pollparams:
                 values.append(self.readParam(p,a))
             df.loc[a] = values
         df['Measure'] = df['Measure'].apply(lambda x: x*100/32000)
@@ -128,6 +143,24 @@ class MFC():
         df = df.rename({'Measure':'Measure_pct', 'Setpoint':'Setpoint_pct'}, axis = 1)
         self.paramDf = df
         return df
+    
+    def pollAll(self):
+        self.getAddresses()
+        datadct = {}
+        datadct['address'] = self.addresses
+        for par in self.pollparams:
+            datadct[par] = []
+        for a in self.addresses:
+            datadcttmp = self.readParams(self.ddenrs, a)
+            for par in datadcttmp:
+                datadct[par].append(datadcttmp[par])
+        df = pd.DataFrame.from_dict(datadct)
+        df['Measure'] = df['Measure'].apply(lambda x: x*100/32000)
+        df['Setpoint'] = df['Setpoint'].apply(lambda x: x*100/32000)
+        df['Valve output'] = df['Valve output'].apply(lambda x: x/2**24)
+        df = df.rename({'Measure':'Measure_pct', 'Setpoint':'Setpoint_pct'}, axis = 1)
+        return df
+                
 
     def pollAllServer(self):
         df = self.pollAll()
