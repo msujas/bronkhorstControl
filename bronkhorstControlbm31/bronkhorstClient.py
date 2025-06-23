@@ -89,7 +89,7 @@ class MFCclient():
     def readControlMode(self):
         string = self.makeMessage(self.address, 'readControlMode')
         data = self.sendMessage(string)
-        return data
+        return int(data)
     def writeControlMode(self,value):
         string = self.makeMessage(self.address, 'writeControlMode',value)
         data = self.sendMessage(string)
