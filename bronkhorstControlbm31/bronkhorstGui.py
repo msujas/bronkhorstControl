@@ -492,9 +492,9 @@ class Ui_MainWindow(object):
         address = self.addressLabels[i].value()
         print(f'setting address {address} to fluid {value}')
         MFCclient(address,self.host,self.port).writeFluidIndex(value)
-        df = MFCclient(address,self.host,self.port).pollAll()
-        fluidIndex = df.loc[i]['Fluidset index']
-        fluidName = df.loc[i]['Fluid name']
+        newfluid = MFCclient(address, self.host,self.port).readFluidType()
+        fluidIndex = newfluid['Fluidset index']
+        fluidName = newfluid['Fluid name']
         self.fluidBoxes[i].setValue(fluidIndex)
         self.fluidNameBoxes[i].setText(fluidName)
 

@@ -54,8 +54,9 @@ class MFC():
         parm_nr = paramDF.loc[name]['parm_nr']
         parm_type = paramDF.loc[name]['parm_type']
         return proc_nr, parm_nr, parm_type
-    def getdde(self,name):
-        return paramDF.loc[name]['dde_nr']
+    def getddes(self,*names):
+        return paramDF['dde_nr'].loc[list(names)].values
+
     def readParam(self,name, address = None):
         if address == None:
             address = self.address
@@ -71,7 +72,9 @@ class MFC():
         for d in datalist:
             datadct[d['parm_name']] = d['data']
         return datadct
-        
+    def readParams_names(self, *names,address=None):
+        ddes = self.getddes(*names)
+        return self.readParams(ddes,address=address)
     def writeParam(self,name, value):
         proc_nr, parm_nr, parm_type = self.getNumbers(name)
         x = self.mfcMain.master.write(self.address,proc_nr,parm_nr,parm_type,value)
@@ -115,10 +118,16 @@ class MFC():
         return x
     def readFluidType(self):
         name = self.readName()
-        fluidIndex = self.readParam('Fluidset index')
-        fluidName = self.readParam('Fluid name')
+        fluiddct = self.readParams_names('Fluidset index', 'Fluid name')
+        '''
+        fluidName = fluiddct['Fluid name']
+        fluidIndex = fluiddct['Fluidset index']
+        #fluidName = self.readParam('Fluid name')
+        
         print(f'{name} fluid: {fluidName}, fluid index: {fluidIndex}')
-        return fluidName, fluidIndex
+        '''
+        print(fluiddct)
+        return fluiddct#fluidName, fluidIndex
     def writeFluidIndex(self,value):
         value = int(value)
         x = self.writeParam('Fluidset index',value)
@@ -200,7 +209,7 @@ class MFC():
                      'readFluidType':self.readFluidType, 'writeFluidIndex':self.writeFluidIndex,
                      'writeName':self.writeName, 'readMeasure_pct': self.readMeasure_pct,
                      'readSetpoint_pct': self.readSetpoint_pct, 'wink':self.wink,
-                     'readValve': self.readValve}
+                     'readValve': self.readValve, 'readParams_names':self.readParams_names}
         method = methodDct[methodName]
         val = method(*args)
         return val

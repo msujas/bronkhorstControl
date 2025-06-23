@@ -3,13 +3,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import selectors,types
 import matplotlib
-matplotlib.rcParams.update({'font.size':14})
+matplotlib.rcParams.update({'font.size':12})
 import time
 from datetime import datetime
 import argparse
 import os, pathlib
 from bronkhorstControlbm31.bronkhorstServer import PORT, HOST
 from PyQt6 import QtCore
+import json
 
 
 def getArgs(host=HOST, port=PORT, connid = socket.gethostname(),waitTime = 0.5, plotTime = 1, log = True, logInterval = 5):
@@ -70,6 +71,11 @@ class MFCclient():
         string = self.makeMessage(self.address, 'readParam', name)
         data = self.sendMessage(string)
         return data
+    def readParams(self,*names):
+        string = self.makeMessage(self.address, 'readParams_names', *names)
+        data = self.sendMessage(string)
+        datadct = json.loads(data.replace('\'','"'))
+        return datadct
     def readFlow(self):
         string = self.makeMessage(self.address, 'readFlow')
         data = self.sendMessage(string)
@@ -97,11 +103,8 @@ class MFCclient():
     def readFluidType(self):
         string = self.makeMessage(self.address, 'readFluidType')
         data = self.sendMessage(string)
-        data = data.replace('(','').replace(')','').replace('\'','')
-        datasplit = data.split(',')
-        index = int(datasplit[1])
-        name = datasplit[0]
-        return index, name
+        datadct = json.loads(data.replace('\'','"'))
+        return datadct#index, name
     def writeFluidIndex(self,value):
         string = self.makeMessage(self.address, 'writeFluidIndex',value)
         data = self.sendMessage(string)
@@ -399,14 +402,22 @@ def plotValvesBar(df, ax):
     ax.bar_label(p1, fmt = '%.2f')
     ax.set_ylabel('MFC/BPR Measure')
 
+def plotAllSingle(df, tlist, ax, measureFlow, measureValve,xlim, logfile , log, tlog, logInterval, headerString):
+    barPlotSingle(df,ax[0,1], ax[1,1], title1=False)
 
-        
+    timePlotSingle(df,ax[0,0],measureFlow,tlist,xlim, xlabel=False)
+
+    if log and time.time() - tlog > logInterval:
+        logMFCs(logfile, df, headerString)
+
+    timePlotSingle(df,ax[1,0], measureValve, tlist, xlim, colName='Valve output', ylabel='MFC/BPR valve output',
+                    title=False)
 def plotAll(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'allPlot',xlim = 1, log = True, logInterval = 5):
     host,port,connid, waittime, xlim, log, logInterval = getArgs(host=host,port=port,connid=connid, 
                                                                  waitTime=waittime,plotTime=xlim, log = log, logInterval=logInterval)
     plt.ion()
     xlims = xlim*3600
-    fig, ax = plt.subplots(2,2, width_ratios=[1.3,1], gridspec_kw={'wspace': 0.15, 'hspace':0.15})
+    fig, ax = plt.subplots(2,2)#, gridspec_kw={'wspace': 0.15, 'hspace':0.15})
     #fig.delaxes(ax[1,0])
     df = MFCclient(1,host,port).pollAll()
     measureFlow = {}
@@ -420,7 +431,6 @@ def plotAll(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'allPlot
         try:
             tlist.append(time.time())
             df = MFCclient(1,host,port).pollAll()
-            barPlotSingle(df,ax[0,1], ax[1,1], title1=False)
             if c == 0:
                 for i in df.index.values:
                     measureFlow[i] = []
@@ -429,17 +439,11 @@ def plotAll(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'allPlot
                 c=1
                 if log:
                     headerString = logHeader(logfile,df)
-            timePlotSingle(df,ax[0,0],measureFlow,tlist,xlim, xlabel=False)
-
-            if log and time.time() - tlog > logInterval:
-                logMFCs(logfile, df, headerString)
-
-            #plt.tight_layout()
-            #plotValvesBar(df,ax[1,0])
-            timePlotSingle(df,ax[1,0], measureValve, tlist, xlim, colName='Valve output', ylabel='MFC/BPR valve output',
-                           title=False)
+                    
+            plotAllSingle(df,tlist,ax,measureFlow, measureValve,xlim, logfile, log, tlog,logInterval, headerString)
             if tlist[-1] -tlist[0] > xlims:
                 tlist.pop(0)
+            plt.tight_layout()
             plt.show(block = False)
             plt.pause(waittime)
             #time.sleep(waittime)
