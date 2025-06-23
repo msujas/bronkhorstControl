@@ -97,7 +97,11 @@ class MFCclient():
     def readFluidType(self):
         string = self.makeMessage(self.address, 'readFluidType')
         data = self.sendMessage(string)
-        return data
+        data = data.replace('(','').replace(')','').replace('\'','')
+        datasplit = data.split(',')
+        index = int(datasplit[1])
+        name = datasplit[0]
+        return index, name
     def writeFluidIndex(self,value):
         string = self.makeMessage(self.address, 'writeFluidIndex',value)
         data = self.sendMessage(string)

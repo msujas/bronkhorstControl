@@ -64,8 +64,11 @@ class Ui_MainWindow(object):
                 'setpointpct':3,
                 'measurepct':4,
                 'valve':5,
-                'writesp':6,
-                'usertag':7}
+                'controlMode':6,
+                'fluidIndex':7,
+                'fluidName':8,
+                'writesp':9,
+                'usertag':10}
 
         self.scrollArea = QtWidgets.QScrollArea()
         self.scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -117,7 +120,7 @@ class Ui_MainWindow(object):
 
         self.addressLabel = QtWidgets.QLabel()
         self.addressLabel.setObjectName('addressLabel')
-        self.addressLabel.setText('addresses')
+        self.addressLabel.setText('address')
         self.addressLabel.adjustSize()
         self.addressLabel.setMinimumHeight(self.yspacing)
         self.leftLayout.addWidget(self.addressLabel, rows['address'],0)
@@ -155,6 +158,27 @@ class Ui_MainWindow(object):
         self.valveLabel.setMinimumHeight(self.yspacing)
         self.leftLayout.addWidget(self.valveLabel,rows['valve'],0)
 
+        self.controlLable = QtWidgets.QLabel()
+        self.controlLable.setObjectName('controlLable')
+        self.controlLable.setText('control mode')
+        self.controlLable.adjustSize()
+        self.controlLable.setMinimumHeight(self.yspacing)
+        self.leftLayout.addWidget(self.controlLable,rows['controlMode'],0)
+
+        self.fluidLabel = QtWidgets.QLabel()
+        self.fluidLabel.setObjectName('fluidLabel')
+        self.fluidLabel.setText('fluid index')
+        self.fluidLabel.adjustSize()
+        self.fluidLabel.setMinimumHeight(self.yspacing)
+        self.leftLayout.addWidget(self.fluidLabel,rows['fluidIndex'],0)
+
+        self.fluidNameLabel = QtWidgets.QLabel()
+        self.fluidNameLabel.setObjectName('fluidNameLabel')
+        self.fluidNameLabel.setText('fluid name')
+        self.fluidNameLabel.adjustSize()
+        self.fluidNameLabel.setMinimumHeight(self.yspacing)
+        self.leftLayout.addWidget(self.fluidNameLabel,rows['fluidName'],0)
+
         self.writespLabel = QtWidgets.QLabel()
         self.writespLabel.setObjectName('writespLabel')
         self.writespLabel.setText('write setpoint')
@@ -178,6 +202,9 @@ class Ui_MainWindow(object):
         self.setpointpctBoxes = {}
         self.measurepctBoxes = {}
         self.valveBoxes = {}
+        self.controlBoxes = {}
+        self.fluidBoxes = {}
+        self.fluidNameBoxes = {}
         self.writeSetpointBoxes = {}
         self.writeSetpointpctBoxes = {}
         self.userTags = {}
@@ -238,6 +265,54 @@ class Ui_MainWindow(object):
             self.valveBoxes[i].setMaximumWidth(spinboxsizex)
             self.valveBoxes[i].setMinimumHeight(self.yspacing)
             self.gridLayout.addWidget(self.valveBoxes[i], rows['valve'],i+1)
+
+            self.controlBoxes[i] = QtWidgets.QComboBox()
+            self.controlBoxes[i].setObjectName(f'controlBoxes{i}')
+            self.controlBoxes[i].setEnabled(False)
+            #self.controlBoxes[i].setStyleSheet('color: black;')
+            self.controlBoxes[i].setMaximumWidth(spinboxsizex)
+            self.controlBoxes[i].setMinimumHeight(self.yspacing)
+            self.controlBoxes[i].addItem("0;Bus/RS232")
+            self.controlBoxes[i].addItem("1;Analog input")
+            self.controlBoxes[i].addItem("2;FB/RS232 slave")
+            self.controlBoxes[i].addItem("3;Valve close")
+            self.controlBoxes[i].addItem("4;Controller idle")
+            self.controlBoxes[i].addItem("5;Testing mode")
+            self.controlBoxes[i].addItem("6;Tuning mode")
+            self.controlBoxes[i].addItem("7;Setpoint 100%")
+            self.controlBoxes[i].addItem("8;Valve fully open")
+            self.controlBoxes[i].addItem("9;Calibration mode")
+            self.controlBoxes[i].addItem("10;Analog slave")
+            self.controlBoxes[i].addItem("11;Keyb. & FLOW-BUS")
+            self.controlBoxes[i].addItem("12;Setpoint 0%")
+            self.controlBoxes[i].addItem("13;FB, analog slave")
+            self.controlBoxes[i].addItem("14;(FPP) Range select")
+            self.controlBoxes[i].addItem("15;(FPP) Man.s, auto.e")
+            self.controlBoxes[i].addItem("16;(FPP) Auto.s, man.e")
+            self.controlBoxes[i].addItem("17;(FPP) Auto.s, auto.e")
+            self.controlBoxes[i].addItem("18;RS232")
+            self.controlBoxes[i].addItem("19;RS232 broadcast")
+            self.controlBoxes[i].addItem("20;Valve steering")
+            self.controlBoxes[i].addItem("21;An. valve steering")
+            self.controlBoxes[i].currentIndexChanged.connect(partial(self.setControlMode,i))
+            self.gridLayout.addWidget(self.controlBoxes[i], rows['controlMode'],i+1)
+
+            self.fluidBoxes[i] = QtWidgets.QSpinBox()
+            self.fluidBoxes[i].setObjectName(f'fluidBoxes{i}')
+            self.fluidBoxes[i].setEnabled(False)
+            self.fluidBoxes[i].setStyleSheet('color: black;')
+            self.fluidBoxes[i].setMaximum(20)
+            self.fluidBoxes[i].setMinimumHeight(self.yspacing)
+            self.fluidBoxes[i].setMaximumWidth(spinboxsizex)
+            self.fluidBoxes[i].setKeyboardTracking(False)
+            self.fluidBoxes[i].valueChanged.connect(partial(self.setFluidIndex,i))
+            self.gridLayout.addWidget(self.fluidBoxes[i], rows['fluidIndex'],i+1)
+
+            self.fluidNameBoxes[i] = QtWidgets.QLabel()
+            self.fluidNameBoxes[i].setObjectName(f'fluidNameBoxes{i}')
+            self.fluidNameBoxes[i].setMinimumHeight(self.yspacing)
+            self.fluidNameBoxes[i].setMaximumWidth(spinboxsizex)
+            self.gridLayout.addWidget(self.fluidNameBoxes[i], rows['fluidName'],i+1)
 
             self.writeSetpointBoxes[i] = QtWidgets.QDoubleSpinBox()
             self.writeSetpointBoxes[i].setObjectName(f'writeSetpointBox{i}')
@@ -307,11 +382,17 @@ class Ui_MainWindow(object):
         
         self.enabledMFCs = []
         self.originalUserTags = {}
+        self.originalControlModes = {}
+        self.originalFluidIndexes = {}
         for i in df.index.values:
             self.writeSetpointBoxes[i].setValue(df.loc[i]['fSetpoint'])
             self.enabledMFCs.append(i)
             self.originalUserTags[i] = df.loc[i]['User tag']
+            self.originalControlModes[i] = df.loc[i]['Control mode']
             self.userTags[i].setText(self.originalUserTags[i])
+            self.controlBoxes[i].setCurrentIndex(self.originalControlModes[i])
+            self.originalFluidIndexes[i] = df.loc[i]['Fluidset index']
+            self.fluidBoxes[i].setValue(self.originalFluidIndexes[i])
         self.updateMFCs(df)
 
     def updateMFCs(self,df):
@@ -327,6 +408,17 @@ class Ui_MainWindow(object):
             self.setpointpctBoxes[i].setValue(df.loc[i]['Setpoint_pct'])
             self.measurepctBoxes[i].setValue(df.loc[i]['Measure_pct'])
             self.writeSetpointBoxes[i].setEnabled(True)
+            self.controlBoxes[i].setEnabled(True)
+            self.fluidBoxes[i].setEnabled(True)
+            self.fluidNameBoxes[i].setText(df.loc[i]['Fluid name'])
+            newControlMode = df.loc[i]['Control mode']
+            if newControlMode != self.originalControlModes[i]:
+                self.controlBoxes[i].setCurrentIndex(newControlMode)
+                self.originalControlModes[i] = newControlMode
+            newFluidIndex = df.loc[i]['Fluidset index']
+            if newFluidIndex != self.originalFluidIndexes[i]:
+                self.fluidBoxes[i].setValue(newFluidIndex)
+                self.originalFluidIndexes[i] = newFluidIndex
             newUserTag = df.loc[i]['User tag']
             if newUserTag != self.originalUserTags[i]:
                 self.userTags[i].setText(df.loc[i]['User tag'])
@@ -382,6 +474,29 @@ class Ui_MainWindow(object):
             return
         for i in self.enabledMFCs:
             self.setFlow(i)
+
+    def setControlMode(self,i):
+        if not self.running:
+            return
+        value = self.controlBoxes[i].currentIndex()
+        address = self.addressLabels[i].value()
+        print(f'setting address {address} to control mode {value}')
+        MFCclient(address, self.host,self.port).writeControlMode(value)
+        newmode = MFCclient(address,self.host,self.port).readControlMode()
+        self.controlBoxes[i].setCurrentIndex(newmode)
+
+    def setFluidIndex(self,i):
+        if not self.running:
+            return
+        value = self.fluidBoxes[i].value()
+        address = self.addressLabels[i].value()
+        print(f'setting address {address} to fluid {value}')
+        MFCclient(address,self.host,self.port).writeFluidIndex(value)
+        df = MFCclient(address,self.host,self.port).pollAll()
+        fluidIndex = df.loc[i]['Fluidset index']
+        fluidName = df.loc[i]['Fluid name']
+        self.fluidBoxes[i].setValue(fluidIndex)
+        self.fluidNameBoxes[i].setText(fluidName)
 
 
 def main():

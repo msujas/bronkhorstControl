@@ -24,6 +24,7 @@ def strToFloat(string):
         return string
 
 paramDF = getParamDF()
+
 def startMfc(com = 'COM1'):
     mfcMain = propar.instrument(com)
     return mfcMain
