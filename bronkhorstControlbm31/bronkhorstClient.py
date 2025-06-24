@@ -328,7 +328,7 @@ def timePlotSingle(df, ax, measure, tlist, xlim, colName = 'fMeasure', ylabel = 
         measure[i].append(df.loc[i][colName])
         while len(measure[i]) > len(tlist):
             measure[i].pop(0)
-            
+
     tlistPlot = [t-tlist[-1] for t in tlist] 
     for a in measure:
         ax.plot(tlistPlot,measure[a],'o-',label = userTags[a],markersize = 3)
@@ -382,7 +382,7 @@ def timePlot(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'timePl
                 c = 1
                 if log:
                     headerString = logHeader(logfile, df)
-            timePlotSingle(df,ax,measure, tlist, xlims)
+            timePlotSingle(df,ax,measure, tlist, xlim)
 
             if log and time.time() - tlog > logInterval:
                 logMFCs(logfile,df, headerString)
