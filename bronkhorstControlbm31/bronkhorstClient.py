@@ -12,7 +12,7 @@ from bronkhorstControlbm31.bronkhorstServer import PORT, HOST
 import json
 
 
-def getArgs(host=HOST, port=PORT, connid = socket.gethostname(),waitTime = 0.5, plotTime = 1, log = True, logInterval = 5):
+def getArgs(host=HOST, port=PORT, connid = socket.gethostname(),waitTime = 0.5, plotTime = 60, log = True, logInterval = 5):
     parser = argparse.ArgumentParser()
 
     parser.add_argument('host',nargs='?', default=host, type= str, help = 'host name/address')
@@ -20,7 +20,7 @@ def getArgs(host=HOST, port=PORT, connid = socket.gethostname(),waitTime = 0.5, 
     parser.add_argument('-c','--connid',default=connid, type = str, help='name for connection')
     parser.add_argument('-wt','--waittime',default=waitTime, type = float, help = 'time to wait between iterations (default 0.5 s)')
     parser.add_argument('-pt','--plotTime',default=plotTime, type = float, 
-                        help = 'timePlot only. Total time to plot on x-axis (only for timePlot, default 1 hour)')
+                        help = 'timePlot only. Total time to plot on x-axis (only for timePlot, default 60 minutes)')
     parser.add_argument('-l','--log', default = log, type = bool, 
                         help='timePlot only, boolean. Whether or not to log the data (default True, file saved in <homedir>/bronkhorstClientLog/<yyyymmdd>.log)')
     parser.add_argument('-li', '--logInterval', default = logInterval, type = int, help='timePlot only. Integer, time interval between each log entry (default 5 s)')
@@ -320,18 +320,20 @@ def logMFCs(logfile, df, headerString):
 
 
 def timePlotSingle(df, ax, measure, tlist, xlim, colName = 'fMeasure', ylabel = 'MFC/BPR measure', title = True, xlabel = True):
-    xlims = xlim*3600
+    xlims = xlim*60
     userTags = df['User tag'].to_list()
+    if tlist[-1] -tlist[0] > xlims:
+        tlist.pop(0)
     for i in df.index.values:
         measure[i].append(df.loc[i][colName])
-        if tlist[-1] -tlist[0] > xlims:
-            measure[a].pop(0)
-
+        while len(measure[i]) > len(tlist):
+            measure[i].pop(0)
+            
     tlistPlot = [t-tlist[-1] for t in tlist] 
     for a in measure:
         ax.plot(tlistPlot,measure[a],'o-',label = userTags[a],markersize = 3)
     if title:
-        ax.set_title(f'measure, tscale: {xlim} hours')
+        ax.set_title(f'measure, tscale: {xlim} minutes')
     ax.legend()
     if xlabel:
         ax.set_xlabel('t-current time (s)')
@@ -359,13 +361,12 @@ def logHeader(logfile, df):
     writeLog(logfile,headerString)
     return headerString
 
-def timePlot(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'timePlot',xlim = 1, log = True, logInterval = 5):
+def timePlot(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'timePlot',xlim = 60, log = True, logInterval = 5):
     host,port,connid, waittime, xlim, log, logInterval = getArgs(host=host,port=port,connid=connid, waitTime=waittime,plotTime=xlim, log = log, logInterval=logInterval)
     measure = {}
     c=0
     fig,ax = plt.subplots()
     tlist = []
-    xlims = xlim*3600
     if log:
         logfile = getLogFile()
     tlog = 0
@@ -382,8 +383,7 @@ def timePlot(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'timePl
                 if log:
                     headerString = logHeader(logfile, df)
             timePlotSingle(df,ax,measure, tlist, xlims)
-            if tlist[-1] -tlist[0] > xlims:
-                tlist.pop(0)
+
             if log and time.time() - tlog > logInterval:
                 logMFCs(logfile,df, headerString)
                 tlog = time.time()
@@ -411,11 +411,11 @@ def plotAllSingle(df, tlist, ax, measureFlow, measureValve,xlim, logfile , log, 
 
     timePlotSingle(df,ax[1,0], measureValve, tlist, xlim, colName='Valve output', ylabel='MFC/BPR valve output',
                     title=False)
-def plotAll(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'allPlot',xlim = 1, log = True, logInterval = 5):
+def plotAll(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'allPlot',xlim = 60, log = True, logInterval = 5):
     host,port,connid, waittime, xlim, log, logInterval = getArgs(host=host,port=port,connid=connid, 
                                                                  waitTime=waittime,plotTime=xlim, log = log, logInterval=logInterval)
     plt.ion()
-    xlims = xlim*3600
+    xlims = xlim*60
     fig, ax = plt.subplots(2,2)#, gridspec_kw={'wspace': 0.15, 'hspace':0.15})
     #fig.delaxes(ax[1,0])
     df = MFCclient(1,host,port).pollAll()
