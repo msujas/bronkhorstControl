@@ -222,28 +222,6 @@ class MFCclient():
                 sent = sock.send(data.outb)  # Should be ready to write
                 data.outb = data.outb[sent:]
 
-'''
-class Worker(QtCore.QThread):
-    outputs = QtCore.pyqtSignal(list)
-    def __init__(self, host, port):
-        super(Worker,self).__init__()
-        self.host = host
-        self.port = port
-    def run(self):
-        while True:
-            df = MFCclient(1,self.host,self.port).pollAll()
-            self.outputs.emit(df)
-    def stop(self):
-        self.terminate()
-def getdf(df):
-    print(df)
-
-def startWorker(host=HOST,port=PORT):
-    thread = Worker(host,port)
-    thread.start()
-    thread.outputs.connect(getdf)
-'''
-
 import threading
 def gettmpDFfile():
     homedir = pathlib.Path.home()
@@ -401,7 +379,7 @@ def plotValvesBar(df, ax):
     ax.bar_label(p1, fmt = '%.2f')
     ax.set_ylabel('MFC/BPR Measure')
 
-def plotAllSingle(df, tlist, ax, measureFlow, measureValve,xlim, logfile , log, tlog, logInterval, headerString):
+def plotAllSingle(df, tlist, ax, measureFlow, measureValve,xlim, waittime = 1,  log=False, logfile =None,tlog=None, logInterval=0, headerString=''):
     barPlotSingle(df,ax[0,1], ax[1,1], title1=False)
 
     timePlotSingle(df,ax[0,0],measureFlow,tlist,xlim, xlabel=False)
@@ -411,14 +389,19 @@ def plotAllSingle(df, tlist, ax, measureFlow, measureValve,xlim, logfile , log, 
 
     timePlotSingle(df,ax[1,0], measureValve, tlist, xlim, colName='Valve output', ylabel='MFC/BPR valve output',
                     title=False)
+    plt.tight_layout()
+    plt.show(block = False)
+    plt.pause(waittime)
+    #time.sleep(waittime)
+    ax[0,0].cla()
+    ax[1,0].cla()
+    ax[0,1].cla()
+    ax[1,1].cla()
 def plotAll(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'allPlot',xlim = 60, log = True, logInterval = 5):
     host,port,connid, waittime, xlim, log, logInterval = getArgs(host=host,port=port,connid=connid, 
                                                                  waitTime=waittime,plotTime=xlim, log = log, logInterval=logInterval)
     plt.ion()
-    xlims = xlim*60
-    fig, ax = plt.subplots(2,2)#, gridspec_kw={'wspace': 0.15, 'hspace':0.15})
-    #fig.delaxes(ax[1,0])
-    df = MFCclient(1,host,port).pollAll()
+    fig, ax = plt.subplots(2,2)
     measureFlow = {}
     measureValve = {}
     c=0
@@ -434,29 +417,11 @@ def plotAll(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'allPlot
                 for i in df.index.values:
                     measureFlow[i] = []
                     measureValve[i] = []
-
                 c=1
                 if log:
                     headerString = logHeader(logfile,df)
-                    
-            plotAllSingle(df,tlist,ax,measureFlow, measureValve,xlim, logfile, log, tlog,logInterval, headerString)
-            if tlist[-1] -tlist[0] > xlims:
-                tlist.pop(0)
-            plt.tight_layout()
-            plt.show(block = False)
-            plt.pause(waittime)
-            #time.sleep(waittime)
-            ax[0,0].cla()
-            ax[1,0].cla()
-            ax[0,1].cla()
-            ax[1,1].cla()
+            plotAllSingle(df,tlist,ax,measureFlow, measureValve,xlim, waittime=waittime,  log = log, logfile=logfile, tlog=tlog,
+                          logInterval=logInterval, headerString=headerString)
         except (KeyboardInterrupt, AttributeError):
             plt.close(fig)
             return
-
-
-
-
-
-
-    

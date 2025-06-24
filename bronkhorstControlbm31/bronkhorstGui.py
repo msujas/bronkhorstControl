@@ -3,10 +3,10 @@ import argparse
 import time
 import pandas as pd
 if __name__ == '__main__':
-    from bronkhorstClient import MFCclient
+    from bronkhorstClient import MFCclient, plotAllSingle
     from bronkhorstServer import HOST, PORT
 else:
-    from .bronkhorstClient import MFCclient
+    from .bronkhorstClient import MFCclient, plotAllSingle
     from .bronkhorstServer import HOST, PORT
 from functools import partial
 
@@ -33,6 +33,7 @@ class Worker(QtCore.QThread):
         self.parname = None
         self.write = False
         self.value = None
+
     def run(self):
         while True:
             try:
@@ -54,7 +55,6 @@ class Worker(QtCore.QThread):
         func = parnamedct[parname]
         func(value)
         
-
     def stop(self):
         self.terminate()
 
@@ -339,7 +339,6 @@ class Ui_MainWindow(object):
             self.writeSetpointBoxes[i].valueChanged.connect(partial(self.setFlow, i))
             self.writeSetpointBoxes[i].setMaximumWidth(spinboxsizex)
             self.writeSetpointBoxes[i].setMinimumHeight(self.yspacing)
-            self.writeSetpointBoxes[i].setKeyboardTracking(False)
             self.gridLayout.addWidget(self.writeSetpointBoxes[i],rows['writesp'],i+1)
 
             self.userTags[i] = QtWidgets.QLineEdit()
@@ -352,19 +351,18 @@ class Ui_MainWindow(object):
  
         self.group.setLayout(self.gridLayout)
         self.scrollArea.setWidget(self.group)
-        #self.scrollArea.setFixedHeight(self.yspacing*(len(rows)+1))
+
         self.leftLayout.setVerticalSpacing(0)
         self.scrollArea3 = QtWidgets.QScrollArea()
         self.scrollArea3.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.scrollArea3.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         
-        #self.scrollArea3.setFrameStyle()
-        #self.scrollArea3.setFixedHeight(self.yspacing*(len(rows)+1))
+
         self.group3 = QtWidgets.QGroupBox()
         self.group3.setLayout(self.leftLayout)
         
         self.group3.setFixedHeight(self.group.height())
-        #self.group.setFixedHeight(self.yspacing*(len(rows)+1))
+
         self.scrollArea3.setWidget(self.group3)
         self.scrollArea3.setFixedWidth(self.group3.width())
 
