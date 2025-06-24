@@ -9,7 +9,6 @@ from datetime import datetime
 import argparse
 import os, pathlib
 from bronkhorstControlbm31.bronkhorstServer import PORT, HOST
-from PyQt6 import QtCore
 import json
 
 
