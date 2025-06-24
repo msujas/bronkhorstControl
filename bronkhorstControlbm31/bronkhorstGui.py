@@ -14,7 +14,7 @@ from functools import partial
 def parseArguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('-m','--maxMFCs', default=10, type=int, help='maximum number of MFCs that might be needed (default 10)')
-    parser.add_argument('-w', '--waittime',default=1, type = int, help = 'wait time between polling')
+    parser.add_argument('-w', '--waittime',default=1, type = float, help = 'wait time between polling')
     args = parser.parse_args()
     maxMFCs = args.maxMFCs
     waittime = args.waittime
@@ -29,6 +29,10 @@ class Worker(QtCore.QThread):
         self.host = host
         self.port = port
         self.waittime = waittime
+        self.address = 0
+        self.parname = None
+        self.write = False
+        self.value = None
     def run(self):
         while True:
             try:
@@ -39,6 +43,18 @@ class Worker(QtCore.QThread):
                 return
             self.outputs.emit(df)
             time.sleep(self.waittime)
+    def writeParam(self, address, parname, value):
+        mfc = MFCclient(address,self.host,self.port)
+        parnamedct = {'setpoint': mfc.writeSetpoint,
+                      'Control mode': mfc.writeControlMode,
+                      'Fluidset index': mfc.writeFluidIndex,
+                      'User tag': mfc.writeName}
+        if not parname in list(parnamedct.keys()):
+            return
+        func = parnamedct[parname]
+        func(value)
+        
+
     def stop(self):
         self.terminate()
 
@@ -323,6 +339,7 @@ class Ui_MainWindow(object):
             self.writeSetpointBoxes[i].valueChanged.connect(partial(self.setFlow, i))
             self.writeSetpointBoxes[i].setMaximumWidth(spinboxsizex)
             self.writeSetpointBoxes[i].setMinimumHeight(self.yspacing)
+            self.writeSetpointBoxes[i].setKeyboardTracking(False)
             self.gridLayout.addWidget(self.writeSetpointBoxes[i],rows['writesp'],i+1)
 
             self.userTags[i] = QtWidgets.QLineEdit()
@@ -384,8 +401,10 @@ class Ui_MainWindow(object):
         self.originalUserTags = {}
         self.originalControlModes = {}
         self.originalFluidIndexes = {}
+        self.originalSetpoints = {}
         for i in df.index.values:
-            self.writeSetpointBoxes[i].setValue(df.loc[i]['fSetpoint'])
+            self.originalSetpoints[i] = df.loc[i]['fSetpoint']
+            self.writeSetpointBoxes[i].setValue(self.originalSetpoints[i])
             self.enabledMFCs.append(i)
             self.originalUserTags[i] = df.loc[i]['User tag']
             self.originalControlModes[i] = df.loc[i]['Control mode']
@@ -400,9 +419,12 @@ class Ui_MainWindow(object):
             self.disableWidgets()
             return
         for i in df.index.values:
+            newSetpoint = df.loc[i]['fSetpoint']
+            newControlMode = df.loc[i]['Control mode']
+            newFluidIndex = df.loc[i]['Fluidset index']
             self.addressLabels[i].setValue(df.loc[i]['address'])
             self.addressLabels[i].setStyleSheet('color: black;')
-            self.setpointBoxes[i].setValue(df.loc[i]['fSetpoint'])
+            self.setpointBoxes[i].setValue(newSetpoint)
             self.measureBoxes[i].setValue(df.loc[i]['fMeasure'])
             self.valveBoxes[i].setValue(df.loc[i]['Valve output'])
             self.setpointpctBoxes[i].setValue(df.loc[i]['Setpoint_pct'])
@@ -411,11 +433,11 @@ class Ui_MainWindow(object):
             self.controlBoxes[i].setEnabled(True)
             self.fluidBoxes[i].setEnabled(True)
             self.fluidNameBoxes[i].setText(df.loc[i]['Fluid name'])
-            newControlMode = df.loc[i]['Control mode']
+            
             if newControlMode != self.originalControlModes[i]:
                 self.controlBoxes[i].setCurrentIndex(newControlMode)
                 self.originalControlModes[i] = newControlMode
-            newFluidIndex = df.loc[i]['Fluidset index']
+            
             if newFluidIndex != self.originalFluidIndexes[i]:
                 self.fluidBoxes[i].setValue(newFluidIndex)
                 self.originalFluidIndexes[i] = newFluidIndex
@@ -423,6 +445,9 @@ class Ui_MainWindow(object):
             if newUserTag != self.originalUserTags[i]:
                 self.userTags[i].setText(df.loc[i]['User tag'])
                 self.originalUserTags[i] = newUserTag
+            if newSetpoint != self.originalSetpoints[i]:
+                self.writeSetpointBoxes[i].setValue(newSetpoint)
+                self.originalSetpoints[i] = newSetpoint
             self.userTags[i].setEnabled(True)
 
     def connectLoop(self):
@@ -452,6 +477,9 @@ class Ui_MainWindow(object):
         self.startButton.setText('connect MFCs')
         for i in range(self.maxMFCs):
             self.writeSetpointBoxes[i].setEnabled(False)
+            self.controlBoxes[i].setEnabled(False)
+            self.fluidBoxes[i].setEnabled(False)
+            self.userTags[i].setEnabled(False)
 
     def setFlow(self,i):
         if not self.running:
@@ -459,7 +487,10 @@ class Ui_MainWindow(object):
         value = self.writeSetpointBoxes[i].value()
         address = self.addressLabels[i].value()
         print(f'setting flow to {value} on address {address}')
-        MFCclient(address,self.host, self.port).writeSetpoint(value)
+        #MFCclient(address,self.host, self.port).writeSetpoint(value)
+        self.originalSetpoints[i] = value
+        self.thread.writeParam(address,'setpoint',value)
+
 
     def setUserTag(self,i):
         if not self.running:
@@ -467,7 +498,8 @@ class Ui_MainWindow(object):
         value = self.userTags[i].text()
         address = self.addressLabels[i].value()
         print(f'setting flow to {value} on address {address}')
-        MFCclient(address,self.host, self.port).writeName(value)
+        #MFCclient(address,self.host, self.port).writeName(value)
+        self.thread.writeParam(address,'User tag', value)
 
     def setFlowAll(self):
         if not self.running:
@@ -481,9 +513,11 @@ class Ui_MainWindow(object):
         value = self.controlBoxes[i].currentIndex()
         address = self.addressLabels[i].value()
         print(f'setting address {address} to control mode {value}')
-        MFCclient(address, self.host,self.port).writeControlMode(value)
-        newmode = MFCclient(address,self.host,self.port).readControlMode()
-        self.controlBoxes[i].setCurrentIndex(newmode)
+        #MFCclient(address, self.host,self.port).writeControlMode(value)
+        #newmode = MFCclient(address,self.host,self.port).readControlMode()
+        #self.controlBoxes[i].setCurrentIndex(newmode)
+        self.originalControlModes[i] = value
+        self.thread.writeParam(address, 'Control mode', value)
 
     def setFluidIndex(self,i):
         if not self.running:
@@ -491,12 +525,16 @@ class Ui_MainWindow(object):
         value = self.fluidBoxes[i].value()
         address = self.addressLabels[i].value()
         print(f'setting address {address} to fluid {value}')
-        MFCclient(address,self.host,self.port).writeFluidIndex(value)
+        #MFCclient(address,self.host,self.port).writeFluidIndex(value)
+        self.originalFluidIndexes[i] = value
+        self.thread.writeParam(address,'Fluidset index', value)
+        '''
         newfluid = MFCclient(address, self.host,self.port).readFluidType()
         fluidIndex = newfluid['Fluidset index']
         fluidName = newfluid['Fluid name']
         self.fluidBoxes[i].setValue(fluidIndex)
         self.fluidNameBoxes[i].setText(fluidName)
+        '''
 
 
 def main():
