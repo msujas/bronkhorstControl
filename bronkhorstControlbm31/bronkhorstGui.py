@@ -74,22 +74,6 @@ class Worker(QtCore.QThread):
     def stop(self):
         self.terminate()
 
-class SetWorker(QtCore.QThread):
-    def __init__(self, address, host, port, functionString, value):
-        super(SetWorker,self).__init__()
-        self.address = address
-        self.host = host
-        self.port = port
-        self.functionString = functionString
-        self.value = value
-        self.mfc = MFCclient(self.address, self.host,self.port)
-        self.parnamedct = {'setpoint': self.mfc.writeSetpoint,
-                      'Control mode': self.mfc.writeControlMode,
-                      'Fluidset index': self.mfc.writeFluidIndex,
-                      'User tag': self.mfc.writeName}
-    def run(self):
-        func = self.parnamedct[self.functionString]
-        func(self.value)
     
 
 class Ui_MainWindow(object):
@@ -521,9 +505,9 @@ class Ui_MainWindow(object):
         address = self.addressLabels[i].value()
         print(f'setting flow to {value} on address {address}')
         
-        self.stopConnect()
+        #self.stopConnect()
         MFCclient(address,self.host, self.port).writeSetpoint(value)
-        self.connectLoop()
+        #self.connectLoop()
         
 
 
@@ -533,10 +517,10 @@ class Ui_MainWindow(object):
         value = self.userTags[i].text()
         address = self.addressLabels[i].value()
         print(f'setting flow to {value} on address {address}')
-        self.stopConnect()
+        #self.stopConnect()
         MFCclient(address,self.host, self.port).writeName(value)
-        self.connectLoop()
-        #self.thread.setWriteValues(address,'User tag', value)
+        #self.connectLoop()
+
 
     def setFlowAll(self):
         if not self.running:
@@ -550,13 +534,10 @@ class Ui_MainWindow(object):
         value = self.controlBoxes[i].currentIndex()
         address = self.addressLabels[i].value()
         print(f'setting address {address} to control mode {value}')
-        self.stopConnect()
+        #self.stopConnect()
         MFCclient(address, self.host,self.port).writeControlMode(value)
-        self.connectLoop()
-        #newmode = MFCclient(address,self.host,self.port).readControlMode()
-        #self.controlBoxes[i].setCurrentIndex(newmode)
+        #self.connectLoop()
         self.originalControlModes[i] = value
-        #self.thread.setWriteValues(address, 'Control mode', value)
 
     def setFluidIndex(self,i):
         if not self.running:
@@ -564,18 +545,10 @@ class Ui_MainWindow(object):
         value = self.fluidBoxes[i].value()
         address = self.addressLabels[i].value()
         print(f'setting address {address} to fluid {value}')
-        self.stopConnect()
+        #self.stopConnect()
         MFCclient(address,self.host,self.port).writeFluidIndex(value)
-        self.connectLoop()
+        #self.connectLoop()
         self.originalFluidIndexes[i] = value
-        #self.thread.setWriteValues(address,'Fluidset index', value)
-        '''
-        newfluid = MFCclient(address, self.host,self.port).readFluidType()
-        fluidIndex = newfluid['Fluidset index']
-        fluidName = newfluid['Fluid name']
-        self.fluidBoxes[i].setValue(fluidIndex)
-        self.fluidNameBoxes[i].setText(fluidName)
-        '''
 
 
 def main():

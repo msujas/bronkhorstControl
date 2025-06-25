@@ -127,15 +127,37 @@ class MFCclient():
             return float(datastring)
         else:
             return datastring
-    def pollAll(self):
+    def pollAll_types(self):
+        pass
+    def pollAll2(self):
         string = self.makeMessage(self.address, 'pollAll')
         data = self.sendMessage(string)
         datalines = data.split('\n')
         columns = datalines[0].split(';')
+        types = {'fMeasure': float, 'address':int, 'fSetpoint':float, 'Setpoint_pct':float, 'Measure_pct':float, 'Valve output': float, 'User tag':str,
+                 'Fluidset index': int, 'Fluid name': str, 'Control mode':int}
         array = [[self.strToData(i) for i in line.split(';')] for line in datalines[1:] if line]
         df = pd.DataFrame(data = array,columns=columns)
         df = df.astype({'address':'int8'})
         return df
+    
+    def pollAll(self):
+        string = self.makeMessage(self.address,'readParams_allAddsPars')
+        data = self.sendMessage(string)
+        datadct = json.loads(data.replace('\'','"'))
+        df = pd.DataFrame(columns=list(datadct['0'].keys()))
+        for i in datadct:
+            ds = pd.Series(data = datadct[i])
+            df.loc[int(i)] = ds
+        #columns = 
+        #df = df[]
+        df['Measure'] = df['Measure'].apply(lambda x: x*100/32000)
+        df['Setpoint'] = df['Setpoint'].apply(lambda x: x*100/32000)
+        df['Valve output'] = df['Valve output'].apply(lambda x: x/2**24)
+        df = df.rename({'Measure':'Measure_pct', 'Setpoint':'Setpoint_pct'}, axis = 1)
+        return df
+
+
     def wink(self):
         string = self.makeMessage(self.address,'wink')
         data = self.sendMessage(string)

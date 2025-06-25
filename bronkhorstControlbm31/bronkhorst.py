@@ -70,6 +70,7 @@ class MFC():
         paramdctlist = propar.database().get_parameters(ddeList)
         datalist = propar.instrument(self.com, address=address).read_parameters(paramdctlist)
         datadct = {}
+        datadct['address'] = address
         for d in datalist:
             datadct[d['parm_name']] = d['data']
         return datadct
@@ -77,11 +78,15 @@ class MFC():
         ddes = self.getddes(*names)
         return self.readParams(ddes,address=address)
     def readParams_namesAllAddress(self,*names):
-        ddes = self.getddes(*names)
-        #self.getAddresses()
         datadct_all = {}
-        for a in self.addresses:
-            datadct_all[a] = self.readParams_names(*names, address=a)
+        for c,a in enumerate(self.addresses):
+            dct = self.readParams_names(*names, address=a)
+            #dct['address'] = a
+            datadct_all[str(c)] = dct
+        return datadct_all
+    
+    def readParams_allAddsPars(self):
+        return self.readParams_namesAllAddress(*self.pollparams)
 
     def writeParam(self,name, value):
         proc_nr, parm_nr, parm_type = self.getNumbers(name)
@@ -164,8 +169,8 @@ class MFC():
     def pollAll(self):
         #self.getAddresses()
         datadct = {}
-        datadct['address'] = self.addresses
-        for par in self.pollparams:
+        #datadct['address'] = self.addresses
+        for par in ['address']+self.pollparams:
             datadct[par] = []
         for a in self.addresses:
             datadcttmp = self.readParams(self.ddenrs, a)
@@ -217,7 +222,8 @@ class MFC():
                      'readFluidType':self.readFluidType, 'writeFluidIndex':self.writeFluidIndex,
                      'writeName':self.writeName, 'readMeasure_pct': self.readMeasure_pct,
                      'readSetpoint_pct': self.readSetpoint_pct, 'wink':self.wink,
-                     'readValve': self.readValve, 'readParams_names':self.readParams_names}
+                     'readValve': self.readValve, 'readParams_names':self.readParams_names,
+                     'readParams_allAddsPars':self.readParams_allAddsPars}
         method = methodDct[methodName]
         val = method(*args)
         return val
