@@ -32,13 +32,14 @@ def startMfc(com = 'COM1'):
 
 
 class MFC():
-    def __init__(self,address, mfcMain, com = None):
+    def __init__(self,address, mfcMain):
         self.address = address
         self.mfcMain = mfcMain
-        self.com = self.getCom(com)
+        self.com = mfcMain.comport
         self.pollparams = ['User tag', 'Control mode', 'Fluid name', 'Fluidset index','fMeasure', 'fSetpoint', 
                   'Measure', 'Setpoint', 'Valve output']
         self.ddenrs = paramDF['dde_nr'].loc[self.pollparams].values
+        self.getAddresses()
         #self.pollparamList = propar.database().get_parameters(self.ddenrs)
     def __str__(self):
         return self.readName()
@@ -75,6 +76,13 @@ class MFC():
     def readParams_names(self, *names,address=None):
         ddes = self.getddes(*names)
         return self.readParams(ddes,address=address)
+    def readParams_namesAllAddress(self,*names):
+        ddes = self.getddes(*names)
+        #self.getAddresses()
+        datadct_all = {}
+        for a in self.addresses:
+            datadct_all[a] = self.readParams_names(*names, address=a)
+
     def writeParam(self,name, value):
         proc_nr, parm_nr, parm_type = self.getNumbers(name)
         x = self.mfcMain.master.write(self.address,proc_nr,parm_nr,parm_type,value)
@@ -139,7 +147,7 @@ class MFC():
         return valve
     
     def pollAll_individual(self):
-        self.getAddresses()
+        #self.getAddresses()
         df = pd.DataFrame(columns=['address']+self.pollparams)
         for a in self.addresses:
             values = [a]
@@ -154,7 +162,7 @@ class MFC():
         return df
     
     def pollAll(self):
-        self.getAddresses()
+        #self.getAddresses()
         datadct = {}
         datadct['address'] = self.addresses
         for par in self.pollparams:

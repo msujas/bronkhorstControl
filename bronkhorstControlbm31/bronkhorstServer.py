@@ -124,7 +124,7 @@ def accept_wrapper(sock,sel):
     events = selectors.EVENT_READ | selectors.EVENT_WRITE
     sel.register(conn,events,data=data)
 
-def service_connection(key,mask,sel,mfcMain, com, acceptedHosts = None):
+def service_connection(key,mask,sel,mfc, acceptedHosts = None):
     sock = key.fileobj
     data = key.data
 
@@ -152,7 +152,8 @@ def service_connection(key,mask,sel,mfcMain, com, acceptedHosts = None):
             strmessage = data.outb.decode()
             try:
                 address = int(strmessage.split(';')[0])
-                mainmessage = MFC(address,mfcMain, com).strToMethod(strmessage)
+                mfc.address = address
+                mainmessage = mfc.strToMethod(strmessage)
                 #endmessageMarker = '!'
                 fullmessage = f'{mainmessage}!'
                 bytemessage += bytes(fullmessage,encoding='utf-8')
@@ -185,6 +186,7 @@ def multiServer():
         ahstring = ','.join(acceptedHosts)
     print(f'accepted hosts: {ahstring}')
     mfcMain = startMfc(com)
+    mfc = MFC(0,mfcMain)
     sel = selectors.DefaultSelector()
     print('running multiServer')
     s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -200,7 +202,7 @@ def multiServer():
                 if key.data is None:
                     accept_wrapper(key.fileobj,sel)
                 else:
-                    service_connection(key, mask,sel,mfcMain, com, acceptedHosts)
+                    service_connection(key, mask,sel,mfc, acceptedHosts)
     except KeyboardInterrupt:
         print("caught keyboard interrupt, exiting")
     finally:

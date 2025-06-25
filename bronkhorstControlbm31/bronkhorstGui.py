@@ -76,7 +76,7 @@ class Worker(QtCore.QThread):
 
 class SetWorker(QtCore.QThread):
     def __init__(self, address, host, port, functionString, value):
-        super(Worker,self).__init__()
+        super(SetWorker,self).__init__()
         self.address = address
         self.host = host
         self.port = port
@@ -520,13 +520,12 @@ class Ui_MainWindow(object):
         value = self.writeSetpointBoxes[i].value()
         address = self.addressLabels[i].value()
         print(f'setting flow to {value} on address {address}')
+        
         self.stopConnect()
         MFCclient(address,self.host, self.port).writeSetpoint(value)
         self.connectLoop()
-        '''
-        self.originalSetpoints[i] = value
-        self.thread.setWriteValues(address,'setpoint',value)
-        '''
+        
+
 
     def setUserTag(self,i):
         if not self.running:

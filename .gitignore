@@ -13,3 +13,4 @@ testServer.py
 build
 *.docx
 bronkhorst_control_modes.png
+timeTest.py
