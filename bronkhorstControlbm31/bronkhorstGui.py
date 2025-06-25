@@ -127,6 +127,14 @@ class Ui_MainWindow(object):
         self.startButton.setText('connect MFCs')
         self.bottomLayout.addWidget(self.startButton,0,0)
 
+        self.runningIndicator = QtWidgets.QRadioButton(self.centralwidget)
+        self.runningIndicator.setObjectName('runningIndicator')
+        self.runningIndicator.setText('blinks when running')
+        #self.runningIndicator.setEnabled(False)
+        self.runningIndicator.setChecked(False)
+        #print(self.runningIndicator.isChecked())
+        self.bottomLayout.addWidget(self.runningIndicator,1,0)
+
         self.hostInput = QtWidgets.QLineEdit(self.centralwidget)
         self.hostInput.setObjectName('hostInput')
         self.hostInput.setMinimumWidth(120)
@@ -434,6 +442,8 @@ class Ui_MainWindow(object):
         if len(df.columns) == 0:
             self.disableWidgets()
             return
+        checkValue = self.runningIndicator.isChecked()
+        self.runningIndicator.setChecked(not checkValue)
         for i in df.index.values:
             newSetpoint = df.loc[i]['fSetpoint']
             newControlMode = df.loc[i]['Control mode']
@@ -465,12 +475,12 @@ class Ui_MainWindow(object):
                 self.writeSetpointBoxes[i].setValue(newSetpoint)
                 self.originalSetpoints[i] = newSetpoint
             self.userTags[i].setEnabled(True)
+        
 
     def connectLoop(self):
         if not self.running:
             self.host = self.hostInput.text()
             self.port = self.portInput.value()
-            
             try:
                 self.connectMFCs()
             except OSError:

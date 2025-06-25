@@ -76,6 +76,7 @@ def getArgs(port=PORT):
 
 def run(port = PORT):
     com, port, host, acceptedHosts = getArgs()
+    
     if not acceptedHosts:
         ahstring = 'all'
     else:
@@ -84,6 +85,7 @@ def run(port = PORT):
     print(f'accepted hosts: {ahstring}')
     print('running single client server')
     mfcMain = startMfc(com)
+    mfc = MFC(0,mfcMain)
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind((host, port))
         s.listen()
@@ -106,8 +108,9 @@ def run(port = PORT):
                     strdata = data.decode()
                     try:
                         address = int(strdata.split(';')[0])
+                        mfc.address = address
                         print(strdata)
-                        result = MFC(address, mfcMain, com).strToMethod(strdata)
+                        result = mfc.strToMethod(strdata)
                         result += '!'
                         
                     except (ValueError, KeyError):
