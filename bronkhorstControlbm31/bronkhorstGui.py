@@ -33,17 +33,29 @@ class Worker(QtCore.QThread):
         self.parname = None
         self.write = False
         self.value = None
-
+        self.changeValue = False
+        self.param = ''
+        self.address = 0
+        self.writeValue = None
     def run(self):
         while True:
             try:
+                if self.changeValue:
+                    self.writeParam(self.address,self.param, self.writeValue)
                 df = MFCclient(1,self.host,self.port).pollAll()
+
             except (OSError, AttributeError, ConnectionResetError):
                 print("connection to server lost. Exiting")
                 self.outputs.emit(pd.DataFrame())
                 return
             self.outputs.emit(df)
             time.sleep(self.waittime)
+    def setWriteValues(self,address, parname, value):
+        self.address = address
+        self.param = parname
+        self.writeValue = value
+        self.changeValue = True
+
     def writeParam(self, address, parname, value):
         mfc = MFCclient(address,self.host,self.port)
         parnamedct = {'setpoint': mfc.writeSetpoint,
@@ -54,9 +66,31 @@ class Worker(QtCore.QThread):
             return
         func = parnamedct[parname]
         func(value)
+        self.changeValue = False
+        self.address = 0
+        self.param = ''
+        self.writeValue = None
         
     def stop(self):
         self.terminate()
+
+class SetWorker(QtCore.QThread):
+    def __init__(self, address, host, port, functionString, value):
+        super(Worker,self).__init__()
+        self.address = address
+        self.host = host
+        self.port = port
+        self.functionString = functionString
+        self.value = value
+        self.mfc = MFCclient(self.address, self.host,self.port)
+        self.parnamedct = {'setpoint': self.mfc.writeSetpoint,
+                      'Control mode': self.mfc.writeControlMode,
+                      'Fluidset index': self.mfc.writeFluidIndex,
+                      'User tag': self.mfc.writeName}
+    def run(self):
+        func = self.parnamedct[self.functionString]
+        func(self.value)
+    
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -469,6 +503,7 @@ class Ui_MainWindow(object):
 
     def stopConnect(self):
         self.thread.terminate()
+        self.running = False
     
     def disableWidgets(self):
         self.running = False
@@ -485,10 +520,13 @@ class Ui_MainWindow(object):
         value = self.writeSetpointBoxes[i].value()
         address = self.addressLabels[i].value()
         print(f'setting flow to {value} on address {address}')
-        #MFCclient(address,self.host, self.port).writeSetpoint(value)
+        self.stopConnect()
+        MFCclient(address,self.host, self.port).writeSetpoint(value)
+        self.connectLoop()
+        '''
         self.originalSetpoints[i] = value
-        self.thread.writeParam(address,'setpoint',value)
-
+        self.thread.setWriteValues(address,'setpoint',value)
+        '''
 
     def setUserTag(self,i):
         if not self.running:
@@ -496,8 +534,10 @@ class Ui_MainWindow(object):
         value = self.userTags[i].text()
         address = self.addressLabels[i].value()
         print(f'setting flow to {value} on address {address}')
-        #MFCclient(address,self.host, self.port).writeName(value)
-        self.thread.writeParam(address,'User tag', value)
+        self.stopConnect()
+        MFCclient(address,self.host, self.port).writeName(value)
+        self.connectLoop()
+        #self.thread.setWriteValues(address,'User tag', value)
 
     def setFlowAll(self):
         if not self.running:
@@ -511,11 +551,13 @@ class Ui_MainWindow(object):
         value = self.controlBoxes[i].currentIndex()
         address = self.addressLabels[i].value()
         print(f'setting address {address} to control mode {value}')
-        #MFCclient(address, self.host,self.port).writeControlMode(value)
+        self.stopConnect()
+        MFCclient(address, self.host,self.port).writeControlMode(value)
+        self.connectLoop()
         #newmode = MFCclient(address,self.host,self.port).readControlMode()
         #self.controlBoxes[i].setCurrentIndex(newmode)
         self.originalControlModes[i] = value
-        self.thread.writeParam(address, 'Control mode', value)
+        #self.thread.setWriteValues(address, 'Control mode', value)
 
     def setFluidIndex(self,i):
         if not self.running:
@@ -523,9 +565,11 @@ class Ui_MainWindow(object):
         value = self.fluidBoxes[i].value()
         address = self.addressLabels[i].value()
         print(f'setting address {address} to fluid {value}')
-        #MFCclient(address,self.host,self.port).writeFluidIndex(value)
+        self.stopConnect()
+        MFCclient(address,self.host,self.port).writeFluidIndex(value)
+        self.connectLoop()
         self.originalFluidIndexes[i] = value
-        self.thread.writeParam(address,'Fluidset index', value)
+        #self.thread.setWriteValues(address,'Fluidset index', value)
         '''
         newfluid = MFCclient(address, self.host,self.port).readFluidType()
         fluidIndex = newfluid['Fluidset index']
