@@ -150,7 +150,8 @@ class MFC():
         value = self.readParam('Valve output')
         valve = value/2**24
         return valve
-    
+    def testMessage(self):
+        return 'a'*1000 + 'b'*1000
     def pollAll_individual(self):
         #self.getAddresses()
         df = pd.DataFrame(columns=['address']+self.pollparams)
@@ -223,7 +224,7 @@ class MFC():
                      'writeName':self.writeName, 'readMeasure_pct': self.readMeasure_pct,
                      'readSetpoint_pct': self.readSetpoint_pct, 'wink':self.wink,
                      'readValve': self.readValve, 'readParams_names':self.readParams_names,
-                     'readParams_allAddsPars':self.readParams_allAddsPars}
+                     'readParams_allAddsPars':self.readParams_allAddsPars,'testMessage':self.testMessage}
         method = methodDct[methodName]
         val = method(*args)
         return val

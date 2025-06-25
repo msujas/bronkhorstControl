@@ -112,9 +112,12 @@ def run(port = PORT):
                         
                     except (ValueError, KeyError):
                         byteResult = b'invalid input!'
-                    byteResult = bytes(str(result),encoding = 'utf-8')
-                    print(f'sending data to {addr}')
-                    conn.sendall(byteResult)
+                    resultsplit = result
+                    while len(resultsplit) > 1024:
+                        resultsplit = resultsplit[:1024]
+                        byteResult = bytes(str(resultsplit),encoding = 'utf-8')
+                        print(f'sending data to {addr}')
+                        conn.sendall(byteResult)
 
 def accept_wrapper(sock,sel):
     conn,addr =sock.accept()

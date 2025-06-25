@@ -129,7 +129,7 @@ class MFCclient():
             return datastring
     def pollAll_types(self):
         pass
-    def pollAll2(self):
+    def pollAll(self):
         string = self.makeMessage(self.address, 'pollAll')
         data = self.sendMessage(string)
         datalines = data.split('\n')
@@ -141,7 +141,7 @@ class MFCclient():
         df = df.astype({'address':'int8'})
         return df
     
-    def pollAll(self):
+    def pollAll2(self):
         string = self.makeMessage(self.address,'readParams_allAddsPars')
         data = self.sendMessage(string)
         datadct = json.loads(data.replace('\'','"'))
@@ -157,7 +157,10 @@ class MFCclient():
         df = df.rename({'Measure':'Measure_pct', 'Setpoint':'Setpoint_pct'}, axis = 1)
         return df
 
-
+    def testMessage(self):
+        string = self.makeMessage(self.address,'testMessage')
+        data = self.sendMessage(string)
+        return data
     def wink(self):
         string = self.makeMessage(self.address,'wink')
         data = self.sendMessage(string)
@@ -220,20 +223,23 @@ class MFCclient():
         sock = key.fileobj
         data = key.data
         receivedMessage = b''
+        strMessage = '!'
         if mask & selectors.EVENT_READ:
-            recv_data = sock.recv(1024)  # Should be ready to read
-            if recv_data:
-                #print(f"Received {recv_data!r} from connection {data.connid}")
-                receivedMessage+= recv_data
-                data.recv_total += len(recv_data)
-                if receivedMessage:
-                    strMessage = receivedMessage.decode()
-            if not recv_data or '!' in strMessage:
-                print(f"Closing connection {data.connid}")
-                sel.unregister(sock)
-                sock.close()
+            while True:
+                recv_data = sock.recv(1024)  # Should be ready to read
                 if recv_data:
-                    return strMessage
+                    #print(f"Received {recv_data!r} from connection {data.connid}")
+                    receivedMessage+= recv_data
+                    data.recv_total += len(recv_data)
+                    if receivedMessage:
+                        strMessage = receivedMessage.decode()
+                if not recv_data or '!' in strMessage:
+                    print(f"Closing connection {data.connid}")
+                    sel.unregister(sock)
+                    sock.close()
+                    if recv_data:
+                        return strMessage
+                    return
                 
             
         if mask & selectors.EVENT_WRITE:
