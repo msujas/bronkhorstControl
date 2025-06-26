@@ -479,6 +479,9 @@ def plotAll(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'allPlot
             logger.error(message)
             print(message)
             return
+        except np.core._exceptions._UFuncNoLoopError as e:
+            logger.warning(e)
+            continue
         except Exception as e:
             logger.exception(e)
             raise e
