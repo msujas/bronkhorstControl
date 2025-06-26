@@ -22,13 +22,15 @@ logger = logging.getLogger()
 def parseArguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('-m','--maxMFCs', default=10, type=int, help='maximum number of MFCs that might be needed (default 10)')
-    parser.add_argument('-w', '--waittime',default=1, type = float, help = 'wait time between polling')
+    #parser.add_argument('-w', '--waittime',default=1, type = float, help = 'wait time between polling')
     args = parser.parse_args()
     maxMFCs = args.maxMFCs
+    '''
     waittime = args.waittime
     if not waittime:
         waittime = 1
-    return maxMFCs, waittime
+    '''
+    return maxMFCs#, waittime
 
 class Worker(QtCore.QThread):
     outputs = QtCore.pyqtSignal(pd.DataFrame)
@@ -45,12 +47,13 @@ class Worker(QtCore.QThread):
         self.param = ''
         self.address = 0
         self.writeValue = None
+        self.mfc = MFCclient(1,self.host,self.port)
     def run(self):
         while True:
             try:
                 if self.changeValue:
                     self.writeParam(self.address,self.param, self.writeValue)
-                df = MFCclient(1,self.host,self.port).pollAll()
+                df = self.mfc.pollAll()
 
             except (OSError, AttributeError, ConnectionResetError):
                 print("connection to server lost. Exiting")
@@ -96,7 +99,7 @@ class Ui_MainWindow(object):
         self.MainWindow.setWindowTitle('Bronkhorst GUI')
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
-        self.maxMFCs, self.waittime = parseArguments()
+        self.maxMFCs = parseArguments()
         self.box1x = 70
         self.box1y = 20
         self.xspacing = 90
@@ -133,13 +136,13 @@ class Ui_MainWindow(object):
         self.bottomLayout.setVerticalSpacing(0)
         
         
-        self.startButton = QtWidgets.QPushButton(self.centralwidget)
+        self.startButton = QtWidgets.QPushButton()
         self.startButton.setObjectName('startButton')
         self.startButton.setMinimumWidth(150)
         self.startButton.setText('connect MFCs')
         self.bottomLayout.addWidget(self.startButton,0,0)
 
-        self.runningIndicator = QtWidgets.QRadioButton(self.centralwidget)
+        self.runningIndicator = QtWidgets.QRadioButton()
         self.runningIndicator.setObjectName('runningIndicator')
         self.runningIndicator.setText('blinks when running')
         #self.runningIndicator.setEnabled(False)
@@ -147,19 +150,19 @@ class Ui_MainWindow(object):
         #print(self.runningIndicator.isChecked())
         self.bottomLayout.addWidget(self.runningIndicator,1,0)
 
-        self.hostInput = QtWidgets.QLineEdit(self.centralwidget)
+        self.hostInput = QtWidgets.QLineEdit()
         self.hostInput.setObjectName('hostInput')
         self.hostInput.setMinimumWidth(120)
         self.hostInput.setText(HOST)
         self.bottomLayout.addWidget(self.hostInput, 0, 1)
 
-        self.hostLabel = QtWidgets.QLabel(self.centralwidget)
+        self.hostLabel = QtWidgets.QLabel()
         self.hostLabel.setObjectName('hostLabel')
         self.hostLabel.setText('host name')
         self.bottomLayout.addWidget(self.hostLabel,1,1)
 
 
-        self.portInput = QtWidgets.QSpinBox(self.centralwidget)
+        self.portInput = QtWidgets.QSpinBox()
         self.portInput.setObjectName('portInput')
         self.portInput.setMinimumWidth(120)
         self.portInput.setMaximum(2**16)
@@ -167,10 +170,23 @@ class Ui_MainWindow(object):
         self.portInput.setValue(PORT)
         self.bottomLayout.addWidget(self.portInput,0,2)
 
-        self.portLabel = QtWidgets.QLabel(self.centralwidget)
+        self.portLabel = QtWidgets.QLabel()
         self.portLabel.setObjectName('portLabel')
         self.portLabel.setText('port value')
         self.bottomLayout.addWidget(self.portLabel,1,2)
+
+        self.pollTimeBox = QtWidgets.QDoubleSpinBox()
+        self.pollTimeBox.setObjectName('pollTimeBox')
+        self.pollTimeBox.setValue(1)
+        self.pollTimeBox.setMinimum(0.1)
+        self.pollTimeBox.setMaximum(5)
+        self.pollTimeBox.setDecimals(1)
+        self.bottomLayout.addWidget(self.pollTimeBox,0,3)
+
+        self.pollLabel = QtWidgets.QLabel()
+        self.pollLabel.setObjectName('pollLabel')
+        self.pollLabel.setText('poll time')
+        self.bottomLayout.addWidget(self.pollLabel,1,3)
 
         self.addressLabel = QtWidgets.QLabel()
         self.addressLabel.setObjectName('addressLabel')
@@ -489,9 +505,11 @@ class Ui_MainWindow(object):
                     self.originalSetpoints[i] = newSetpoint
                 self.userTags[i].setEnabled(True)
             except TypeError as e:
+                print(df)
                 logger.warning(e)
                 return
             except Exception as e:
+                print(df)
                 logger.exception(e)
                 raise e
         
@@ -501,6 +519,7 @@ class Ui_MainWindow(object):
         if not self.running:
             self.host = self.hostInput.text()
             self.port = self.portInput.value()
+            self.waittime = self.pollTimeBox.value()
             try:
                 self.connectMFCs()
             except OSError:

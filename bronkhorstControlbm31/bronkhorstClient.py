@@ -59,6 +59,8 @@ class MFCclient():
         self.port = port
         self.connid = connid
         self.multi = multi
+        self.types = {'fMeasure': float, 'address':np.uint8, 'fSetpoint':float, 'Setpoint_pct':float, 'Measure_pct':float, 'Valve output': float, 
+                 'Fluidset index': np.uint8,  'Control mode':np.uint8}
     def readAddresses(self):
         string = self.makeMessage(self.address, 'getAddresses')
         addressesString = self.sendMessage(string)
@@ -128,25 +130,16 @@ class MFCclient():
         string = self.makeMessage(self.address,'readValve')
         data = self.sendMessage(string)
         return float(data)
-    def strToData(self,datastring : str):
-        if datastring.isdigit():
-            return int(datastring)
-        elif datastring.replace('.','',1).isdigit():
-            return float(datastring)
-        else:
-            return datastring
-    def pollAll_types(self):
-        pass
+
     def pollAll(self):
         string = self.makeMessage(self.address, 'pollAll')
         data = self.sendMessage(string)
         datalines = data.split('\n')
         columns = datalines[0].split(';')
-        types = {'fMeasure': float, 'address':np.uint8, 'fSetpoint':float, 'Setpoint_pct':float, 'Measure_pct':float, 'Valve output': float, 
-                 'Fluidset index': np.uint8,  'Control mode':np.uint8}
-        array = [[self.strToData(i) for i in line.split(';')] for line in datalines[1:] if line]
+
+        array = [[i for i in line.split(';')] for line in datalines[1:] if line]
         df = pd.DataFrame(data = array,columns=columns)
-        df = df.astype(types)
+        df = df.astype(self.types)
         return df
     
     def pollAll2(self):
