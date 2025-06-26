@@ -53,6 +53,7 @@ def getArgs(port=PORT):
                                                                 '49152-65535 should be fine'))
     parser.add_argument('-a','--accepted-hosts', default = None, type = str, help= ('list of comma separated hosts that can be'
                                                                                     'accepted (default - accept all). E.g. -a pc1,pc2'))
+    parser.add_argument('-d','--debug', action='store_true')
 
     args = parser.parse_args()
     f = open(configfile,'w')
@@ -63,7 +64,7 @@ def getArgs(port=PORT):
     print(f'MFCs on {com}')
     print(f'port: {PORT}')
     host = args.host
-    
+    debug = args.debug
     acceptedHosts = None
     if args.accepted_hosts:
         acceptedHosts = args.accepted_hosts.split(',')
@@ -81,7 +82,7 @@ def getArgs(port=PORT):
         print('host must must be "local", "remote", "remoteip" or nothing (local)')
         return
     print(host)
-    return com, PORT, host, acceptedHosts
+    return com, PORT, host, acceptedHosts, debug
 
 def run(port = PORT):
     com, port, host, acceptedHosts = getArgs()
@@ -142,7 +143,8 @@ def accept_wrapper(sock,sel):
 def service_connection(key,mask,sel,mfc, acceptedHosts = None):
     sock = key.fileobj
     data = key.data
-
+    logger.debug(f'accepted connection from {data.addr}')
+    connectionLostMessage = f'connection lost with client: {data.addr}'
     bytemessage = b''
     def closeConnection():
         print(f'closing connection to {data.addr}')
@@ -158,8 +160,11 @@ def service_connection(key,mask,sel,mfc, acceptedHosts = None):
     if mask & selectors.EVENT_READ:
         try:
             recvData = sock.recv(1024)
+            
         except (ConnectionAbortedError, ConnectionResetError):
-            print(f'connection lost with client: {data.addr}')
+            
+            print(connectionLostMessage)
+            logger.info(connectionLostMessage)
             recvData = b''
         if recvData:
             print(recvData)
@@ -179,6 +184,7 @@ def service_connection(key,mask,sel,mfc, acceptedHosts = None):
                 bytemessage = b''
                 closeConnection()
         else:
+            logger.debug(f'no data received from {data.addr}')
             closeConnection()
     if mask & selectors.EVENT_WRITE:
 
@@ -187,16 +193,22 @@ def service_connection(key,mask,sel,mfc, acceptedHosts = None):
             try:
                 sent = sock.send(bytemessage)
                 bytemessage = bytemessage[sent:]
+                logger.debug(f'data sent to {data.addr}')
             except ConnectionResetError:
-                print(f'connection lost with client: {data.addr}')
+                print(connectionLostMessage)
+                logger.info(connectionLostMessage)
                 bytemessage = b''
                 closeConnection()
 
 def multiServer():
-    logging.basicConfig(filename=logfile, level = logging.DEBUG, format = '%(asctime)s %(levelname)-8s %(message)s',
+    com,port, host, acceptedHosts, debug = getArgs()
+    loglevel = logging.INFO
+    if debug:
+        loglevel = logging.DEBUG
+    logging.basicConfig(filename=logfile, level = loglevel, format = '%(asctime)s %(levelname)-8s %(message)s',
                         datefmt = '%Y/%m/%d_%H:%M:%S')
     logger.info('server started')
-    com,port, host, acceptedHosts = getArgs()
+    
     
     if not acceptedHosts:
         ahstring = 'all'

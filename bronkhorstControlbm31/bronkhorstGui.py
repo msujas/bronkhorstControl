@@ -4,11 +4,19 @@ import time
 import pandas as pd
 if __name__ == '__main__':
     from bronkhorstClient import MFCclient, plotAllSingle
-    from bronkhorstServer import HOST, PORT
+    from bronkhorstServer import HOST, PORT, logdir
 else:
     from .bronkhorstClient import MFCclient, plotAllSingle
-    from .bronkhorstServer import HOST, PORT
+    from .bronkhorstServer import HOST, PORT, logdir
 from functools import partial
+import logging
+import pathlib, os
+
+homedir = pathlib.Path.home()
+#logdir = 'bronkhorstLogger'
+fulllogdir = f'{homedir}/{logdir}'
+os.makedirs(fulllogdir,exist_ok=True)
+logger = logging.getLogger()
 
 
 def parseArguments():
@@ -78,6 +86,10 @@ class Worker(QtCore.QThread):
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
+        eventlogfile = f'{homedir}/{logdir}/mfcPlotAll.log'
+        logging.basicConfig(filename=eventlogfile, level = logging.INFO, format = '%(asctime)s %(levelname)-8s %(message)s',
+                            datefmt = '%Y/%m/%d_%H:%M:%S')
+        logger.info('mfcgui opened')
         self.MainWindow = MainWindow
         self.MainWindow.setObjectName("MainWindow")
         self.MainWindow.resize(800, 450)
@@ -445,36 +457,44 @@ class Ui_MainWindow(object):
         checkValue = self.runningIndicator.isChecked()
         self.runningIndicator.setChecked(not checkValue)
         for i in df.index.values:
-            newSetpoint = df.loc[i]['fSetpoint']
-            newControlMode = df.loc[i]['Control mode']
-            newFluidIndex = df.loc[i]['Fluidset index']
-            self.addressLabels[i].setValue(df.loc[i]['address'])
-            self.addressLabels[i].setStyleSheet('color: black;')
-            self.setpointBoxes[i].setValue(newSetpoint)
-            self.measureBoxes[i].setValue(df.loc[i]['fMeasure'])
-            self.valveBoxes[i].setValue(df.loc[i]['Valve output'])
-            self.setpointpctBoxes[i].setValue(df.loc[i]['Setpoint_pct'])
-            self.measurepctBoxes[i].setValue(df.loc[i]['Measure_pct'])
-            self.writeSetpointBoxes[i].setEnabled(True)
-            self.controlBoxes[i].setEnabled(True)
-            self.fluidBoxes[i].setEnabled(True)
-            self.fluidNameBoxes[i].setText(df.loc[i]['Fluid name'])
-            
-            if newControlMode != self.originalControlModes[i]:
-                self.controlBoxes[i].setCurrentIndex(newControlMode)
-                self.originalControlModes[i] = newControlMode
-            
-            if newFluidIndex != self.originalFluidIndexes[i]:
-                self.fluidBoxes[i].setValue(newFluidIndex)
-                self.originalFluidIndexes[i] = newFluidIndex
-            newUserTag = df.loc[i]['User tag']
-            if newUserTag != self.originalUserTags[i]:
-                self.userTags[i].setText(df.loc[i]['User tag'])
-                self.originalUserTags[i] = newUserTag
-            if newSetpoint != self.originalSetpoints[i]:
-                self.writeSetpointBoxes[i].setValue(newSetpoint)
-                self.originalSetpoints[i] = newSetpoint
-            self.userTags[i].setEnabled(True)
+            try:
+                newSetpoint = df.loc[i]['fSetpoint']
+                newControlMode = df.loc[i]['Control mode']
+                newFluidIndex = df.loc[i]['Fluidset index']
+                self.addressLabels[i].setValue(df.loc[i]['address'])
+                self.addressLabels[i].setStyleSheet('color: black;')
+                self.setpointBoxes[i].setValue(newSetpoint)
+                self.measureBoxes[i].setValue(df.loc[i]['fMeasure'])
+                self.valveBoxes[i].setValue(df.loc[i]['Valve output'])
+                self.setpointpctBoxes[i].setValue(df.loc[i]['Setpoint_pct'])
+                self.measurepctBoxes[i].setValue(df.loc[i]['Measure_pct'])
+                self.writeSetpointBoxes[i].setEnabled(True)
+                self.controlBoxes[i].setEnabled(True)
+                self.fluidBoxes[i].setEnabled(True)
+                self.fluidNameBoxes[i].setText(df.loc[i]['Fluid name'])
+                
+                if newControlMode != self.originalControlModes[i]:
+                    self.controlBoxes[i].setCurrentIndex(newControlMode)
+                    self.originalControlModes[i] = newControlMode
+                
+                if newFluidIndex != self.originalFluidIndexes[i]:
+                    self.fluidBoxes[i].setValue(newFluidIndex)
+                    self.originalFluidIndexes[i] = newFluidIndex
+                newUserTag = df.loc[i]['User tag']
+                if newUserTag != self.originalUserTags[i]:
+                    self.userTags[i].setText(df.loc[i]['User tag'])
+                    self.originalUserTags[i] = newUserTag
+                if newSetpoint != self.originalSetpoints[i]:
+                    self.writeSetpointBoxes[i].setValue(newSetpoint)
+                    self.originalSetpoints[i] = newSetpoint
+                self.userTags[i].setEnabled(True)
+            except TypeError as e:
+                logger.warning(e)
+                return
+            except Exception as e:
+                logger.exception(e)
+                raise e
+        
         
 
     def connectLoop(self):

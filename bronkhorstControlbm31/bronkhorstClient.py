@@ -11,6 +11,7 @@ import os, pathlib
 from bronkhorstControlbm31.bronkhorstServer import PORT, HOST, logdir
 import json
 import logging
+import numpy as np
 
 homedir = pathlib.Path.home()
 #logdir = 'bronkhorstLogger'
@@ -141,11 +142,11 @@ class MFCclient():
         data = self.sendMessage(string)
         datalines = data.split('\n')
         columns = datalines[0].split(';')
-        types = {'fMeasure': float, 'address':int, 'fSetpoint':float, 'Setpoint_pct':float, 'Measure_pct':float, 'Valve output': float, 'User tag':str,
-                 'Fluidset index': int, 'Fluid name': str, 'Control mode':int}
+        types = {'fMeasure': float, 'address':np.uint8, 'fSetpoint':float, 'Setpoint_pct':float, 'Measure_pct':float, 'Valve output': float, 
+                 'Fluidset index': np.uint8,  'Control mode':np.uint8}
         array = [[self.strToData(i) for i in line.split(';')] for line in datalines[1:] if line]
         df = pd.DataFrame(data = array,columns=columns)
-        df = df.astype({'address':'int8'})
+        df = df.astype(types)
         return df
     
     def pollAll2(self):
