@@ -86,7 +86,7 @@ class Worker(QtCore.QThread):
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
-        eventlogfile = f'{homedir}/{logdir}/mfcPlotAll.log'
+        eventlogfile = f'{homedir}/{logdir}/mfcgui.log'
         logging.basicConfig(filename=eventlogfile, level = logging.INFO, format = '%(asctime)s %(levelname)-8s %(message)s',
                             datefmt = '%Y/%m/%d_%H:%M:%S')
         logger.info('mfcgui opened')
