@@ -1,9 +1,18 @@
 import socket
 from bronkhorstControlbm31.bronkhorst import MFC, startMfc, configfile
-import os
+import os, pathlib
 import argparse
 import selectors, types
 import subprocess
+import logging
+
+logger = logging.getLogger()
+homedir = pathlib.Path.home()
+logdir = 'bronkhorstLogger'
+fulllogdir = f'{homedir}/{logdir}'
+os.makedirs(fulllogdir,exist_ok=True)
+logfile = f'{homedir}/{logdir}/bronkhorstServer.log'
+
 
 HOST = 'localhost'
 PORT = 61245
@@ -184,6 +193,9 @@ def service_connection(key,mask,sel,mfc, acceptedHosts = None):
                 closeConnection()
 
 def multiServer():
+    logging.basicConfig(filename=logfile, level = logging.DEBUG, format = '%(asctime)s %(levelname)-8s %(message)s',
+                        datefmt = '%Y/%m/%d_%H:%M:%S')
+    logger.info('server started')
     com,port, host, acceptedHosts = getArgs()
     
     if not acceptedHosts:
@@ -210,7 +222,11 @@ def multiServer():
                 else:
                     service_connection(key, mask,sel,mfc, acceptedHosts)
     except KeyboardInterrupt:
+        logger.info('keyboard interupt')
         print("caught keyboard interrupt, exiting")
+    except Exception as e:
+        logger.exception(e)
+        raise e
     finally:
         sel.close()
 

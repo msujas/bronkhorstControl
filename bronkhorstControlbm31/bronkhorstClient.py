@@ -8,8 +8,15 @@ import time
 from datetime import datetime
 import argparse
 import os, pathlib
-from bronkhorstControlbm31.bronkhorstServer import PORT, HOST
+from bronkhorstControlbm31.bronkhorstServer import PORT, HOST, logdir
 import json
+import logging
+
+homedir = pathlib.Path.home()
+#logdir = 'bronkhorstLogger'
+fulllogdir = f'{homedir}/{logdir}'
+os.makedirs(fulllogdir,exist_ok=True)
+logger = logging.getLogger()
 
 
 def getArgs(host=HOST, port=PORT, connid = socket.gethostname(),waitTime = 0.5, plotTime = 60, log = True, logInterval = 5):
@@ -346,7 +353,7 @@ def timePlotSingle(df, ax, measure, tlist, xlim, colName = 'fMeasure', ylabel = 
     ax.set_ylabel(ylabel)
 
 def getLogFile():
-    homedir = pathlib.Path.home()
+    
     logdir = f'{homedir}/bronkhorstClientLog/'
     t = time.time()
     dt = datetime.fromtimestamp(t)
@@ -428,6 +435,10 @@ def plotAllSingle(df, tlist, ax, measureFlow, measureValve,xlim, waittime = 1,  
 def plotAll(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'allPlot',xlim = 60, log = True, logInterval = 5):
     host,port,connid, waittime, xlim, log, logInterval = getArgs(host=host,port=port,connid=connid, 
                                                                  waitTime=waittime,plotTime=xlim, log = log, logInterval=logInterval)
+    eventlogfile = f'{homedir}/{logdir}/mfcPlotAll.log'
+    logging.basicConfig(filename=eventlogfile, level = logging.INFO, format = '%(asctime)s %(levelname)-8s %(message)s',
+                        datefmt = '%Y/%m/%d_%H:%M:%S')
+    logger.info('mfcPlotAll started')
     plt.ion()
     fig, ax = plt.subplots(2,2)
     measureFlow = {}
@@ -450,6 +461,23 @@ def plotAll(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'allPlot
                     headerString = logHeader(logfile,df)
             plotAllSingle(df,tlist,ax,measureFlow, measureValve,xlim, waittime=waittime,  log = log, logfile=logfile, tlog=tlog,
                           logInterval=logInterval, headerString=headerString)
-        except (KeyboardInterrupt, AttributeError):
+        except KeyboardInterrupt:
+            logger.info('keyboard interrupt')
             plt.close(fig)
             return
+        except AttributeError as e:
+            logger.error(str(e))
+            return
+        except OSError as e:
+            message = f'{e}.\nbronkhorstServer is probably not open, or host or port settings are incorrect'
+            print(message)
+            logger.error(message)
+            return
+        except ConnectionResetError as e:
+            message = f'{e}.\nbronkhorstServer likely closed while running'
+            logger.error(message)
+            print(message)
+            return
+        except Exception as e:
+            logger.exception(e)
+            raise e
