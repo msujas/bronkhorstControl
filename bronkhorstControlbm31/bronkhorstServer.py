@@ -143,7 +143,7 @@ def accept_wrapper(sock,sel):
 def service_connection(key,mask,sel,mfc, acceptedHosts = None):
     sock = key.fileobj
     data = key.data
-    logger.debug(f'accepted connection from {data.addr}')
+    #logger.debug(f'accepted connection from {data.addr}')
     connectionLostMessage = f'connection lost with client: {data.addr}'
     bytemessage = b''
     def closeConnection():
@@ -193,7 +193,7 @@ def service_connection(key,mask,sel,mfc, acceptedHosts = None):
             try:
                 sent = sock.send(bytemessage)
                 bytemessage = bytemessage[sent:]
-                logger.debug(f'data sent to {data.addr}')
+                #logger.debug(f'data sent to {data.addr}')
             except ConnectionResetError:
                 print(connectionLostMessage)
                 logger.info(connectionLostMessage)

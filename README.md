@@ -29,12 +29,12 @@ There are also 3 plotting programs called barPlot, timePlot, and mfcPlotAll whic
 mfcPlotAll
 ![alt text](plotter-1.png)
 
-There is also a gui called mfcgui. Run in the terminal. There are two options: -m/--maxMFCs - the maximum number of MFCs that may be needed (sets the number of columns of widgets), by default this is 10, if you have more, or want to reduce it to make it cleaner, run with the specific number you want. And -w/--waittime - the time between polls of the MFCs (minimum 1). e.g. for 15 MFCs:
+There is also a gui called mfcgui. Run in the terminal. There is one option: -m/--maxMFCs - the maximum number of MFCs that may be needed (sets the number of columns of widgets), by default this is 10, if you have more, or want to reduce it to make it cleaner, run with the specific number you want. e.g. for 15 MFCs:
 ```
 mfcgui -m 15
 ```
 
-![image](https://github.com/user-attachments/assets/d6e73338-d5de-499c-ae60-87e3848f3f1d)
+![alt text](mfcgui.png)
 
 I should mention this article https://realpython.com/python-sockets/ and the associated repository which helped me to make this.
 

@@ -1,6 +1,7 @@
 import propar
 import pandas as pd
-import pathlib, os
+import pathlib, os, json
+from functools import partial
 
 homedir = pathlib.Path.home()
 configfile = f'{homedir}/bronkhorstServerConfig/comConfg.log'
@@ -79,10 +80,13 @@ class MFC():
         return self.readParams(ddes,address=address)
     def readParams_namesAllAddress(self,*names):
         datadct_all = {}
+            
         for c,a in enumerate(self.addresses):
             dct = self.readParams_names(*names, address=a)
-            #dct['address'] = a
-            datadct_all[str(c)] = dct
+            for par in dct:
+                if c == 0:
+                    datadct_all[par] = []
+                datadct_all[par].append(dct[par])
         return datadct_all
     
     def readParams_allAddsPars(self):
@@ -132,15 +136,9 @@ class MFC():
     def readFluidType(self):
         name = self.readName()
         fluiddct = self.readParams_names('Fluidset index', 'Fluid name')
-        '''
-        fluidName = fluiddct['Fluid name']
-        fluidIndex = fluiddct['Fluidset index']
-        #fluidName = self.readParam('Fluid name')
-        
-        print(f'{name} fluid: {fluidName}, fluid index: {fluidIndex}')
-        '''
         print(fluiddct)
-        return fluiddct#fluidName, fluidIndex
+        return fluiddct
+    
     def writeFluidIndex(self,value):
         value = int(value)
         x = self.writeParam('Fluidset index',value)
@@ -152,25 +150,9 @@ class MFC():
         return valve
     def testMessage(self):
         return 'a'*1000 + 'b'*1000
-    def pollAll_individual(self):
-        #self.getAddresses()
-        df = pd.DataFrame(columns=['address']+self.pollparams)
-        for a in self.addresses:
-            values = [a]
-            for p in self.pollparams:
-                values.append(self.readParam(p,a))
-            df.loc[a] = values
-        df['Measure'] = df['Measure'].apply(lambda x: x*100/32000)
-        df['Setpoint'] = df['Setpoint'].apply(lambda x: x*100/32000)
-        df['Valve output'] = df['Valve output'].apply(lambda x: x/2**24)
-        df = df.rename({'Measure':'Measure_pct', 'Setpoint':'Setpoint_pct'}, axis = 1)
-        self.paramDf = df
-        return df
     
     def pollAll(self):
-        #self.getAddresses()
         datadct = {}
-        #datadct['address'] = self.addresses
         for par in ['address']+self.pollparams:
             datadct[par] = []
         for a in self.addresses:
@@ -183,8 +165,6 @@ class MFC():
         df['Valve output'] = df['Valve output'].apply(lambda x: x/2**24)
         df = df.rename({'Measure':'Measure_pct', 'Setpoint':'Setpoint_pct'}, axis = 1)
         return df
-                
-
     def pollAllServer(self):
         df = self.pollAll()
         print(df)
@@ -227,6 +207,8 @@ class MFC():
                      'readParams_allAddsPars':self.readParams_allAddsPars,'testMessage':self.testMessage}
         method = methodDct[methodName]
         val = method(*args)
+        if type(val) == dict:
+            return json.dumps(val)
         return val
 
     

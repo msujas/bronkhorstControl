@@ -95,7 +95,7 @@ class Ui_MainWindow(object):
         logger.info('mfcgui opened')
         self.MainWindow = MainWindow
         self.MainWindow.setObjectName("MainWindow")
-        self.MainWindow.resize(800, 450)
+        self.MainWindow.resize(800, 550)
         self.MainWindow.setWindowTitle('Bronkhorst GUI')
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -107,17 +107,18 @@ class Ui_MainWindow(object):
 
         spinboxsizex = 100
 
-        rows = {'address':0,
-                'setpoint':1,
-                'measure':2,
-                'setpointpct':3,
-                'measurepct':4,
-                'valve':5,
-                'controlMode':6,
-                'fluidIndex':7,
-                'fluidName':8,
-                'writesp':9,
-                'usertag':10}
+        rows = {'wink':0,
+                'address':1,
+                'setpoint':2,
+                'measure':3,
+                'setpointpct':4,
+                'measurepct':5,
+                'valve':6,
+                'controlMode':7,
+                'fluidIndex':8,
+                'fluidName':9,
+                'writesp':10,
+                'usertag':11}
 
         self.scrollArea = QtWidgets.QScrollArea()
         self.scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -181,12 +182,18 @@ class Ui_MainWindow(object):
         self.pollTimeBox.setMinimum(0.1)
         self.pollTimeBox.setMaximum(5)
         self.pollTimeBox.setDecimals(1)
+        self.pollTimeBox.setSingleStep(0.1)
         self.bottomLayout.addWidget(self.pollTimeBox,0,3)
 
         self.pollLabel = QtWidgets.QLabel()
         self.pollLabel.setObjectName('pollLabel')
         self.pollLabel.setText('poll time')
         self.bottomLayout.addWidget(self.pollLabel,1,3)
+
+        self.winkLabel = QtWidgets.QLabel()
+        self.winkLabel.setObjectName('winkLabel')
+        self.winkLabel.setMinimumHeight(self.yspacing)
+        self.leftLayout.addWidget(self.winkLabel,rows['wink'],0)
 
         self.addressLabel = QtWidgets.QLabel()
         self.addressLabel.setObjectName('addressLabel')
@@ -265,7 +272,7 @@ class Ui_MainWindow(object):
 
 
         
-
+        self.winkbuttons= {}
         self.addressLabels = {}
         self.setpointBoxes = {}
         self.measureBoxes = {}
@@ -281,6 +288,15 @@ class Ui_MainWindow(object):
 
         self.running = False
         for i in range(self.maxMFCs):
+            self.winkbuttons[i] = QtWidgets.QPushButton()
+            self.winkbuttons[i].setText('wink')
+            self.winkbuttons[i].setObjectName(f'winkbuttons{i}')
+            self.winkbuttons[i].setMaximumWidth(spinboxsizex)
+            self.winkbuttons[i].setMinimumHeight(self.yspacing)
+            self.winkbuttons[i].setEnabled(False)
+            self.gridLayout.addWidget(self.winkbuttons[i], rows['wink'],i+1)
+            self.winkbuttons[i].clicked.connect(partial(self.wink,i))
+
             self.addressLabels[i] = QtWidgets.QSpinBox()
             self.addressLabels[i].setObjectName(f'addressLabel{i}')
             self.addressLabels[i].setMinimum(-1)
@@ -404,7 +420,9 @@ class Ui_MainWindow(object):
             self.gridLayout.addWidget(self.userTags[i],rows['usertag'],i+1)
  
         self.group.setLayout(self.gridLayout)
+        
         self.scrollArea.setWidget(self.group)
+        self.scrollArea.setMinimumHeight(self.yspacing*(len(rows)+4))
 
         self.leftLayout.setVerticalSpacing(0)
         self.scrollArea3 = QtWidgets.QScrollArea()
@@ -422,6 +440,7 @@ class Ui_MainWindow(object):
 
         self.topLayout.addWidget(self.scrollArea3)
         self.topLayout.addWidget(self.scrollArea)
+        
         self.topLayout.setSpacing(0)
         self.outerLayout.addLayout(self.topLayout)
         
@@ -474,6 +493,7 @@ class Ui_MainWindow(object):
         self.runningIndicator.setChecked(not checkValue)
         for i in df.index.values:
             try:
+                self.winkbuttons[i].setEnabled(True)
                 newSetpoint = df.loc[i]['fSetpoint']
                 newControlMode = df.loc[i]['Control mode']
                 newFluidIndex = df.loc[i]['Fluidset index']
@@ -546,6 +566,7 @@ class Ui_MainWindow(object):
             self.controlBoxes[i].setEnabled(False)
             self.fluidBoxes[i].setEnabled(False)
             self.userTags[i].setEnabled(False)
+            self.winkbuttons[i].setEnabled(False)
 
     def setFlow(self,i):
         if not self.running:
@@ -554,9 +575,7 @@ class Ui_MainWindow(object):
         address = self.addressLabels[i].value()
         print(f'setting flow to {value} on address {address}')
         
-        #self.stopConnect()
         MFCclient(address,self.host, self.port).writeSetpoint(value)
-        #self.connectLoop()
         
 
 
@@ -566,9 +585,7 @@ class Ui_MainWindow(object):
         value = self.userTags[i].text()
         address = self.addressLabels[i].value()
         print(f'setting flow to {value} on address {address}')
-        #self.stopConnect()
         MFCclient(address,self.host, self.port).writeName(value)
-        #self.connectLoop()
 
 
     def setFlowAll(self):
@@ -583,9 +600,7 @@ class Ui_MainWindow(object):
         value = self.controlBoxes[i].currentIndex()
         address = self.addressLabels[i].value()
         print(f'setting address {address} to control mode {value}')
-        #self.stopConnect()
         MFCclient(address, self.host,self.port).writeControlMode(value)
-        #self.connectLoop()
         self.originalControlModes[i] = value
 
     def setFluidIndex(self,i):
@@ -594,10 +609,12 @@ class Ui_MainWindow(object):
         value = self.fluidBoxes[i].value()
         address = self.addressLabels[i].value()
         print(f'setting address {address} to fluid {value}')
-        #self.stopConnect()
         MFCclient(address,self.host,self.port).writeFluidIndex(value)
-        #self.connectLoop()
         self.originalFluidIndexes[i] = value
+    
+    def wink(self,i):
+        address = self.addressLabels[i].value()
+        MFCclient(address,self.host,self.port).wink()
 
 
 def main():

@@ -83,7 +83,7 @@ class MFCclient():
     def readParams(self,*names):
         string = self.makeMessage(self.address, 'readParams_names', *names)
         data = self.sendMessage(string)
-        datadct = json.loads(data.replace('\'','"'))
+        datadct = json.loads(data)
         return datadct
     def readFlow(self):
         string = self.makeMessage(self.address, 'readFlow')
@@ -112,8 +112,8 @@ class MFCclient():
     def readFluidType(self):
         string = self.makeMessage(self.address, 'readFluidType')
         data = self.sendMessage(string)
-        datadct = json.loads(data.replace('\'','"'))
-        return datadct#index, name
+        datadct = json.loads(data)
+        return datadct
     def writeFluidIndex(self,value):
         string = self.makeMessage(self.address, 'writeFluidIndex',value)
         data = self.sendMessage(string)
@@ -136,7 +136,6 @@ class MFCclient():
         data = self.sendMessage(string)
         datalines = data.split('\n')
         columns = datalines[0].split(';')
-
         array = [[i for i in line.split(';')] for line in datalines[1:] if line]
         df = pd.DataFrame(data = array,columns=columns)
         df = df.astype(self.types)
@@ -145,17 +144,13 @@ class MFCclient():
     def pollAll2(self):
         string = self.makeMessage(self.address,'readParams_allAddsPars')
         data = self.sendMessage(string)
-        datadct = json.loads(data.replace('\'','"'))
-        df = pd.DataFrame(columns=list(datadct['0'].keys()))
-        for i in datadct:
-            ds = pd.Series(data = datadct[i])
-            df.loc[int(i)] = ds
-        #columns = 
-        #df = df[]
+        datadct = json.loads(data)
+        df = pd.DataFrame.from_dict(datadct)
         df['Measure'] = df['Measure'].apply(lambda x: x*100/32000)
         df['Setpoint'] = df['Setpoint'].apply(lambda x: x*100/32000)
         df['Valve output'] = df['Valve output'].apply(lambda x: x/2**24)
         df = df.rename({'Measure':'Measure_pct', 'Setpoint':'Setpoint_pct'}, axis = 1)
+        df = df.astype(self.types)
         return df
 
     def testMessage(self):
@@ -426,6 +421,7 @@ def plotAllSingle(df, tlist, ax, measureFlow, measureValve,xlim, waittime = 1,  
     ax[1,0].cla()
     ax[0,1].cla()
     ax[1,1].cla()
+
 def plotAll(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'allPlot',xlim = 60, log = True, logInterval = 5):
     host,port,connid, waittime, xlim, log, logInterval = getArgs(host=host,port=port,connid=connid, 
                                                                  waitTime=waittime,plotTime=xlim, log = log, logInterval=logInterval)
@@ -460,7 +456,7 @@ def plotAll(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'allPlot
             plt.close(fig)
             return
         except AttributeError as e:
-            logger.error(str(e))
+            logger.error(f'{e}, possible keyboard interrupt during connection')
             return
         except OSError as e:
             message = f'{e}.\nbronkhorstServer is probably not open, or host or port settings are incorrect'
