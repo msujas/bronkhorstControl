@@ -1,2 +1,2 @@
-from .bronkhorstClient import MFCclient, barPlot, timePlot, plotAll
+from .bronkhorstClient import MFCclient
 from .bronkhorst import MFC, startMfc

@@ -209,7 +209,7 @@ def multiServer():
                         datefmt = '%Y/%m/%d_%H:%M:%S')
     logger.info('server started')
     
-    
+    allhosts = []
     if not acceptedHosts:
         ahstring = 'all'
     else:
@@ -232,6 +232,10 @@ def multiServer():
                 if key.data is None:
                     accept_wrapper(key.fileobj,sel)
                 else:
+                    hostname = socket.gethostbyaddr(key.data.addr[0])
+                    if not hostname in allhosts:
+                        allhosts.append(hostname)
+                        logger.info(f'new client {hostname}')
                     service_connection(key, mask,sel,mfc, acceptedHosts)
     except KeyboardInterrupt:
         logger.info('keyboard interupt')

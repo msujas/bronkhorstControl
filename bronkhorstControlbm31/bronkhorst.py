@@ -1,7 +1,6 @@
 import propar
 import pandas as pd
 import pathlib, os, json
-from functools import partial
 
 homedir = pathlib.Path.home()
 configfile = f'{homedir}/bronkhorstServerConfig/comConfg.log'

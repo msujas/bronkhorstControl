@@ -3,10 +3,10 @@ import argparse
 import time
 import pandas as pd
 if __name__ == '__main__':
-    from bronkhorstClient import MFCclient, plotAllSingle
+    from bronkhorstClient import MFCclient
     from bronkhorstServer import HOST, PORT, logdir
 else:
-    from .bronkhorstClient import MFCclient, plotAllSingle
+    from .bronkhorstClient import MFCclient
     from .bronkhorstServer import HOST, PORT, logdir
 from functools import partial
 import logging
@@ -56,9 +56,14 @@ class Worker(QtCore.QThread):
                 df = self.mfc.pollAll()
 
             except (OSError, AttributeError, ConnectionResetError):
-                print("connection to server lost. Exiting")
+                message = "connection to server lost. Stopping polling"
+                print(message)
+                logger.warning(message)
                 self.outputs.emit(pd.DataFrame())
                 return
+            except Exception as e:
+                logger.exception(e)
+                raise e
             self.outputs.emit(df)
             time.sleep(self.waittime)
     def setWriteValues(self,address, parname, value):
@@ -84,8 +89,6 @@ class Worker(QtCore.QThread):
         
     def stop(self):
         self.terminate()
-
-    
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -465,7 +468,7 @@ class Ui_MainWindow(object):
         try:
             df = MFCclient(1,self.host,self.port).pollAll()
         except OSError as e:
-            print("couldn't find server. Try starting it or checking host and port settings")
+            #print("couldn't find server. Try starting it or checking host and port settings")
             raise OSError(e)
         
         self.enabledMFCs = []
@@ -484,6 +487,7 @@ class Ui_MainWindow(object):
             self.originalFluidIndexes[i] = df.loc[i]['Fluidset index']
             self.fluidBoxes[i].setValue(self.originalFluidIndexes[i])
         self.updateMFCs(df)
+        logger.info(f'connected to server. Host: {self.host}, port: {self.port}')
 
     def updateMFCs(self,df):
         if len(df.columns) == 0:
@@ -533,8 +537,6 @@ class Ui_MainWindow(object):
                 logger.exception(e)
                 raise e
         
-        
-
     def connectLoop(self):
         if not self.running:
             self.host = self.hostInput.text()
@@ -543,8 +545,13 @@ class Ui_MainWindow(object):
             try:
                 self.connectMFCs()
             except OSError:
-                print("couldn't find server. Try starting it or checking host and port settings")
+                message = f"couldn't find server at host: {self.host}, port: {self.port}. Try starting it or checking host and port settings"
+                print(message)
+                logger.warning(message)
                 return
+            except Exception as e:
+                logger.exception(e)
+                raise e
             self.running = True
             self.startButton.setText('stop connection')
             self.thread = Worker(self.host,self.port, self.waittime)
@@ -553,6 +560,7 @@ class Ui_MainWindow(object):
         else:
             self.stopConnect()
             self.disableWidgets()
+            logger.info(f'connection closed to server at host: {self.host}, port {self.port}')
 
     def stopConnect(self):
         self.thread.terminate()
@@ -574,11 +582,8 @@ class Ui_MainWindow(object):
         value = self.writeSetpointBoxes[i].value()
         address = self.addressLabels[i].value()
         print(f'setting flow to {value} on address {address}')
-        
         MFCclient(address,self.host, self.port).writeSetpoint(value)
         
-
-
     def setUserTag(self,i):
         if not self.running:
             return
@@ -586,7 +591,6 @@ class Ui_MainWindow(object):
         address = self.addressLabels[i].value()
         print(f'setting flow to {value} on address {address}')
         MFCclient(address,self.host, self.port).writeName(value)
-
 
     def setFlowAll(self):
         if not self.running:

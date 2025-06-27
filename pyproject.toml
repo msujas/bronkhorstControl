@@ -20,9 +20,9 @@ classifiers = [
 bronkhorstServer = "bronkhorstControlbm31.bronkhorstServer:multiServer"
 bronkhorstMultiServer = "bronkhorstControlbm31.bronkhorstServer:multiServer"
 bronkhorstSingleServer = "bronkhorstControlbm31.bronkhorstServer:run"
-timePlot = "bronkhorstControlbm31.bronkhorstClient:timePlot"
-barPlot = "bronkhorstControlbm31.bronkhorstClient:barPlot"
-mfcPlotAll = "bronkhorstControlbm31.bronkhorstClient:plotAll"
+timePlot = "bronkhorstControlbm31.plotters:timePlot"
+barPlot = "bronkhorstControlbm31.plotters:barPlot"
+mfcPlotAll = "bronkhorstControlbm31.plotters:plotAll"
 mfcgui = "bronkhorstControlbm31.bronkhorstGui:main"
 
 [tool.setuptools]
