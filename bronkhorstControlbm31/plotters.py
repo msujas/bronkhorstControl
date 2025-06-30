@@ -41,34 +41,48 @@ def getArgs(host=HOST, port=PORT, connid = socket.gethostname(),waitTime = 0.5, 
     print(connid)
     return host, port, connid, waitTime, plotTime, log, logInterval
 
-def barPlotSingle(df, ax1, title1 = True):
+def barPlotSingle(df, ax1, ax2, title1 = True, title2=True):
+    '''
     basefontsize = 15
     width = 0.45
     mult = 1
     x = df.index.values
+    
     fontsize = int(basefontsize-len(x)*0.7)
     p1 = ax1.bar(x , df['fSetpoint'].values, width, label = 'fSetpoint')
     ax1.bar_label(p1, fmt = '%.2f', padding = 3, fontsize = fontsize)
-    p1 = ax1.bar(x+width*mult, df['fMeasure'].values, width, label = 'fMeasure')
-    ax1.bar_label(p1, fmt = '%.2f', padding = 3, fontsize = fontsize)
+    p2 = ax1.bar(x+width*mult, df['fMeasure'].values, width, label = 'fMeasure')
+    ax1.bar_label(p2, fmt = '%.2f', padding = 3, fontsize = fontsize)
     ax1.legend()
     ax1.set_xticks(x+width*mult*0.5, df['User tag'].values)
     if title1:
-        ax1.set_ylabel('MFC/BPR Flow')
+        ax1.set_ylabel('MFC/BPR flow')
+    '''
+
+    p1 = ax1.bar(df['User tag'].values, df['fMeasure'].values)
+    p2 = ax2.bar(df['User tag'].values, df['fSetpoint'].values)
+    ax1.bar_label(p1, fmt = '%.3f')
+    ax2.bar_label(p2, fmt = '%.3f')
+    if title1:
+        ax1.set_ylabel('MFC/BPR measure')
+    if title2:
+        ax2.set_ylabel('MFC/BPR setpoint')
+
     
 
 def barPlot(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'plotLoop'):
     host,port,connid, waittime, _, _log, _li =getArgs(host=host,port=port,connid=connid, waitTime=waittime,plotTime=1, log = False)
-    fig,ax1 = plt.subplots(1,1)
+    fig,ax = plt.subplots(2,1)
 
     while True:
         try:
             df = MFCclient(1,host,port,multi=multi, connid=connid).pollAll()
-            barPlotSingle(df,ax1)
+            barPlotSingle(df,ax[0], ax[1])
             plt.tight_layout()
             plt.show(block = False)
             plt.pause(waittime)
-            ax1.cla()
+            ax[0].cla()
+            ax[1].cla()
         except (KeyboardInterrupt, AttributeError) as e:
             print(e)
             plt.close(fig)
@@ -113,7 +127,9 @@ def timePlotSingle(df, ax, measure, tlist, xlim, colName = 'fMeasure', ylabel = 
     for a in measure:
         ax.plot(tlistPlot,measure[a],'o-',label = userTags[a],markersize = 3)
     if title:
-        ax.set_title(f'measure, tscale: {xlim} minutes')
+        dt = datetime.fromtimestamp(tlist[-1])
+        dtstring = f'{dt.year:04d}/{dt.month:02d}/{dt.day:02d} {dt.hour:02d}:{dt.minute:02d}:{dt.second:02d}'
+        ax.set_title(f'measure, tscale: {xlim} minutes. Updated: {dtstring}')
     ax.legend()
     if xlabel:
         ax.set_xlabel('t-current time (s)')
@@ -182,21 +198,22 @@ def plotValvesBar(df, ax):
     ax.set_ylabel('MFC/BPR Measure')
 
 def plotAllSingle(df, tlist, ax, measureFlow, measureValve,xlim, waittime = 1,  log=False, logfile =None,tlog=None, logInterval=0, headerString=''):
-    barPlotSingle(df,ax[0,1], title1=True)
+    tlist.append(time.time())
+    barPlotSingle(df,ax[0,1], ax[1,1], title1=True)
 
     timePlotSingle(df,ax[0,0],measureFlow,tlist,xlim, xlabel=True)
 
     if log and time.time() - tlog > logInterval:
         logMFCs(logfile, df, headerString)
 
-    timePlotSingle(df,ax[1,1], measureValve, tlist, xlim, colName='Valve output', ylabel='MFC/BPR valve output',
+    timePlotSingle(df,ax[1,0], measureValve, tlist, xlim, colName='Valve output', ylabel='MFC/BPR valve output',
                     title=False)
     plt.tight_layout()
     plt.show(block = False)
     plt.pause(waittime)
     #time.sleep(waittime)
     ax[0,0].cla()
-    #ax[1,0].cla()
+    ax[1,0].cla()
     ax[0,1].cla()
     ax[1,1].cla()
 
@@ -209,7 +226,7 @@ def plotAll(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'allPlot
     logger.info('mfcPlotAll started')
     plt.ion()
     fig, ax = plt.subplots(2,2)
-    plt.delaxes(ax[1,0])
+    #plt.delaxes(ax[1,0])
     measureFlow = {}
     measureValve = {}
     c=0
@@ -219,7 +236,6 @@ def plotAll(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'allPlot
     tlog = 0
     while True:
         try:
-            tlist.append(time.time())
             df = MFCclient(1,host,port).pollAll()
             if c == 0:
                 for i in df.index.values:

@@ -2,15 +2,18 @@ from PyQt6 import QtWidgets, QtCore, QtGui
 import argparse
 import time
 import pandas as pd
+import matplotlib.pyplot as plt
 if __name__ == '__main__':
     from bronkhorstClient import MFCclient
     from bronkhorstServer import HOST, PORT, logdir
+    from plotters import plotAllSingle, getLogFile, logHeader
 else:
     from .bronkhorstClient import MFCclient
     from .bronkhorstServer import HOST, PORT, logdir
+    from .plotters import plotAllSingle, getLogFile, logHeader
 from functools import partial
 import logging
-import pathlib, os
+import pathlib, os, time
 
 homedir = pathlib.Path.home()
 #logdir = 'bronkhorstLogger'
@@ -107,6 +110,7 @@ class Ui_MainWindow(object):
         self.box1y = 20
         self.xspacing = 90
         self.yspacing = 25
+        #self.plot = False
 
         spinboxsizex = 100
 
@@ -149,9 +153,7 @@ class Ui_MainWindow(object):
         self.runningIndicator = QtWidgets.QRadioButton()
         self.runningIndicator.setObjectName('runningIndicator')
         self.runningIndicator.setText('blinks when running')
-        #self.runningIndicator.setEnabled(False)
         self.runningIndicator.setChecked(False)
-        #print(self.runningIndicator.isChecked())
         self.bottomLayout.addWidget(self.runningIndicator,1,0)
 
         self.hostInput = QtWidgets.QLineEdit()
@@ -470,7 +472,20 @@ class Ui_MainWindow(object):
         except OSError as e:
             #print("couldn't find server. Try starting it or checking host and port settings")
             raise OSError(e)
-        
+        '''
+        if self.plot:
+            plt.ion()
+            self.fig, self.ax = plt.subplots(2,2)
+            self.tlist = []
+            self.measureFlow = {}
+            self.measureValve = {}
+            for i in df.index.values:
+                self.measureFlow[i] = []
+                self.measureValve[i] = []
+            self.tlog = 0
+            self.logfile = getLogFile()
+            self.headerString = logHeader(self.logfile, df)
+        '''
         self.enabledMFCs = []
         self.originalUserTags = {}
         self.originalControlModes = {}
@@ -536,7 +551,11 @@ class Ui_MainWindow(object):
                 print(df)
                 logger.exception(e)
                 raise e
-        
+        '''
+        if self.plot:
+            plotAllSingle(df,self.tlist, self.ax, self.measureFlow, self.measureValve, 3600, waittime=0.01, log=True, 
+                          logfile=self.logfile, tlog=self.tlog, logInterval=5, headerString=self.headerString)
+        '''
     def connectLoop(self):
         if not self.running:
             self.host = self.hostInput.text()
@@ -575,7 +594,10 @@ class Ui_MainWindow(object):
             self.fluidBoxes[i].setEnabled(False)
             self.userTags[i].setEnabled(False)
             self.winkbuttons[i].setEnabled(False)
-
+        '''
+        if self.plot:
+            plt.close()
+        '''
     def setFlow(self,i):
         if not self.running:
             return
