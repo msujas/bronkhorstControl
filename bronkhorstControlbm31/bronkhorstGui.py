@@ -2,7 +2,7 @@ from PyQt6 import QtWidgets, QtCore, QtGui
 import argparse
 import time
 import pandas as pd
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 if __name__ == '__main__':
     from bronkhorstClient import MFCclient
     from bronkhorstServer import HOST, PORT, logdir
@@ -14,6 +14,7 @@ else:
 from functools import partial
 import logging
 import pathlib, os, time
+from enum import Enum
 
 homedir = pathlib.Path.home()
 #logdir = 'bronkhorstLogger'
@@ -92,6 +93,8 @@ class Worker(QtCore.QThread):
         
     def stop(self):
         self.terminate()
+
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -275,7 +278,29 @@ class Ui_MainWindow(object):
         self.userTagLabel.setMinimumHeight(self.yspacing)
         self.leftLayout.addWidget(self.userTagLabel,rows['usertag'],0)
 
-
+        self.controlModeDct = {
+                "0;Bus/RS232":0 ,
+                "1;Analog input":1 ,
+                "2;FB/RS232 slave":2 ,
+                "3;Valve close":3 ,
+                "4;Controller idle":4 ,
+                "5;Testing mode":5 ,
+                "6;Tuning mode":6 ,
+                "7;Setpoint 100%":7 ,
+                "8;Valve fully open":8 ,
+                "9;Calibration mode":9 ,
+                "10;Analog slave":10,
+                "11;Keyb. & FLOW-BUS":11,
+                "12;Setpoint 0%":12,
+                "13;FB, analog slave":13,
+                "14;(FPP) Range select":14,
+                "15;(FPP) Man.s, auto.e":15,
+                "16;(FPP) Auto.s, man.e":16,
+                "17;(FPP) Auto.s, auto.e":17,
+                "18;RS232":18,
+                "19;RS232 broadcast":19,
+                "20;Valve steering":20,
+                "21;An. valve steering":21}
         
         self.winkbuttons= {}
         self.addressLabels = {}
@@ -317,7 +342,7 @@ class Ui_MainWindow(object):
             self.setpointBoxes[i].setEnabled(False)
             self.setpointBoxes[i].setKeyboardTracking(False)
             self.setpointBoxes[i].setStyleSheet('color: black;')
-            self.setpointBoxes[i].setMaximum(100)
+            self.setpointBoxes[i].setMaximum(200)
             self.setpointBoxes[i].setMinimumHeight(self.yspacing)
             self.setpointBoxes[i].setMaximumWidth(spinboxsizex)
             self.gridLayout.addWidget(self.setpointBoxes[i], rows['setpoint'], i+1)
@@ -326,7 +351,7 @@ class Ui_MainWindow(object):
             self.measureBoxes[i].setObjectName(f'measureBox{i}')
             self.measureBoxes[i].setEnabled(False)
             self.measureBoxes[i].setStyleSheet('color: black;')
-            self.measureBoxes[i].setMaximum(100)
+            self.measureBoxes[i].setMaximum(200)
             self.measureBoxes[i].setMinimumHeight(self.yspacing)
             self.measureBoxes[i].setMaximumWidth(120)
             self.gridLayout.addWidget(self.measureBoxes[i], rows['measure'],i+1)
@@ -335,7 +360,7 @@ class Ui_MainWindow(object):
             self.setpointpctBoxes[i].setObjectName(f'setpointpctBox{i}')
             self.setpointpctBoxes[i].setEnabled(False)
             self.setpointpctBoxes[i].setStyleSheet('color: black;')
-            self.setpointpctBoxes[i].setMaximum(100)
+            self.setpointpctBoxes[i].setMaximum(200)
             self.setpointpctBoxes[i].setMinimumHeight(self.yspacing)
             self.setpointpctBoxes[i].setMaximumWidth(spinboxsizex)
             self.gridLayout.addWidget(self.setpointpctBoxes[i],rows['setpointpct'],i+1)
@@ -344,7 +369,7 @@ class Ui_MainWindow(object):
             self.measurepctBoxes[i].setObjectName(f'measurepctBox{i}')
             self.measurepctBoxes[i].setEnabled(False)
             self.measurepctBoxes[i].setStyleSheet('color: black;')
-            self.measurepctBoxes[i].setMaximum(100)
+            self.measurepctBoxes[i].setMaximum(200)
             self.measurepctBoxes[i].setMinimumHeight(self.yspacing)
             self.measurepctBoxes[i].setMaximumWidth(spinboxsizex)
             self.gridLayout.addWidget(self.measurepctBoxes[i], rows['measurepct'],i+1)
@@ -363,6 +388,8 @@ class Ui_MainWindow(object):
             #self.controlBoxes[i].setStyleSheet('color: black;')
             self.controlBoxes[i].setMaximumWidth(spinboxsizex)
             self.controlBoxes[i].setMinimumHeight(self.yspacing)
+            #for mode in self.controlModeDct:
+            #    self.controlBoxes[i].addItem(mode)
             self.controlBoxes[i].addItem("0;Bus/RS232")
             self.controlBoxes[i].addItem("1;Analog input")
             self.controlBoxes[i].addItem("2;FB/RS232 slave")
@@ -409,7 +436,7 @@ class Ui_MainWindow(object):
             self.writeSetpointBoxes[i].setObjectName(f'writeSetpointBox{i}')
             self.writeSetpointBoxes[i].setEnabled(False)
             self.writeSetpointBoxes[i].setStyleSheet('color: black;')
-            self.writeSetpointBoxes[i].setMaximum(100)
+            self.writeSetpointBoxes[i].setMaximum(200)
             self.writeSetpointBoxes[i].setKeyboardTracking(False)
             self.writeSetpointBoxes[i].valueChanged.connect(partial(self.setFlow, i))
             self.writeSetpointBoxes[i].setMaximumWidth(spinboxsizex)
@@ -461,6 +488,7 @@ class Ui_MainWindow(object):
         
         self.MainWindow.setCentralWidget(self.centralwidget)
         QtCore.QMetaObject.connectSlotsByName(self.MainWindow)
+
 
         self.startButton.clicked.connect(self.connectLoop)
 
@@ -604,7 +632,9 @@ class Ui_MainWindow(object):
         value = self.writeSetpointBoxes[i].value()
         address = self.addressLabels[i].value()
         print(f'setting flow to {value} on address {address}')
-        MFCclient(address,self.host, self.port).writeSetpoint(value)
+        newflow = MFCclient(address,self.host, self.port).writeSetpoint(value)
+        #newflow = MFCclient(address, self.host,self.port).readFlow()
+        self.writeSetpointBoxes[i].setValue(newflow)
         
     def setUserTag(self,i):
         if not self.running:
@@ -612,7 +642,8 @@ class Ui_MainWindow(object):
         value = self.userTags[i].text()
         address = self.addressLabels[i].value()
         print(f'setting flow to {value} on address {address}')
-        MFCclient(address,self.host, self.port).writeName(value)
+        newtag = MFCclient(address,self.host, self.port).writeName(value)
+        self.userTags[i].setText(newtag)
 
     def setFlowAll(self):
         if not self.running:
@@ -624,10 +655,15 @@ class Ui_MainWindow(object):
         if not self.running:
             return
         value = self.controlBoxes[i].currentIndex()
+        #text = self.controlBoxes[i].currentText()
+        #value = int(text.split(';')[0])
         address = self.addressLabels[i].value()
         print(f'setting address {address} to control mode {value}')
-        MFCclient(address, self.host,self.port).writeControlMode(value)
-        self.originalControlModes[i] = value
+        
+        newmode = MFCclient(address, self.host,self.port).writeControlMode(value)
+        #newmode = MFCclient(address, self.host,self.port).readControlMode()
+        self.controlBoxes[i].setCurrentIndex(newmode)
+
 
     def setFluidIndex(self,i):
         if not self.running:
@@ -635,8 +671,10 @@ class Ui_MainWindow(object):
         value = self.fluidBoxes[i].value()
         address = self.addressLabels[i].value()
         print(f'setting address {address} to fluid {value}')
-        MFCclient(address,self.host,self.port).writeFluidIndex(value)
-        self.originalFluidIndexes[i] = value
+        newfluid = MFCclient(address,self.host,self.port).writeFluidIndex(value)
+        #newfluid = MFCclient(address, self.host,self.port).readFluidType()
+        newfluidIndex = newfluid['Fluidset index']
+        self.fluidBoxes[i].setValue(newfluidIndex)
     
     def wink(self,i):
         address = self.addressLabels[i].value()

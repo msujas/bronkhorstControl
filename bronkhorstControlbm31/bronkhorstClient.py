@@ -30,6 +30,10 @@ class MFCclient():
         self.multi = multi
         self.types = {'fMeasure': float, 'address':np.uint8, 'fSetpoint':float, 'Setpoint_pct':float, 'Measure_pct':float, 'Valve output': float, 
                  'Fluidset index': np.uint8,  'Control mode':np.uint8}
+    def strToBool(self,string):
+        if string == 'True' or string == 'False':
+            return string == 'True'
+        return string
     def readAddresses(self):
         string = self.makeMessage(self.address, 'getAddresses')
         addressesString = self.sendMessage(string)
@@ -65,11 +69,11 @@ class MFCclient():
     def writeParam(self, name, value):
         string = self.makeMessage(self.address, 'writeParam', name, value)
         data = self.sendMessage(string)
-        return data
+        return self.strToBool(data)
     def writeSetpoint(self,value):
         string = self.makeMessage(self.address, 'writeSetpoint', value)
         data = self.sendMessage(string)
-        return data
+        return float(data)
     def readControlMode(self):
         string = self.makeMessage(self.address, 'readControlMode')
         data = self.sendMessage(string)
@@ -77,7 +81,7 @@ class MFCclient():
     def writeControlMode(self,value):
         string = self.makeMessage(self.address, 'writeControlMode',value)
         data = self.sendMessage(string)
-        return data
+        return int(data)
     def readFluidType(self):
         string = self.makeMessage(self.address, 'readFluidType')
         data = self.sendMessage(string)
@@ -86,7 +90,7 @@ class MFCclient():
     def writeFluidIndex(self,value):
         string = self.makeMessage(self.address, 'writeFluidIndex',value)
         data = self.sendMessage(string)
-        return data
+        return json.loads(data)
     def readMeasure_pct(self):
         string = self.makeMessage(self.address,'readMeasure_pct')
         data = self.sendMessage(string)

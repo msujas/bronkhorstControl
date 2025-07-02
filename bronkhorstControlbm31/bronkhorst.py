@@ -99,7 +99,9 @@ class MFC():
         name = self.readName()
         value = float(value)
         print(f'setting {name} to {value} ml/min')
-        return self.writeParam('fSetpoint',value)
+        x =  self.writeParam('fSetpoint',value)
+        return self.readSetpoint()
+        
     def readSetpoint(self):
         sp = self.readParam('fSetpoint')
         name = self.readName()
@@ -113,9 +115,10 @@ class MFC():
     def readName(self):
         name = self.readParam('User tag')
         return name
-    def writeName(self,newname):
-        x = self.writeParam('User tag',newname)
-        return x
+    def writeName(self,name):
+        x = self.writeParam('User tag',name)
+        newname = self.readName()
+        return newname
     def getAddresses(self):
         nodes = self.mfcMain.master.get_nodes()
         self.addresses = [n['address'] for n in nodes]
@@ -131,7 +134,8 @@ class MFC():
     def writeControlMode(self, value):
         value = int(value)
         x = self.writeParam('Control mode', value)
-        return x
+        newvalue = self.readControlMode()
+        return newvalue
     def readFluidType(self):
         name = self.readName()
         fluiddct = self.readParams_names('Fluidset index', 'Fluid name')
@@ -141,8 +145,8 @@ class MFC():
     def writeFluidIndex(self,value):
         value = int(value)
         x = self.writeParam('Fluidset index',value)
-        self.readFluidType()
-        return x
+        newIndex = self.readFluidType()
+        return newIndex
     def readValve(self):
         value = self.readParam('Valve output')
         valve = value/2**24
@@ -184,6 +188,8 @@ class MFC():
     def writeSetpoint_pct(self,value_pct):
         value = int(value_pct*32000/100)
         self.writeParam('Setpoint', value)
+        return self.readSetpoint_pct()
+        
     def wink(self):
         if not self.com:
             print('com needs to be defined to run this')
