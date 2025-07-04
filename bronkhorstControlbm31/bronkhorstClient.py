@@ -22,7 +22,7 @@ def connect(host=HOST, port=PORT):
     return s
 
 class MFCclient():
-    def __init__(self,address, host=HOST,port=PORT, multi=True,connid = socket.gethostname()):
+    def __init__(self,address, host=HOST,port=PORT, connid = socket.gethostname(),multi=True):
         self.address = address
         self.host = host
         self.port = port
@@ -130,6 +130,7 @@ class MFCclient():
         string = self.makeMessage(self.address,'testMessage')
         data = self.sendMessage(string)
         return data
+
     def wink(self):
         string = self.makeMessage(self.address,'wink')
         data = self.sendMessage(string)
@@ -157,10 +158,10 @@ class MFCclient():
     def multiClient(self,message):
         sel = selectors.DefaultSelector()
         server_addr = (self.host, self.port)
-
         print(f"Starting connection {self.connid} to {server_addr}")
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.setblocking(False)
+        sock.settimeout(5)
+        #sock.setblocking(False)
         sock.connect_ex(server_addr)
         events = selectors.EVENT_READ | selectors.EVENT_WRITE
         data = types.SimpleNamespace(
@@ -184,6 +185,9 @@ class MFCclient():
                     break
         except KeyboardInterrupt:
             print("Caught keyboard interrupt, exiting")
+        except Exception as e:
+            logger.exception(e)
+            raise e
         finally:
             sel.close()
         return receivedMessage

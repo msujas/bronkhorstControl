@@ -222,12 +222,13 @@ def multiServer():
     s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind((host, port))
     s.listen()
-    s.setblocking(False)
+    s.settimeout(5)
+    #s.setblocking(False)
     sel.register(s,selectors.EVENT_READ,data=None)
 
     try:
         while True:
-            events = sel.select(timeout=10)
+            events = sel.select(timeout=5)
             for key, mask in events:
                 if key.data is None:
                     accept_wrapper(key.fileobj,sel)

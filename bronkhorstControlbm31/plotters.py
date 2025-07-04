@@ -70,7 +70,7 @@ def barPlotSingle(df, ax1, ax2, title1 = True, title2=True):
 
     
 
-def barPlot(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'plotLoop'):
+def barPlot(host=HOST, port = PORT,waittime = 1, multi = True, connid = f'{socket.gethostname()}barplot'):
     host,port,connid, waittime, _, _log, _li =getArgs(host=host,port=port,connid=connid, waitTime=waittime,plotTime=1, log = False)
     fig,ax = plt.subplots(2,1)
 
@@ -157,7 +157,7 @@ def logHeader(logfile, df):
     writeLog(logfile,headerString)
     return headerString
 
-def timePlot(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'timePlot',xlim = 60, log = True, logInterval = 5):
+def timePlot(host=HOST, port = PORT,waittime = 1, multi = True, connid = f'{socket.gethostname()}timePlot',xlim = 60, log = True, logInterval = 5):
     host,port,connid, waittime, xlim, log, logInterval = getArgs(host=host,port=port,connid=connid, waitTime=waittime,plotTime=xlim, log = log, logInterval=logInterval)
     measure = {}
     c=0
@@ -197,7 +197,8 @@ def plotValvesBar(df, ax):
     ax.bar_label(p1, fmt = '%.2f')
     ax.set_ylabel('MFC/BPR Measure')
 
-def plotAllSingle(df, tlist, ax, measureFlow, measureValve,xlim, waittime = 1,  log=False, logfile =None,tlog=None, logInterval=0, headerString=''):
+def plotAllSingle(df, tlist, fig, ax, measureFlow, measureValve,xlim, waittime = 1,  log=False, logfile =None,tlog=None, logInterval=0, headerString=''):
+    
     tlist.append(time.time())
     barPlotSingle(df,ax[0,1], ax[1,1], title1=True)
 
@@ -209,7 +210,8 @@ def plotAllSingle(df, tlist, ax, measureFlow, measureValve,xlim, waittime = 1,  
     timePlotSingle(df,ax[1,0], measureValve, tlist, xlim, colName='Valve output', ylabel='MFC/BPR valve output',
                     title=False)
     plt.tight_layout()
-    plt.show(block = False)
+    
+    plt.show()
     plt.pause(waittime)
     #time.sleep(waittime)
     ax[0,0].cla()
@@ -217,7 +219,7 @@ def plotAllSingle(df, tlist, ax, measureFlow, measureValve,xlim, waittime = 1,  
     ax[0,1].cla()
     ax[1,1].cla()
 
-def plotAll(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'allPlot',xlim = 60, log = True, logInterval = 5):
+def plotAll(host=HOST, port = PORT,waittime = 1, multi = True, connid = f'{socket.gethostname()}allPlot',xlim = 60, log = True, logInterval = 5):
     host,port,connid, waittime, xlim, log, logInterval = getArgs(host=host,port=port,connid=connid, 
                                                                  waitTime=waittime,plotTime=xlim, log = log, logInterval=logInterval)
     eventlogfile = f'{homedir}/{logdir}/mfcPlotAll.log'
@@ -234,9 +236,10 @@ def plotAll(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'allPlot
     if log:
         logfile = getLogFile()
     tlog = 0
+    
     while True:
         try:
-            df = MFCclient(1,host,port).pollAll()
+            df = MFCclient(1,host,port, connid=connid).pollAll()
             if c == 0:
                 for i in df.index.values:
                     measureFlow[i] = []
@@ -244,8 +247,9 @@ def plotAll(host=HOST, port = PORT,waittime = 1, multi = True, connid = 'allPlot
                 c=1
                 if log:
                     headerString = logHeader(logfile,df)
-            plotAllSingle(df,tlist,ax,measureFlow, measureValve,xlim, waittime=waittime,  log = log, logfile=logfile, tlog=tlog,
+            plotAllSingle(df,tlist,fig,ax,measureFlow, measureValve,xlim, waittime=waittime,  log = log, logfile=logfile, tlog=tlog,
                           logInterval=logInterval, headerString=headerString)
+            
         except KeyboardInterrupt:
             logger.info('keyboard interrupt')
             plt.close(fig)

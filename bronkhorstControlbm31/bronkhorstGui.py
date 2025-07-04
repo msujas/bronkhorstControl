@@ -14,7 +14,7 @@ else:
 from functools import partial
 import logging
 import pathlib, os, time
-from enum import Enum
+import socket
 
 homedir = pathlib.Path.home()
 #logdir = 'bronkhorstLogger'
@@ -36,29 +36,19 @@ def parseArguments():
     '''
     return maxMFCs#, waittime
 
-class Worker(QtCore.QThread):
+class Worker(QtCore.QObject):
     outputs = QtCore.pyqtSignal(pd.DataFrame)
     def __init__(self, host, port, waittime = 1):
         super(Worker,self).__init__()
         self.host = host
         self.port = port
         self.waittime = waittime
-        self.address = 0
-        self.parname = None
-        self.write = False
-        self.value = None
-        self.changeValue = False
-        self.param = ''
-        self.address = 0
-        self.writeValue = None
-        self.mfc = MFCclient(1,self.host,self.port)
+        self.mfc = MFCclient(1,self.host,self.port, connid=f'{socket.gethostname()}GUIthread')
+        self.running = True
     def run(self):
-        while True:
+        while self.running:
             try:
-                if self.changeValue:
-                    self.writeParam(self.address,self.param, self.writeValue)
                 df = self.mfc.pollAll()
-
             except (OSError, AttributeError, ConnectionResetError):
                 message = "connection to server lost. Stopping polling"
                 print(message)
@@ -70,31 +60,10 @@ class Worker(QtCore.QThread):
                 raise e
             self.outputs.emit(df)
             time.sleep(self.waittime)
-    def setWriteValues(self,address, parname, value):
-        self.address = address
-        self.param = parname
-        self.writeValue = value
-        self.changeValue = True
+        print('stopping polling')
 
-    def writeParam(self, address, parname, value):
-        mfc = MFCclient(address,self.host,self.port)
-        parnamedct = {'setpoint': mfc.writeSetpoint,
-                      'Control mode': mfc.writeControlMode,
-                      'Fluidset index': mfc.writeFluidIndex,
-                      'User tag': mfc.writeName}
-        if not parname in list(parnamedct.keys()):
-            return
-        func = parnamedct[parname]
-        func(value)
-        self.changeValue = False
-        self.address = 0
-        self.param = ''
-        self.writeValue = None
-        
     def stop(self):
-        self.terminate()
-
-
+        self.running = False
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -102,6 +71,7 @@ class Ui_MainWindow(object):
         logging.basicConfig(filename=eventlogfile, level = logging.INFO, format = '%(asctime)s %(levelname)-8s %(message)s',
                             datefmt = '%Y/%m/%d_%H:%M:%S')
         logger.info('mfcgui opened')
+        self.connid = f'{socket.gethostname()}GUI'
         self.MainWindow = MainWindow
         self.MainWindow.setObjectName("MainWindow")
         self.MainWindow.resize(800, 550)
@@ -496,7 +466,7 @@ class Ui_MainWindow(object):
         self.host = self.hostInput.text()
         self.port = self.portInput.value()
         try:
-            df = MFCclient(1,self.host,self.port).pollAll()
+            df = MFCclient(1,self.host,self.port, connid=self.connid).pollAll()
         except OSError as e:
             #print("couldn't find server. Try starting it or checking host and port settings")
             raise OSError(e)
@@ -601,17 +571,22 @@ class Ui_MainWindow(object):
                 raise e
             self.running = True
             self.startButton.setText('stop connection')
-            self.thread = Worker(self.host,self.port, self.waittime)
+            self.worker = Worker(self.host,self.port, self.waittime)
+            self.thread = QtCore.QThread()
+            self.worker.moveToThread(self.thread)
+            self.thread.started.connect(self.worker.run)
+            self.worker.outputs.connect(self.updateMFCs)
             self.thread.start()
-            self.thread.outputs.connect(self.updateMFCs)
         else:
             self.stopConnect()
             self.disableWidgets()
             logger.info(f'connection closed to server at host: {self.host}, port {self.port}')
 
     def stopConnect(self):
-        self.thread.terminate()
+        self.worker.stop()
+        self.thread.quit()
         self.running = False
+        self.worker.deleteLater()
     
     def disableWidgets(self):
         self.running = False
@@ -632,8 +607,7 @@ class Ui_MainWindow(object):
         value = self.writeSetpointBoxes[i].value()
         address = self.addressLabels[i].value()
         print(f'setting flow to {value} on address {address}')
-        newflow = MFCclient(address,self.host, self.port).writeSetpoint(value)
-        #newflow = MFCclient(address, self.host,self.port).readFlow()
+        newflow = MFCclient(address,self.host, self.port, connid=self.connid).writeSetpoint(value)
         self.writeSetpointBoxes[i].setValue(newflow)
         
     def setUserTag(self,i):
@@ -642,7 +616,7 @@ class Ui_MainWindow(object):
         value = self.userTags[i].text()
         address = self.addressLabels[i].value()
         print(f'setting flow to {value} on address {address}')
-        newtag = MFCclient(address,self.host, self.port).writeName(value)
+        newtag = MFCclient(address,self.host, self.port, connid=self.connid).writeName(value)
         self.userTags[i].setText(newtag)
 
     def setFlowAll(self):
@@ -660,8 +634,7 @@ class Ui_MainWindow(object):
         address = self.addressLabels[i].value()
         print(f'setting address {address} to control mode {value}')
         
-        newmode = MFCclient(address, self.host,self.port).writeControlMode(value)
-        #newmode = MFCclient(address, self.host,self.port).readControlMode()
+        newmode = MFCclient(address, self.host,self.port, connid=self.connid).writeControlMode(value)
         self.controlBoxes[i].setCurrentIndex(newmode)
 
 
@@ -671,14 +644,13 @@ class Ui_MainWindow(object):
         value = self.fluidBoxes[i].value()
         address = self.addressLabels[i].value()
         print(f'setting address {address} to fluid {value}')
-        newfluid = MFCclient(address,self.host,self.port).writeFluidIndex(value)
-        #newfluid = MFCclient(address, self.host,self.port).readFluidType()
+        newfluid = MFCclient(address,self.host,self.port, connid=self.connid).writeFluidIndex(value)
         newfluidIndex = newfluid['Fluidset index']
         self.fluidBoxes[i].setValue(newfluidIndex)
     
     def wink(self,i):
         address = self.addressLabels[i].value()
-        MFCclient(address,self.host,self.port).wink()
+        MFCclient(address,self.host,self.port, connid=self.connid).wink()
 
 
 def main():

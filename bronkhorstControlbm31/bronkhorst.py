@@ -215,9 +215,6 @@ class MFC():
         if type(val) == dict:
             return json.dumps(val)
         return val
-
     
 
-
-
-
+    
