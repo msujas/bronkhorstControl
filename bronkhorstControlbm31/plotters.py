@@ -7,6 +7,7 @@ import socket
 from datetime import datetime
 import numpy as np
 import matplotlib
+from matplotlib.widgets import CheckButtons
 matplotlib.rcParams.update({'font.size':12})
 
 homedir = pathlib.Path.home()
@@ -58,7 +59,8 @@ def barPlotSingle(df, ax1, ax2, title1 = True, title2=True):
     if title1:
         ax1.set_ylabel('MFC/BPR flow')
     '''
-
+    ax1.cla()
+    ax2.cla()
     p1 = ax1.bar(df['User tag'].values, df['fMeasure'].values)
     p2 = ax2.bar(df['User tag'].values, df['fSetpoint'].values)
     ax1.bar_label(p1, fmt = '%.3f')
@@ -81,8 +83,6 @@ def barPlot(host=HOST, port = PORT,waittime = 1, multi = True, connid = f'{socke
             plt.tight_layout()
             plt.show(block = False)
             plt.pause(waittime)
-            ax[0].cla()
-            ax[1].cla()
         except (KeyboardInterrupt, AttributeError) as e:
             print(e)
             plt.close(fig)
@@ -113,8 +113,9 @@ def logMFCs(logfile, df, headerString):
     writeLog(logfile,logString)
 
 
-def timePlotSingle(df, ax, measure, tlist, xlim, colName = 'fMeasure', ylabel = 'MFC/BPR measure', title = True, xlabel = True):
+def timePlotSingle(df, ax, measure, tlist, xlim, colName = 'fMeasure', ylabel = 'MFC/BPR measure', title = True, xlabel = True, resetAxes = False):
     xlims = xlim*60
+
     userTags = df['User tag'].to_list()
     if tlist[-1] -tlist[0] > xlims:
         tlist.pop(0)
@@ -122,14 +123,25 @@ def timePlotSingle(df, ax, measure, tlist, xlim, colName = 'fMeasure', ylabel = 
         measure[i].append(df.loc[i][colName])
         while len(measure[i]) > len(tlist):
             measure[i].pop(0)
-
     tlistPlot = [t-tlist[-1] for t in tlist] 
+    
+    
+
+    
+    xlimzoom = ax.get_xbound()
+    ylimzoom = ax.get_ybound()
+
+    ax.cla()
     for a in measure:
         ax.plot(tlistPlot,measure[a],'o-',label = userTags[a],markersize = 3)
     if title:
         dt = datetime.fromtimestamp(tlist[-1])
         dtstring = f'{dt.year:04d}/{dt.month:02d}/{dt.day:02d} {dt.hour:02d}:{dt.minute:02d}:{dt.second:02d}'
         ax.set_title(f'measure, tscale: {xlim} minutes. Updated: {dtstring}')
+
+    if len(tlist) > 2 and xlimzoom[0] > tlistPlot[2] and not resetAxes:
+        ax.set_xbound(*xlimzoom)
+        ax.set_ybound(*ylimzoom)
     ax.legend()
     if xlabel:
         ax.set_xlabel('t-current time (s)')
@@ -187,7 +199,6 @@ def timePlot(host=HOST, port = PORT,waittime = 1, multi = True, connid = f'{sock
             plt.tight_layout()
             plt.show(block = False)
             plt.pause(waittime)
-            ax.cla()
         except (KeyboardInterrupt,AttributeError):
             plt.close(fig)
             return
@@ -197,64 +208,60 @@ def plotValvesBar(df, ax):
     ax.bar_label(p1, fmt = '%.2f')
     ax.set_ylabel('MFC/BPR Measure')
 
-def plotAllSingle(df, tlist, fig, ax, measureFlow, measureValve,xlim, plotted,  log=False, logfile =None,tlog=None, logInterval=0, headerString=''):
+def plotAllSingle(df, tlist, fig, ax, measureFlow, measureValve,xlim, plotted,  log=False, logfile =None,tlog=None, logInterval=0, headerString='', resetAxes = False):
     plt.ion()
-    ax[0,0].cla()
-    ax[1,0].cla()
-    ax[0,1].cla()
-    ax[1,1].cla()
+
     tlist.append(time.time())
+
     barPlotSingle(df,ax[0,1], ax[1,1], title1=True)
 
-    timePlotSingle(df,ax[0,0],measureFlow,tlist,xlim, xlabel=True)
+    timePlotSingle(df,ax[0,0],measureFlow,tlist,xlim, xlabel=True, resetAxes=resetAxes)
 
     if log and time.time() - tlog > logInterval:
         logMFCs(logfile, df, headerString)
 
     timePlotSingle(df,ax[1,0], measureValve, tlist, xlim, colName='Valve output', ylabel='MFC/BPR valve output',
-                    title=False)
-    plt.tight_layout()
+                    title=False, resetAxes=resetAxes)
+    #plt.tight_layout()
+
     if not plotted:
         fig.show()
     #plt.pause(waittime)
     #time.sleep(waittime)
 
 class Plotter():
-    def __init__(self,host=HOST, port = PORT,waittime = 1, multi = True, connid = f'{socket.gethostname()}allPlot',xlim = 60, log = True, logInterval = 5):
+    def __init__(self,host=HOST, port = PORT,waittime = 1, connid = f'{socket.gethostname()}allPlot',xlim = 60, log = True, logInterval = 5):
         self.host,self.port,self.connid, self.waittime, self.xlim, self.log, self.logInterval = getArgs(host=host,port=port,
                                                                                                         connid=connid, waitTime=waittime,plotTime=xlim, log = log, logInterval=logInterval)
         self.fig, self.ax = plt.subplots(2,2)
         self.measureFlow = {}
         self.measureValve = {}
         self.tlist = []
+        
+        self.logfile = getLogFile()
+        self.tlog = 0
+        df = MFCclient(1,self.host,self.port, connid=self.connid).pollAll()
+        if self.log:
+            self.headerString = logHeader(self.logfile,df)
+        self.plotted = False
+        axes = plt.axes([0.01, 0.0001, 0.1, 0.05])
+        self.radiobutton = CheckButtons(axes, ['reset axes'],[False])
+        for i in df.index.values:
+            self.measureFlow[i] = []
+            self.measureValve[i] = []
     def plotAll(self):
         eventlogfile = f'{homedir}/{logdir}/mfcPlotAll.log'
         logging.basicConfig(filename=eventlogfile, level = logging.INFO, format = '%(asctime)s %(levelname)-8s %(message)s',
                             datefmt = '%Y/%m/%d_%H:%M:%S')
         logger.info('mfcPlotAll started')
         plt.ion()
-
-        #plt.delaxes(ax[1,0])
-
         c=0
         
-        if self.log:
-            logfile = getLogFile()
-        tlog = 0
-        plotted = False
         while True:
             try:
                 df = MFCclient(1,self.host,self.port, connid=self.connid).pollAll()
-                if c == 0:
-                    for i in df.index.values:
-                        self.measureFlow[i] = []
-                        self.measureValve[i] = []
-                    c=1
-                    if self.log:
-                        headerString = logHeader(logfile,df)
-                plotAllSingle(df,self.tlist, self.fig,self.ax,self.measureFlow, self.measureValve,self.xlim,  log = self.log, logfile=logfile, tlog=tlog,
-                            logInterval=self.logInterval, headerString=headerString, plotted=plotted)
-                plotted = True
+
+                self.plotAllSingle(df)
                 plt.pause(self.waittime)
                 
             except KeyboardInterrupt:
@@ -280,7 +287,29 @@ class Plotter():
             except Exception as e:
                 logger.exception(e)
                 raise e
+    def plotAllSingle(self,df):
+        plt.ion()
+        self.tlist.append(time.time())
+        self.resetAxes = self.radiobutton.get_status()[0]
+
+        barPlotSingle(df,self.ax[0,1], self.ax[1,1], title1=True)
+
+        timePlotSingle(df,self.ax[0,0],self.measureFlow,self.tlist,self.xlim, xlabel=True, resetAxes=self.resetAxes)
+
+        if self.log and time.time() - self.tlog > self.logInterval:
+            logMFCs(self.logfile, df, self.headerString)
+
+        timePlotSingle(df,self.ax[1,0], self.measureValve, self.tlist, self.xlim, colName='Valve output', ylabel='MFC/BPR valve output',
+                        title=False, resetAxes=self.resetAxes)
+        #plt.tight_layout()
+
+        if not self.plotted:
+            self.fig.show()
+        self.plotted = True
+        #plt.pause(waittime)
+        #time.sleep(waittime)
+
             
 def plotAll():
-    plotter = Plotter(host=HOST, port = PORT,waittime = 1, multi = True, connid = f'{socket.gethostname()}allPlot',xlim = 60, log = True, logInterval = 5)
+    plotter = Plotter(host=HOST, port = PORT,waittime = 1, connid = f'{socket.gethostname()}allPlot',xlim = 60, log = True, logInterval = 5)
     plotter.plotAll()

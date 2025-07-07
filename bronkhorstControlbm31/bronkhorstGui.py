@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from .bronkhorstClient import MFCclient
 from .bronkhorstServer import HOST, PORT, logdir
-from .plotters import plotAllSingle, getLogFile, logHeader
+from .plotters import plotAllSingle, getLogFile, logHeader, Plotter
 from functools import partial
 import logging
 import pathlib, os, time
@@ -150,7 +150,7 @@ class Ui_MainWindow(object):
 
         self.pollTimeBox = QtWidgets.QDoubleSpinBox()
         self.pollTimeBox.setObjectName('pollTimeBox')
-        self.pollTimeBox.setValue(1)
+        self.pollTimeBox.setValue(0.5)
         self.pollTimeBox.setMinimum(0.1)
         self.pollTimeBox.setMaximum(5)
         self.pollTimeBox.setDecimals(1)
@@ -467,6 +467,8 @@ class Ui_MainWindow(object):
         self.plot = self.plotBox.isChecked()
         if self.plot:
             plt.ion()
+            self.plotter = Plotter(host = self.host, port = self.port)
+            '''
             self.fig, self.ax = plt.subplots(2,2)
             self.tlist = []
             self.measureFlow = {}
@@ -477,7 +479,9 @@ class Ui_MainWindow(object):
             self.tlog = 0
             self.logfile = getLogFile()
             self.headerString = logHeader(self.logfile, df)
+            '''
             self.plotted= False
+
         
         self.enabledMFCs = []
         self.originalUserTags = {}
@@ -548,9 +552,12 @@ class Ui_MainWindow(object):
         
         
         if self.plot and self.running:
+            self.plotter.plotAllSingle(df)
+            '''
             plotAllSingle(df,self.tlist, self.fig, self.ax, self.measureFlow, self.measureValve, 3600,  log=True, 
                           logfile=self.logfile, tlog=self.tlog, logInterval=5, headerString=self.headerString, plotted=self.plotted)
             self.plotted= True
+            '''
         
     def connectLoop(self):
         if not self.running:
