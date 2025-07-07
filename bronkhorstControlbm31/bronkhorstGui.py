@@ -2,22 +2,17 @@ from PyQt6 import QtWidgets, QtCore, QtGui
 import argparse
 import time
 import pandas as pd
-#import matplotlib.pyplot as plt
-if __name__ == '__main__':
-    from bronkhorstClient import MFCclient
-    from bronkhorstServer import HOST, PORT, logdir
-    from plotters import plotAllSingle, getLogFile, logHeader
-else:
-    from .bronkhorstClient import MFCclient
-    from .bronkhorstServer import HOST, PORT, logdir
-    from .plotters import plotAllSingle, getLogFile, logHeader
+import matplotlib.pyplot as plt
+
+from .bronkhorstClient import MFCclient
+from .bronkhorstServer import HOST, PORT, logdir
+from .plotters import plotAllSingle, getLogFile, logHeader
 from functools import partial
 import logging
 import pathlib, os, time
 import socket
 
 homedir = pathlib.Path.home()
-#logdir = 'bronkhorstLogger'
 fulllogdir = f'{homedir}/{logdir}'
 os.makedirs(fulllogdir,exist_ok=True)
 logger = logging.getLogger()
@@ -26,15 +21,9 @@ logger = logging.getLogger()
 def parseArguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('-m','--maxMFCs', default=10, type=int, help='maximum number of MFCs that might be needed (default 10)')
-    #parser.add_argument('-w', '--waittime',default=1, type = float, help = 'wait time between polling')
     args = parser.parse_args()
     maxMFCs = args.maxMFCs
-    '''
-    waittime = args.waittime
-    if not waittime:
-        waittime = 1
-    '''
-    return maxMFCs#, waittime
+    return maxMFCs
 
 class Worker(QtCore.QObject):
     outputs = QtCore.pyqtSignal(pd.DataFrame)
@@ -59,6 +48,7 @@ class Worker(QtCore.QObject):
                 logger.exception(e)
                 raise e
             self.outputs.emit(df)
+            #QtCore.QThread.msleep(int(self.waittime*1000))
             time.sleep(self.waittime)
         print('stopping polling')
 
@@ -83,7 +73,6 @@ class Ui_MainWindow(object):
         self.box1y = 20
         self.xspacing = 90
         self.yspacing = 25
-        #self.plot = False
 
         spinboxsizex = 100
 
@@ -128,6 +117,11 @@ class Ui_MainWindow(object):
         self.runningIndicator.setText('blinks when running')
         self.runningIndicator.setChecked(False)
         self.bottomLayout.addWidget(self.runningIndicator,1,0)
+
+        self.plotBox = QtWidgets.QCheckBox()
+        self.plotBox.setObjectName('plotBox')
+        self.plotBox.setText('plot data?')
+        self.bottomLayout.addWidget(self.plotBox)
 
         self.hostInput = QtWidgets.QLineEdit()
         self.hostInput.setObjectName('hostInput')
@@ -470,7 +464,7 @@ class Ui_MainWindow(object):
         except OSError as e:
             #print("couldn't find server. Try starting it or checking host and port settings")
             raise OSError(e)
-        '''
+        self.plot = self.plotBox.isChecked()
         if self.plot:
             plt.ion()
             self.fig, self.ax = plt.subplots(2,2)
@@ -483,7 +477,8 @@ class Ui_MainWindow(object):
             self.tlog = 0
             self.logfile = getLogFile()
             self.headerString = logHeader(self.logfile, df)
-        '''
+            self.plotted= False
+        
         self.enabledMFCs = []
         self.originalUserTags = {}
         self.originalControlModes = {}
@@ -549,11 +544,14 @@ class Ui_MainWindow(object):
                 print(df)
                 logger.exception(e)
                 raise e
-        '''
-        if self.plot:
-            plotAllSingle(df,self.tlist, self.ax, self.measureFlow, self.measureValve, 3600, waittime=0.01, log=True, 
-                          logfile=self.logfile, tlog=self.tlog, logInterval=5, headerString=self.headerString)
-        '''
+        #print(flush=True)
+        
+        
+        if self.plot and self.running:
+            plotAllSingle(df,self.tlist, self.fig, self.ax, self.measureFlow, self.measureValve, 3600,  log=True, 
+                          logfile=self.logfile, tlog=self.tlog, logInterval=5, headerString=self.headerString, plotted=self.plotted)
+            self.plotted= True
+        
     def connectLoop(self):
         if not self.running:
             self.host = self.hostInput.text()
@@ -587,6 +585,8 @@ class Ui_MainWindow(object):
         self.thread.quit()
         self.running = False
         self.worker.deleteLater()
+        if self.plot:
+            plt.close()
     
     def disableWidgets(self):
         self.running = False
@@ -661,6 +661,3 @@ def main():
     ui.setupUi(MainWindow)
     MainWindow.show()
     sys.exit(app.exec())
-
-if __name__ == "__main__":
-    main()

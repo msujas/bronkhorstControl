@@ -197,8 +197,12 @@ def plotValvesBar(df, ax):
     ax.bar_label(p1, fmt = '%.2f')
     ax.set_ylabel('MFC/BPR Measure')
 
-def plotAllSingle(df, tlist, fig, ax, measureFlow, measureValve,xlim, waittime = 1,  log=False, logfile =None,tlog=None, logInterval=0, headerString=''):
-    
+def plotAllSingle(df, tlist, fig, ax, measureFlow, measureValve,xlim, plotted,  log=False, logfile =None,tlog=None, logInterval=0, headerString=''):
+    plt.ion()
+    ax[0,0].cla()
+    ax[1,0].cla()
+    ax[0,1].cla()
+    ax[1,1].cla()
     tlist.append(time.time())
     barPlotSingle(df,ax[0,1], ax[1,1], title1=True)
 
@@ -210,66 +214,73 @@ def plotAllSingle(df, tlist, fig, ax, measureFlow, measureValve,xlim, waittime =
     timePlotSingle(df,ax[1,0], measureValve, tlist, xlim, colName='Valve output', ylabel='MFC/BPR valve output',
                     title=False)
     plt.tight_layout()
-    
-    plt.show()
-    plt.pause(waittime)
+    if not plotted:
+        fig.show()
+    #plt.pause(waittime)
     #time.sleep(waittime)
-    ax[0,0].cla()
-    ax[1,0].cla()
-    ax[0,1].cla()
-    ax[1,1].cla()
 
-def plotAll(host=HOST, port = PORT,waittime = 1, multi = True, connid = f'{socket.gethostname()}allPlot',xlim = 60, log = True, logInterval = 5):
-    host,port,connid, waittime, xlim, log, logInterval = getArgs(host=host,port=port,connid=connid, 
-                                                                 waitTime=waittime,plotTime=xlim, log = log, logInterval=logInterval)
-    eventlogfile = f'{homedir}/{logdir}/mfcPlotAll.log'
-    logging.basicConfig(filename=eventlogfile, level = logging.INFO, format = '%(asctime)s %(levelname)-8s %(message)s',
-                        datefmt = '%Y/%m/%d_%H:%M:%S')
-    logger.info('mfcPlotAll started')
-    plt.ion()
-    fig, ax = plt.subplots(2,2)
-    #plt.delaxes(ax[1,0])
-    measureFlow = {}
-    measureValve = {}
-    c=0
-    tlist = []
-    if log:
-        logfile = getLogFile()
-    tlog = 0
-    
-    while True:
-        try:
-            df = MFCclient(1,host,port, connid=connid).pollAll()
-            if c == 0:
-                for i in df.index.values:
-                    measureFlow[i] = []
-                    measureValve[i] = []
-                c=1
-                if log:
-                    headerString = logHeader(logfile,df)
-            plotAllSingle(df,tlist,fig,ax,measureFlow, measureValve,xlim, waittime=waittime,  log = log, logfile=logfile, tlog=tlog,
-                          logInterval=logInterval, headerString=headerString)
+class Plotter():
+    def __init__(self,host=HOST, port = PORT,waittime = 1, multi = True, connid = f'{socket.gethostname()}allPlot',xlim = 60, log = True, logInterval = 5):
+        self.host,self.port,self.connid, self.waittime, self.xlim, self.log, self.logInterval = getArgs(host=host,port=port,
+                                                                                                        connid=connid, waitTime=waittime,plotTime=xlim, log = log, logInterval=logInterval)
+        self.fig, self.ax = plt.subplots(2,2)
+        self.measureFlow = {}
+        self.measureValve = {}
+        self.tlist = []
+    def plotAll(self):
+        eventlogfile = f'{homedir}/{logdir}/mfcPlotAll.log'
+        logging.basicConfig(filename=eventlogfile, level = logging.INFO, format = '%(asctime)s %(levelname)-8s %(message)s',
+                            datefmt = '%Y/%m/%d_%H:%M:%S')
+        logger.info('mfcPlotAll started')
+        plt.ion()
+
+        #plt.delaxes(ax[1,0])
+
+        c=0
+        
+        if self.log:
+            logfile = getLogFile()
+        tlog = 0
+        plotted = False
+        while True:
+            try:
+                df = MFCclient(1,self.host,self.port, connid=self.connid).pollAll()
+                if c == 0:
+                    for i in df.index.values:
+                        self.measureFlow[i] = []
+                        self.measureValve[i] = []
+                    c=1
+                    if self.log:
+                        headerString = logHeader(logfile,df)
+                plotAllSingle(df,self.tlist, self.fig,self.ax,self.measureFlow, self.measureValve,self.xlim,  log = self.log, logfile=logfile, tlog=tlog,
+                            logInterval=self.logInterval, headerString=headerString, plotted=plotted)
+                plotted = True
+                plt.pause(self.waittime)
+                
+            except KeyboardInterrupt:
+                logger.info('keyboard interrupt')
+                plt.close(self.fig)
+                return
+            except AttributeError as e:
+                logger.error(f'{e}, possible keyboard interrupt during connection')
+                return
+            except OSError as e:
+                message = f'{e}.\nbronkhorstServer is probably not open, or host or port settings are incorrect'
+                print(message)
+                logger.error(message)
+                return
+            except ConnectionResetError as e:
+                message = f'{e}.\nbronkhorstServer likely closed while running'
+                logger.error(message)
+                print(message)
+                return
+            except np.core._exceptions._UFuncNoLoopError as e:
+                logger.warning(e)
+                continue
+            except Exception as e:
+                logger.exception(e)
+                raise e
             
-        except KeyboardInterrupt:
-            logger.info('keyboard interrupt')
-            plt.close(fig)
-            return
-        except AttributeError as e:
-            logger.error(f'{e}, possible keyboard interrupt during connection')
-            return
-        except OSError as e:
-            message = f'{e}.\nbronkhorstServer is probably not open, or host or port settings are incorrect'
-            print(message)
-            logger.error(message)
-            return
-        except ConnectionResetError as e:
-            message = f'{e}.\nbronkhorstServer likely closed while running'
-            logger.error(message)
-            print(message)
-            return
-        except np.core._exceptions._UFuncNoLoopError as e:
-            logger.warning(e)
-            continue
-        except Exception as e:
-            logger.exception(e)
-            raise e
+def plotAll():
+    plotter = Plotter(host=HOST, port = PORT,waittime = 1, multi = True, connid = f'{socket.gethostname()}allPlot',xlim = 60, log = True, logInterval = 5)
+    plotter.plotAll()
