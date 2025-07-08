@@ -224,7 +224,8 @@ class Plotter():
         if self.log:
             self.headerString = logHeader(self.logfile,df)
         self.plotted = False
-        axes = plt.axes([0.01, 0.0001, 0.1, 0.05])
+        axes = plt.axes([0.001, 0.0001, 0.08, 0.05])
+        axes.axis('off')
         self.radiobutton = CheckButtons(axes, ['reset axes'],[False])
         for i in df.index.values:
             self.measureFlow[i] = []
@@ -283,7 +284,8 @@ class Plotter():
         timePlotSingle(df,self.ax[1,0], self.measureValve, self.tlist, self.xlim, colName='Valve output', ylabel='MFC/BPR valve output',
                         title=False, resetAxes=self.resetAxes)
         #plt.tight_layout()
-
+        plt.subplots_adjust(top = 0.95, bottom = 0.07, right = 0.99, left = 0.1, 
+            hspace = 0.2, wspace = 0.2)
         if not self.plotted:
             self.fig.show()
         self.plotted = True
