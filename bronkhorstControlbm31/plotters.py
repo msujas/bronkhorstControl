@@ -8,6 +8,7 @@ from datetime import datetime
 import numpy as np
 import matplotlib
 from matplotlib.widgets import CheckButtons
+import pandas as pd
 matplotlib.rcParams.update({'font.size':12})
 
 homedir = pathlib.Path.home()
@@ -211,8 +212,13 @@ def plotValvesBar(df, ax):
 
 class Plotter():
     def __init__(self,host=HOST, port = PORT,waittime = 1, connid = f'{socket.gethostname()}allPlot',xlim = 60, log = True, logInterval = 5):
-        self.host,self.port,self.connid, self.waittime, self.xlim, self.log, self.logInterval = getArgs(host=host,port=port,
-                                                                                                        connid=connid, waitTime=waittime,plotTime=xlim, log = log, logInterval=logInterval)
+        self.host = host
+        self.port = port
+        self.waittime = waittime
+        self.connid = connid
+        self.xlim = xlim
+        self.log = log
+        self.logInterval = logInterval
         self.fig, self.ax = plt.subplots(2,2)
         self.measureFlow = {}
         self.measureValve = {}
@@ -223,25 +229,23 @@ class Plotter():
         df = MFCclient(1,self.host,self.port, connid=self.connid).pollAll()
         if self.log:
             self.headerString = logHeader(self.logfile,df)
-        self.plotted = False
         axes = plt.axes([0.001, 0.0001, 0.08, 0.05])
         axes.axis('off')
         self.radiobutton = CheckButtons(axes, ['reset axes'],[False])
         for i in df.index.values:
             self.measureFlow[i] = []
             self.measureValve[i] = []
+        self.fig.show()
     def plotAll(self):
         eventlogfile = f'{homedir}/{logdir}/mfcPlotAll.log'
         logging.basicConfig(filename=eventlogfile, level = logging.INFO, format = '%(asctime)s %(levelname)-8s %(message)s',
                             datefmt = '%Y/%m/%d_%H:%M:%S')
         logger.info('mfcPlotAll started')
         plt.ion()
-        c=0
         
         while True:
             try:
                 df = MFCclient(1,self.host,self.port, connid=self.connid).pollAll()
-
                 self.plotAllSingle(df)
                 plt.pause(self.waittime)
                 
@@ -283,16 +287,14 @@ class Plotter():
 
         timePlotSingle(df,self.ax[1,0], self.measureValve, self.tlist, self.xlim, colName='Valve output', ylabel='MFC/BPR valve output',
                         title=False, resetAxes=self.resetAxes)
-        #plt.tight_layout()
+
         plt.subplots_adjust(top = 0.95, bottom = 0.07, right = 0.99, left = 0.1, 
             hspace = 0.2, wspace = 0.2)
-        if not self.plotted:
-            self.fig.show()
-        self.plotted = True
-        #plt.pause(waittime)
-        #time.sleep(waittime)
+
 
             
-def plotAll():
-    plotter = Plotter(host=HOST, port = PORT,waittime = 1, connid = f'{socket.gethostname()}allPlot',xlim = 60, log = True, logInterval = 5)
+def plotAll(host = HOST, port = PORT, connid = f'{socket.gethostname()}allPlot', xlim = 60, log = True, logInterval = 5, waittime = 0.5):
+    host,port,connid,waittime, xlim, log, logInterval = getArgs(host=host,port=port,connid=connid, waitTime=waittime,plotTime=xlim, 
+                                                                log = log, logInterval=logInterval)
+    plotter = Plotter(host=host, port = port,waittime = waittime, connid = connid,xlim = xlim, log = log, logInterval = logInterval)
     plotter.plotAll()

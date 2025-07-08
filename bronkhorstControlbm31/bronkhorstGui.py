@@ -121,6 +121,7 @@ class Ui_MainWindow(object):
         self.plotBox = QtWidgets.QCheckBox()
         self.plotBox.setObjectName('plotBox')
         self.plotBox.setText('plot data?')
+        self.plotBox.setEnabled(True)
         self.bottomLayout.addWidget(self.plotBox)
 
         self.hostInput = QtWidgets.QLineEdit()
@@ -465,6 +466,7 @@ class Ui_MainWindow(object):
             #print("couldn't find server. Try starting it or checking host and port settings")
             raise OSError(e)
         self.plot = self.plotBox.isChecked()
+        self.plotBox.setEnabled(False)
         if self.plot:
             plt.ion()
             self.plotter = Plotter(host = self.host, port = self.port)
@@ -592,6 +594,7 @@ class Ui_MainWindow(object):
         self.thread.quit()
         self.running = False
         self.worker.deleteLater()
+        self.plotBox.setEnabled(True)
         if self.plot:
             plt.close()
     
