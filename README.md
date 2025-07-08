@@ -6,9 +6,9 @@ The best way to run is to use the multi client server e.g.
 ```
 bronkhorstServer remote -c 7
 ```
-Use remoteip or the IP address itself instead of remote to use the IP address as the hostname, sometimes it works better in cases where the PC has multiple connections.
+remoteip, the hostname/ hostname.domain (e.g. format: pcname.company.countrycode) or the IP address itself instead of remote to help specify the hostname, sometimes it works better in cases where the PC has multiple connections.
 
-Use ctrl+c to close the server. May take 10 s to take effect.
+Use ctrl+c to close the server. May take 5 s to take effect.
 
 To send commands import the MFCclient class and connect function, then run it's methods. Initial arguments are MFC address (will be an integer), the IP address (default localhost) and the port (default is that in the script). 
 
@@ -25,7 +25,7 @@ To change setpoint on MFC address 3:
 MFCclient(3,'<hostname or ip address>').writeSetpoint(value)
 ```
 
-There is a gui called mfcgui. Run in the terminal. There is one option: -m/--maxMFCs - the maximum number of MFCs that may be needed (sets the number of columns of widgets), by default this is 10, if you have more, or want to reduce it to make it cleaner, run with the specific number you want. e.g. for 15 MFCs:
+There is a gui called mfcgui (still must be used in conjuction with bronkhorstServer). Run in the terminal. There is one option: -m/--maxMFCs - the maximum number of MFCs that may be needed (sets the number of columns of widgets), by default this is 10, if you have more, or want to reduce it to make it cleaner, run with the specific number you want. e.g. for 15 MFCs:
 ```
 mfcgui -m 15
 ```
@@ -36,15 +36,15 @@ When plot data is checked, the following data will be plotted:
 
 ![alt text](plotter.png)
 
-There are also 3 plotting programs which can be run independently of the GUI, called barPlot, timePlot, and mfcPlotAll which can be run in conjunction with the bronkhorstMultiServer. Takes host as a positional argument (default 'localhost'). Run e.g. 'timePlot \<hostname\>'. Use --help to display options. mfcPlotAll plots the same data as the GUI.
-
-I should mention this article https://realpython.com/python-sockets/ and the associated repository which helped me to make this.
+There are also 3 plotting programs which can be run independently of the GUI, called barPlot, timePlot, and mfcPlotAll which can be run in conjunction with the bronkhorstServer. Takes host as a positional argument (default 'localhost'). Run e.g. 'timePlot \<hostname\>'. Use --help to display options. mfcPlotAll plots the same data as the GUI.
 
 Can also be controlled more directly, without the server, using the MFC class in the bronkhorst.py module, but the plotting programs won't work in that case, and it must be on the same PC as the MFCs. e.g.
 ```python
 from bronkhorstControlbm31 import MFC, startMfc
 
-mfcmain = startMfc()
+mfcmain = startMfc('COM3')
 mfc1 = MFC(1,mfcmain)
 mfc1.readName()
 ```
+
+I should mention this article https://realpython.com/python-sockets/ and the associated repository which helped me to make this.
