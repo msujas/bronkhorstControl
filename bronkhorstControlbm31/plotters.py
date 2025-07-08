@@ -208,26 +208,6 @@ def plotValvesBar(df, ax):
     ax.bar_label(p1, fmt = '%.2f')
     ax.set_ylabel('MFC/BPR Measure')
 
-def plotAllSingle(df, tlist, fig, ax, measureFlow, measureValve,xlim, plotted,  log=False, logfile =None,tlog=None, logInterval=0, headerString='', resetAxes = False):
-    plt.ion()
-
-    tlist.append(time.time())
-
-    barPlotSingle(df,ax[0,1], ax[1,1], title1=True)
-
-    timePlotSingle(df,ax[0,0],measureFlow,tlist,xlim, xlabel=True, resetAxes=resetAxes)
-
-    if log and time.time() - tlog > logInterval:
-        logMFCs(logfile, df, headerString)
-
-    timePlotSingle(df,ax[1,0], measureValve, tlist, xlim, colName='Valve output', ylabel='MFC/BPR valve output',
-                    title=False, resetAxes=resetAxes)
-    #plt.tight_layout()
-
-    if not plotted:
-        fig.show()
-    #plt.pause(waittime)
-    #time.sleep(waittime)
 
 class Plotter():
     def __init__(self,host=HOST, port = PORT,waittime = 1, connid = f'{socket.gethostname()}allPlot',xlim = 60, log = True, logInterval = 5):
@@ -298,6 +278,7 @@ class Plotter():
 
         if self.log and time.time() - self.tlog > self.logInterval:
             logMFCs(self.logfile, df, self.headerString)
+            self.tlog = time.time()
 
         timePlotSingle(df,self.ax[1,0], self.measureValve, self.tlist, self.xlim, colName='Valve output', ylabel='MFC/BPR valve output',
                         title=False, resetAxes=self.resetAxes)

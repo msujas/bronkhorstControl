@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from .bronkhorstClient import MFCclient
 from .bronkhorstServer import HOST, PORT, logdir
-from .plotters import plotAllSingle, getLogFile, logHeader, Plotter
+from .plotters import Plotter
 from functools import partial
 import logging
 import pathlib, os, time
