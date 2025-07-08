@@ -1,4 +1,4 @@
-repository for a client/server program for communicating with Bronkhorst MFCs remotely. Intended to be used with Pylatus or similar scripting environment. To install, clone the repository, then run 'pip install -e .' inside. This will create the bronkhorstServer program. Can also get from PyPi, 'pip install bronkhorstControlbm31'
+Repository for a client/server program for communicating with Bronkhorst MFCs remotely. Intended to be used with Pylatus or similar scripting environment. To install, clone the repository, then run 'pip install -e .' inside. This will create the bronkhorstServer program. Can also get from PyPi, 'pip install bronkhorstControlbm31'. Uses the Bronkhorst propar library. Also requires pandas, matplotlib and PyQt6.
 
 Usage: On the PC connected to the MFCs run bronkhorstServer in a terminal. Options are -c/--com input the com number as an integer (default 1, but check com ports in Device Manager), this will save next time you run so you shouldn't need to input it again. -p/--port port number, (default is value in the script, probably unnecessary to change). A positional argument which can be 'local' ('localhost'), 'remote' (hostname), or remoteip (ip address) (default local). If remote the hostname will be displayed to connect from another computer, otherwise it will be 'localhost'. The port number will also be displayed.
 
@@ -30,11 +30,11 @@ There is a gui called mfcgui (still must be used in conjuction with bronkhorstSe
 mfcgui -m 15
 ```
 
-![alt text](image.png)
+![image](https://github.com/user-attachments/assets/39dff271-fe6d-4c0e-9f95-e89416e3c4ce)
 
 When plot data is checked, the following data will be plotted:
 
-![alt text](plotter.png)
+![plotter](https://github.com/user-attachments/assets/9f26bbf2-cbeb-4d9d-994d-d15f480fcfa3)
 
 There is a 'reset axes' box on the plotter. If this is checked, the axes for the time plotters will always reset to show all the data. If unchecked, it allows you to zoom into a region, and it will stay there until the box is checked again. If the graph is not zoomed in, the axes will reset as more data comes in.
 
