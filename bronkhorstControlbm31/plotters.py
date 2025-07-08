@@ -126,9 +126,6 @@ def timePlotSingle(df, ax, measure, tlist, xlim, colName = 'fMeasure', ylabel = 
             measure[i].pop(0)
     tlistPlot = [t-tlist[-1] for t in tlist] 
     
-    
-
-    
     xlimzoom = ax.get_xbound()
     ylimzoom = ax.get_ybound()
 

@@ -463,27 +463,12 @@ class Ui_MainWindow(object):
         try:
             df = MFCclient(1,self.host,self.port, connid=self.connid).pollAll()
         except OSError as e:
-            #print("couldn't find server. Try starting it or checking host and port settings")
             raise OSError(e)
         self.plot = self.plotBox.isChecked()
         self.plotBox.setEnabled(False)
         if self.plot:
             plt.ion()
             self.plotter = Plotter(host = self.host, port = self.port)
-            '''
-            self.fig, self.ax = plt.subplots(2,2)
-            self.tlist = []
-            self.measureFlow = {}
-            self.measureValve = {}
-            for i in df.index.values:
-                self.measureFlow[i] = []
-                self.measureValve[i] = []
-            self.tlog = 0
-            self.logfile = getLogFile()
-            self.headerString = logHeader(self.logfile, df)
-            '''
-            self.plotted= False
-
         
         self.enabledMFCs = []
         self.originalUserTags = {}
@@ -550,16 +535,10 @@ class Ui_MainWindow(object):
                 print(df)
                 logger.exception(e)
                 raise e
-        #print(flush=True)
         
         
         if self.plot and self.running:
             self.plotter.plotAllSingle(df)
-            '''
-            plotAllSingle(df,self.tlist, self.fig, self.ax, self.measureFlow, self.measureValve, 3600,  log=True, 
-                          logfile=self.logfile, tlog=self.tlog, logInterval=5, headerString=self.headerString, plotted=self.plotted)
-            self.plotted= True
-            '''
         
     def connectLoop(self):
         if not self.running:
@@ -607,10 +586,7 @@ class Ui_MainWindow(object):
             self.fluidBoxes[i].setEnabled(False)
             self.userTags[i].setEnabled(False)
             self.winkbuttons[i].setEnabled(False)
-        '''
-        if self.plot:
-            plt.close()
-        '''
+
     def setFlow(self,i):
         if not self.running:
             return
