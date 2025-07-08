@@ -36,6 +36,8 @@ When plot data is checked, the following data will be plotted:
 
 ![alt text](plotter.png)
 
+There is a 'reset axes' box on the plotter. If this is checked, the axes for the time plotters will always reset to show all the data. If unchecked, it allows you to zoom into a region, and it will stay there until the box is checked again. If the graph is not zoomed in, the axes will reset as more data comes in.
+
 There are also 3 plotting programs which can be run independently of the GUI, called barPlot, timePlot, and mfcPlotAll which can be run in conjunction with the bronkhorstServer. Takes host as a positional argument (default 'localhost'). Run e.g. 'timePlot \<hostname\>'. Use --help to display options. mfcPlotAll plots the same data as the GUI.
 
 Can also be controlled more directly, without the server, using the MFC class in the bronkhorst.py module, but the plotting programs won't work in that case, and it must be on the same PC as the MFCs. e.g.

@@ -12,6 +12,8 @@ maintainers = [{name = "Kenneth P. Marshall", email = "kenneth.marshall@esrf.fr"
 description = "tools for communicating with Bronkhorst MFCs with the API for BM31"
 readme = {file = "README.MD", content-type = "text/markdown"}
 keywords = ["Bronkhorst", "MFCs"]
+license = "GPL-3.0"
+license-files = ["LICENSE.md"]
 classifiers = [
 "Development Status :: 4 - Beta",
 "Programming Language :: Python :: 3.12"]

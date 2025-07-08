@@ -466,10 +466,13 @@ class Ui_MainWindow(object):
             raise OSError(e)
         self.plot = self.plotBox.isChecked()
         self.plotBox.setEnabled(False)
+        self.hostInput.setEnabled(False)
+        self.portInput.setEnabled(False)
+        self.pollTimeBox.setEnabled(False)
         if self.plot:
             plt.ion()
             self.plotter = Plotter(host = self.host, port = self.port)
-        
+
         self.enabledMFCs = []
         self.originalUserTags = {}
         self.originalControlModes = {}
@@ -573,13 +576,17 @@ class Ui_MainWindow(object):
         self.thread.quit()
         self.running = False
         self.worker.deleteLater()
-        self.plotBox.setEnabled(True)
+        
         if self.plot:
             plt.close()
     
     def disableWidgets(self):
         self.running = False
         self.startButton.setText('connect MFCs')
+        self.hostInput.setEnabled(True)
+        self.portInput.setEnabled(True)
+        self.pollTimeBox.setEnabled(True)
+        self.plotBox.setEnabled(True)
         for i in range(self.maxMFCs):
             self.writeSetpointBoxes[i].setEnabled(False)
             self.controlBoxes[i].setEnabled(False)

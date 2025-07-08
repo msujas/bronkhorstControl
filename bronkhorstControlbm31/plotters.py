@@ -44,22 +44,6 @@ def getArgs(host=HOST, port=PORT, connid = socket.gethostname(),waitTime = 0.5, 
     return host, port, connid, waitTime, plotTime, log, logInterval
 
 def barPlotSingle(df, ax1, ax2, title1 = True, title2=True):
-    '''
-    basefontsize = 15
-    width = 0.45
-    mult = 1
-    x = df.index.values
-    
-    fontsize = int(basefontsize-len(x)*0.7)
-    p1 = ax1.bar(x , df['fSetpoint'].values, width, label = 'fSetpoint')
-    ax1.bar_label(p1, fmt = '%.2f', padding = 3, fontsize = fontsize)
-    p2 = ax1.bar(x+width*mult, df['fMeasure'].values, width, label = 'fMeasure')
-    ax1.bar_label(p2, fmt = '%.2f', padding = 3, fontsize = fontsize)
-    ax1.legend()
-    ax1.set_xticks(x+width*mult*0.5, df['User tag'].values)
-    if title1:
-        ax1.set_ylabel('MFC/BPR flow')
-    '''
     ax1.cla()
     ax2.cla()
     p1 = ax1.bar(df['User tag'].values, df['fMeasure'].values)
@@ -71,16 +55,34 @@ def barPlotSingle(df, ax1, ax2, title1 = True, title2=True):
     if title2:
         ax2.set_ylabel('MFC/BPR setpoint')
 
-    
+def barplotSingleCombined(df,ax1, title=True):
+    basefontsize = 15
+    width = 0.45
+    mult = 1
+    x = df.index.values
+    fontsize = int(basefontsize-len(x)*0.7)
+    p1 = ax1.bar(x , df['fSetpoint'].values, width, label = 'fSetpoint')
+    ax1.bar_label(p1, fmt = '%.2f', padding = 3, fontsize = fontsize)
+    p2 = ax1.bar(x+width*mult, df['fMeasure'].values, width, label = 'fMeasure')
+    ax1.bar_label(p2, fmt = '%.2f', padding = 3, fontsize = fontsize)
+    ax1.legend()
+    ax1.set_xticks(x+width*mult*0.5, df['User tag'].values)
+    if title:
+        ax1.set_ylabel('MFC/BPR flow')
 
-def barPlot(host=HOST, port = PORT,waittime = 1, multi = True, connid = f'{socket.gethostname()}barplot'):
+def barPlot(host=HOST, port = PORT,waittime = 1, multi = True, connid = f'{socket.gethostname()}barplot', combined = False):
     host,port,connid, waittime, _, _log, _li =getArgs(host=host,port=port,connid=connid, waitTime=waittime,plotTime=1, log = False)
-    fig,ax = plt.subplots(2,1)
+    nrows = (1-combined) +1
+
+    fig,ax = plt.subplots(nrows,1)
 
     while True:
         try:
             df = MFCclient(1,host,port,multi=multi, connid=connid).pollAll()
-            barPlotSingle(df,ax[0], ax[1])
+            if combined:
+                barplotSingleCombined(df,ax)
+            else:
+                barPlotSingle(df,ax[0], ax[1])
             plt.tight_layout()
             plt.show(block = False)
             plt.pause(waittime)
@@ -208,7 +210,8 @@ def plotValvesBar(df, ax):
 
 
 class Plotter():
-    def __init__(self,host=HOST, port = PORT,waittime = 1, connid = f'{socket.gethostname()}allPlot',xlim = 60, log = True, logInterval = 5):
+    def __init__(self,host=HOST, port = PORT,waittime = 1, connid = f'{socket.gethostname()}allPlot',xlim = 60, 
+                 log = True, logInterval = 5):
         self.host = host
         self.port = port
         self.waittime = waittime
@@ -290,7 +293,8 @@ class Plotter():
 
 
             
-def plotAll(host = HOST, port = PORT, connid = f'{socket.gethostname()}allPlot', xlim = 60, log = True, logInterval = 5, waittime = 0.5):
+def plotAll(host = HOST, port = PORT, connid = f'{socket.gethostname()}allPlot', xlim = 60, log = True, 
+            logInterval = 5, waittime = 0.5):
     host,port,connid,waittime, xlim, log, logInterval = getArgs(host=host,port=port,connid=connid, waitTime=waittime,plotTime=xlim, 
                                                                 log = log, logInterval=logInterval)
     plotter = Plotter(host=host, port = port,waittime = waittime, connid = connid,xlim = xlim, log = log, logInterval = logInterval)
