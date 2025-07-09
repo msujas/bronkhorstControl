@@ -273,7 +273,6 @@ class Plotter():
                 logger.exception(e)
                 raise e
     def plotAllSingle(self,df):
-        plt.ion()
         self.tlist.append(time.time())
         self.resetAxes = self.radiobutton.get_status()[0]
 

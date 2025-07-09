@@ -419,7 +419,7 @@ class Ui_MainWindow(object):
         self.group.setLayout(self.gridLayout)
         
         self.scrollArea.setWidget(self.group)
-        self.scrollArea.setMinimumHeight(self.yspacing*(len(rows)+4))
+        self.scrollArea.setMinimumHeight(int(self.yspacing*1.35*len(rows)))
 
         self.leftLayout.setVerticalSpacing(0)
         self.scrollArea3 = QtWidgets.QScrollArea()
@@ -465,10 +465,7 @@ class Ui_MainWindow(object):
         except OSError as e:
             raise OSError(e)
         self.plot = self.plotBox.isChecked()
-        self.plotBox.setEnabled(False)
-        self.hostInput.setEnabled(False)
-        self.portInput.setEnabled(False)
-        self.pollTimeBox.setEnabled(False)
+
         if self.plot:
             plt.ion()
             self.plotter = Plotter(host = self.host, port = self.port)
@@ -493,6 +490,7 @@ class Ui_MainWindow(object):
 
     def updateMFCs(self,df):
         if len(df.columns) == 0:
+            self.stopConnect()
             self.disableWidgets()
             return
         checkValue = self.runningIndicator.isChecked()
@@ -560,6 +558,10 @@ class Ui_MainWindow(object):
                 raise e
             self.running = True
             self.startButton.setText('stop connection')
+            self.plotBox.setEnabled(False)
+            self.hostInput.setEnabled(False)
+            self.portInput.setEnabled(False)
+            self.pollTimeBox.setEnabled(False)
             self.worker = Worker(self.host,self.port, self.waittime)
             self.thread = QtCore.QThread()
             self.worker.moveToThread(self.thread)
