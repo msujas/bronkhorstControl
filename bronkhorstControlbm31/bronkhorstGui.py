@@ -419,7 +419,7 @@ class Ui_MainWindow(object):
         self.group.setLayout(self.gridLayout)
         
         self.scrollArea.setWidget(self.group)
-        self.scrollArea.setMinimumHeight(int(self.yspacing*1.35*len(rows)))
+        self.scrollArea.setMinimumHeight(int(self.yspacing*1.4*len(rows)))
 
         self.leftLayout.setVerticalSpacing(0)
         self.scrollArea3 = QtWidgets.QScrollArea()
@@ -485,10 +485,16 @@ class Ui_MainWindow(object):
             self.controlBoxes[i].setCurrentIndex(self.originalControlModes[i])
             self.originalFluidIndexes[i] = df.loc[i]['Fluidset index']
             self.fluidBoxes[i].setValue(self.originalFluidIndexes[i])
+            self.winkbuttons[i].setEnabled(True)
+            self.writeSetpointBoxes[i].setEnabled(True)
+            self.controlBoxes[i].setEnabled(True)
+            self.fluidBoxes[i].setEnabled(True)
+            self.userTags[i].setEnabled(True)
         self.updateMFCs(df)
         logger.info(f'connected to server. Host: {self.host}, port: {self.port}')
 
     def updateMFCs(self,df):
+
         if len(df.columns) == 0:
             self.stopConnect()
             self.disableWidgets()
@@ -497,7 +503,6 @@ class Ui_MainWindow(object):
         self.runningIndicator.setChecked(not checkValue)
         for i in df.index.values:
             try:
-                self.winkbuttons[i].setEnabled(True)
                 newSetpoint = df.loc[i]['fSetpoint']
                 newControlMode = df.loc[i]['Control mode']
                 newFluidIndex = df.loc[i]['Fluidset index']
@@ -508,11 +513,7 @@ class Ui_MainWindow(object):
                 self.valveBoxes[i].setValue(df.loc[i]['Valve output'])
                 self.setpointpctBoxes[i].setValue(df.loc[i]['Setpoint_pct'])
                 self.measurepctBoxes[i].setValue(df.loc[i]['Measure_pct'])
-                self.writeSetpointBoxes[i].setEnabled(True)
-                self.controlBoxes[i].setEnabled(True)
-                self.fluidBoxes[i].setEnabled(True)
                 self.fluidNameBoxes[i].setText(df.loc[i]['Fluid name'])
-                
                 if newControlMode != self.originalControlModes[i]:
                     self.controlBoxes[i].setCurrentIndex(newControlMode)
                     self.originalControlModes[i] = newControlMode
@@ -527,7 +528,7 @@ class Ui_MainWindow(object):
                 if newSetpoint != self.originalSetpoints[i]:
                     self.writeSetpointBoxes[i].setValue(newSetpoint)
                     self.originalSetpoints[i] = newSetpoint
-                self.userTags[i].setEnabled(True)
+
             except TypeError as e:
                 print(df)
                 logger.warning(e)
