@@ -501,7 +501,8 @@ class Ui_MainWindow(object):
             self.winkbuttons[i].setEnabled(True)
             self.writeSetpointBoxes[i].setEnabled(True)
             self.controlBoxes[i].setEnabled(True)
-            self.fluidBoxes[i].setEnabled(True)
+            if not self.lockFluidIndex.isChecked():
+                self.fluidBoxes[i].setEnabled(True)
             self.userTags[i].setEnabled(True)
             self.addressLabels[i].setStyleSheet('color: black;')
         self.updateMFCs(df)
