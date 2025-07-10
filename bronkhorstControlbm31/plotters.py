@@ -226,7 +226,8 @@ class Plotter():
         
         self.logfile = getLogFile()
         self.tlog = 0
-        df = MFCclient(1,self.host,self.port, connid=self.connid).pollAll()
+        self.mfcclient = MFCclient(1,self.host,self.port, connid=self.connid)
+        df = self.mfcclient.pollAll()
         if self.log:
             self.headerString = logHeader(self.logfile,df)
         axes = plt.axes([0.001, 0.0001, 0.08, 0.05])
@@ -245,7 +246,7 @@ class Plotter():
         
         while True:
             try:
-                df = MFCclient(1,self.host,self.port, connid=self.connid).pollAll()
+                df = self.mfcclient.pollAll()
                 self.plotAllSingle(df)
                 plt.pause(self.waittime)
                 

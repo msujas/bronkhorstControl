@@ -36,24 +36,29 @@ class Worker(QtCore.QObject):
         self.running = True
     def run(self):
         while self.running:
-            try:
-                df = self.mfc.pollAll()
-            except (OSError, AttributeError, ConnectionResetError):
-                message = "connection to server lost. Stopping polling"
-                print(message)
-                logger.warning(message)
-                self.outputs.emit(pd.DataFrame())
-                return
-            except Exception as e:
-                logger.exception(e)
-                raise e
-            self.outputs.emit(df)
+            #os.system('cls')
+            self.runOnce()
             #QtCore.QThread.msleep(int(self.waittime*1000))
             time.sleep(self.waittime)
         print('stopping polling')
 
     def stop(self):
         self.running = False
+    
+    def runOnce(self):
+        try:
+            df = self.mfc.pollAll()
+        except (OSError, AttributeError, ConnectionResetError):
+            message = "connection to server lost. Stopping polling"
+            print(message)
+            logger.warning(message)
+            self.outputs.emit(pd.DataFrame())
+            return
+        except Exception as e:
+            logger.exception(e)
+            raise e
+        self.outputs.emit(df)
+        
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -350,7 +355,6 @@ class Ui_MainWindow(object):
             self.controlBoxes[i] = QtWidgets.QComboBox()
             self.controlBoxes[i].setObjectName(f'controlBoxes{i}')
             self.controlBoxes[i].setEnabled(False)
-            #self.controlBoxes[i].setStyleSheet('color: black;')
             self.controlBoxes[i].setMaximumWidth(spinboxsizex)
             self.controlBoxes[i].setMinimumHeight(self.yspacing)
             #for mode in self.controlModeDct:
@@ -462,8 +466,8 @@ class Ui_MainWindow(object):
         self.port = self.portInput.value()
         try:
             df = MFCclient(1,self.host,self.port, connid=self.connid).pollAll()
-        except OSError as e:
-            raise OSError(e)
+        except (OSError, AttributeError) as e:
+            raise e
         self.plot = self.plotBox.isChecked()
 
         if self.plot:
@@ -549,7 +553,7 @@ class Ui_MainWindow(object):
             self.waittime = self.pollTimeBox.value()
             try:
                 self.connectMFCs()
-            except OSError:
+            except (OSError, AttributeError):
                 message = f"couldn't find server at host: {self.host}, port: {self.port}. Try starting it or checking host and port settings"
                 print(message)
                 logger.warning(message)

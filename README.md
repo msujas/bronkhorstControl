@@ -6,7 +6,7 @@ The best way to run is to use the multi client server e.g.
 ```
 bronkhorstServer remote -c 7
 ```
-remoteip, the hostname/ hostname.domain (e.g. format: pcname.company.countrycode) or the IP address itself instead of remote to help specify the hostname, sometimes it works better in cases where the PC has multiple connections.
+remoteip, the hostname/ hostname.domain (e.g. format: pcname.company.countrycode) or the IP address itself can be used instead of remote to help specify the hostname, sometimes it works better in cases where the PC has multiple connections.
 
 Use ctrl+c to close the server. May take 5 s to take effect.
 
