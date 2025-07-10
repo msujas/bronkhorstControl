@@ -168,6 +168,12 @@ class Ui_MainWindow(object):
         self.pollLabel.setText('poll time')
         self.bottomLayout.addWidget(self.pollLabel,1,3)
 
+        self.lockFluidIndex = QtWidgets.QCheckBox()
+        self.lockFluidIndex.setObjectName('lockFluidIndex')
+        self.lockFluidIndex.setText('lock fluid index')
+        self.lockFluidIndex.setChecked(False)
+        self.bottomLayout.addWidget(self.lockFluidIndex, 2,1)
+
         self.winkLabel = QtWidgets.QLabel()
         self.winkLabel.setObjectName('winkLabel')
         self.winkLabel.setMinimumHeight(self.yspacing)
@@ -285,6 +291,8 @@ class Ui_MainWindow(object):
         self.writeSetpointBoxes = {}
         self.writeSetpointpctBoxes = {}
         self.userTags = {}
+
+        self.enabledMFCs = []
 
         self.running = False
         for i in range(self.maxMFCs):
@@ -460,6 +468,7 @@ class Ui_MainWindow(object):
 
 
         self.startButton.clicked.connect(self.connectLoop)
+        self.lockFluidIndex.stateChanged.connect(self.lockFluidIndexes)
 
     def connectMFCs(self):
         self.host = self.hostInput.text()
@@ -474,7 +483,7 @@ class Ui_MainWindow(object):
             plt.ion()
             self.plotter = Plotter(host = self.host, port = self.port)
 
-        self.enabledMFCs = []
+        
         self.originalUserTags = {}
         self.originalControlModes = {}
         self.originalFluidIndexes = {}
@@ -494,6 +503,7 @@ class Ui_MainWindow(object):
             self.controlBoxes[i].setEnabled(True)
             self.fluidBoxes[i].setEnabled(True)
             self.userTags[i].setEnabled(True)
+            self.addressLabels[i].setStyleSheet('color: black;')
         self.updateMFCs(df)
         logger.info(f'connected to server. Host: {self.host}, port: {self.port}')
 
@@ -511,7 +521,6 @@ class Ui_MainWindow(object):
                 newControlMode = df.loc[i]['Control mode']
                 newFluidIndex = df.loc[i]['Fluidset index']
                 self.addressLabels[i].setValue(df.loc[i]['address'])
-                self.addressLabels[i].setStyleSheet('color: black;')
                 self.setpointBoxes[i].setValue(newSetpoint)
                 self.measureBoxes[i].setValue(df.loc[i]['fMeasure'])
                 self.valveBoxes[i].setValue(df.loc[i]['Valve output'])
@@ -594,12 +603,14 @@ class Ui_MainWindow(object):
         self.portInput.setEnabled(True)
         self.pollTimeBox.setEnabled(True)
         self.plotBox.setEnabled(True)
+        self.enabledMFCs = []
         for i in range(self.maxMFCs):
             self.writeSetpointBoxes[i].setEnabled(False)
             self.controlBoxes[i].setEnabled(False)
             self.fluidBoxes[i].setEnabled(False)
             self.userTags[i].setEnabled(False)
             self.winkbuttons[i].setEnabled(False)
+            self.addressLabels[i].setStyleSheet('color: gray;')
 
     def setFlow(self,i):
         if not self.running:
@@ -651,6 +662,10 @@ class Ui_MainWindow(object):
     def wink(self,i):
         address = self.addressLabels[i].value()
         MFCclient(address,self.host,self.port, connid=self.connid).wink()
+    
+    def lockFluidIndexes(self):
+        for i in self.enabledMFCs:
+            self.fluidBoxes[i].setEnabled(not self.lockFluidIndex.isChecked())
 
 
 def main():
