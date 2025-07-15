@@ -114,7 +114,28 @@ def logMFCs(logfile, df, headerString):
         headerString = newHeaderString
         writeLog(logfile,headerString)
     writeLog(logfile,logString)
+    return headerString
 
+def getLogFile():
+    logdir = f'{homedir}/bronkhorstClientLog/'
+    t = time.time()
+    dt = datetime.fromtimestamp(t)
+    dtstring = f'{dt.year:04d}{dt.month:02d}{dt.day:02d}'
+    logfile = f'{logdir}/{dtstring}.log'
+    if not os.path.exists(logdir):
+        os.makedirs(logdir)
+    return logfile
+
+def logHeader(logfile, df):
+    names = []
+    headerString = f'datetime unixTime(s)'
+    for i in df.index.values:
+        name = df.loc[i]['User tag'].replace(' ','_')
+        names.append(name)
+        headerString += f' {name}Setpoint {name}Measure'
+    headerString += '\n'
+    writeLog(logfile,headerString)
+    return headerString
 
 def timePlotSingle(df, ax, measure, tlist, xlim, colName = 'fMeasure', ylabel = 'MFC/BPR measure', title = True, xlabel = True, resetAxes = False):
     xlims = xlim*60
@@ -147,28 +168,6 @@ def timePlotSingle(df, ax, measure, tlist, xlim, colName = 'fMeasure', ylabel = 
         ax.set_xlabel('t-current time (s)')
     ax.set_ylabel(ylabel)
 
-def getLogFile():
-    
-    logdir = f'{homedir}/bronkhorstClientLog/'
-    t = time.time()
-    dt = datetime.fromtimestamp(t)
-    dtstring = f'{dt.year:04d}{dt.month:02d}{dt.day:02d}'
-    logfile = f'{logdir}/{dtstring}.log'
-    if not os.path.exists(logdir):
-        os.makedirs(logdir)
-    return logfile
-
-def logHeader(logfile, df):
-    names = []
-    headerString = f'datetime unixTime(s)'
-    for i in df.index.values:
-        name = df.loc[i]['User tag'].replace(' ','_')
-        names.append(name)
-        headerString += f' {name}Setpoint {name}Measure'
-    headerString += '\n'
-    writeLog(logfile,headerString)
-    return headerString
-
 def timePlot(host=HOST, port = PORT,waittime = 1, multi = True, connid = f'{socket.gethostname()}timePlot',xlim = 60, log = True, logInterval = 5):
     host,port,connid, waittime, xlim, log, logInterval = getArgs(host=host,port=port,connid=connid, waitTime=waittime,plotTime=xlim, log = log, logInterval=logInterval)
     measure = {}
@@ -178,7 +177,6 @@ def timePlot(host=HOST, port = PORT,waittime = 1, multi = True, connid = f'{sock
     if log:
         logfile = getLogFile()
     tlog = 0
-
     while True:
         try:
             tlist.append(time.time())
@@ -193,7 +191,7 @@ def timePlot(host=HOST, port = PORT,waittime = 1, multi = True, connid = f'{sock
             timePlotSingle(df,ax,measure, tlist, xlim)
 
             if log and time.time() - tlog > logInterval:
-                logMFCs(logfile,df, headerString)
+                headerString = logMFCs(logfile,df, headerString)
                 tlog = time.time()
                 
             plt.tight_layout()
@@ -220,6 +218,7 @@ class Plotter():
         self.log = log
         self.logInterval = logInterval
         self.fig, self.ax = plt.subplots(2,2)
+        plt.ion()
         self.measureFlow = {}
         self.measureValve = {}
         self.tlist = []
@@ -242,7 +241,6 @@ class Plotter():
         logging.basicConfig(filename=eventlogfile, level = logging.INFO, format = '%(asctime)s %(levelname)-8s %(message)s',
                             datefmt = '%Y/%m/%d_%H:%M:%S')
         logger.info('mfcPlotAll started')
-        plt.ion()
         
         while True:
             try:
@@ -282,7 +280,7 @@ class Plotter():
         timePlotSingle(df,self.ax[0,0],self.measureFlow,self.tlist,self.xlim, xlabel=True, resetAxes=self.resetAxes)
 
         if self.log and time.time() - self.tlog > self.logInterval:
-            logMFCs(self.logfile, df, self.headerString)
+            self.headerString = logMFCs(self.logfile, df, self.headerString)
             self.tlog = time.time()
 
         timePlotSingle(df,self.ax[1,0], self.measureValve, self.tlist, self.xlim, colName='Valve output', ylabel='MFC/BPR valve output',

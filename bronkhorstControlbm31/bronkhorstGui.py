@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from .bronkhorstClient import MFCclient
 from .bronkhorstServer import HOST, PORT, logdir
-from .plotters import Plotter
+from .plotters import Plotter, getLogFile, logHeader, logMFCs
 from functools import partial
 import logging
 import pathlib, os, time
@@ -466,7 +466,6 @@ class Ui_MainWindow(object):
         self.MainWindow.setCentralWidget(self.centralwidget)
         QtCore.QMetaObject.connectSlotsByName(self.MainWindow)
 
-
         self.startButton.clicked.connect(self.connectLoop)
         self.lockFluidIndex.stateChanged.connect(self.lockFluidIndexes)
 
@@ -480,10 +479,12 @@ class Ui_MainWindow(object):
         self.plot = self.plotBox.isChecked()
 
         if self.plot:
-            plt.ion()
-            self.plotter = Plotter(host = self.host, port = self.port)
+            self.plotter = Plotter(host = self.host, port = self.port, log=False)
 
-        
+        self.tlog = 0
+        self.logfile = getLogFile()
+        self.headerstring = logHeader(self.logfile, df)
+
         self.originalUserTags = {}
         self.originalControlModes = {}
         self.originalFluidIndexes = {}
@@ -552,7 +553,9 @@ class Ui_MainWindow(object):
                 logger.exception(e)
                 raise e
         
-        
+        if time.time() - self.tlog > 5:
+            self.headerstring = logMFCs(self.logfile,df,self.headerstring)
+            self.tlog = time.time()
         if self.plot and self.running:
             self.plotter.plotAllSingle(df)
         
