@@ -30,7 +30,7 @@ There is a gui called mfcgui (still must be used in conjuction with bronkhorstSe
 mfcgui -m 15
 ```
 
-![image](https://github.com/user-attachments/assets/39dff271-fe6d-4c0e-9f95-e89416e3c4ce)
+<img width="799" height="578" alt="image" src="https://github.com/user-attachments/assets/6fe75069-f66e-450c-8915-dda187c5501f" />
 
 When plot data is checked, the following data will be plotted:
 
