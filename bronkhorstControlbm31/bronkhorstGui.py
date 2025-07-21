@@ -468,6 +468,14 @@ class Ui_MainWindow(object):
 
         self.startButton.clicked.connect(self.connectLoop)
         self.lockFluidIndex.stateChanged.connect(self.lockFluidIndexes)
+        self.plotBox.stateChanged.connect(self.plotSetup)
+    
+    def plotSetup(self):
+        self.plot = self.plotBox.isChecked()
+        if self.plot and self.running:
+            self.plotter = Plotter(host = self.host, port = self.port, log = False)
+        elif not self.plot:
+            plt.close()
 
     def connectMFCs(self):
         self.host = self.hostInput.text()
@@ -476,8 +484,8 @@ class Ui_MainWindow(object):
             df = MFCclient(1,self.host,self.port, connid=self.connid).pollAll()
         except (OSError, AttributeError) as e:
             raise e
+        
         self.plot = self.plotBox.isChecked()
-
         if self.plot:
             self.plotter = Plotter(host = self.host, port = self.port, log=False)
 
@@ -564,6 +572,7 @@ class Ui_MainWindow(object):
             self.host = self.hostInput.text()
             self.port = self.portInput.value()
             self.waittime = self.pollTimeBox.value()
+            self.running = True
             try:
                 self.connectMFCs()
             except (OSError, AttributeError):
@@ -574,9 +583,7 @@ class Ui_MainWindow(object):
             except Exception as e:
                 logger.exception(e)
                 raise e
-            self.running = True
             self.startButton.setText('stop connection')
-            self.plotBox.setEnabled(False)
             self.hostInput.setEnabled(False)
             self.portInput.setEnabled(False)
             self.pollTimeBox.setEnabled(False)
