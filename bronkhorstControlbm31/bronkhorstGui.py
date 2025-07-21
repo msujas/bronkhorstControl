@@ -572,7 +572,7 @@ class Ui_MainWindow(object):
             self.host = self.hostInput.text()
             self.port = self.portInput.value()
             self.waittime = self.pollTimeBox.value()
-            self.running = True
+            
             try:
                 self.connectMFCs()
             except (OSError, AttributeError):
@@ -583,6 +583,7 @@ class Ui_MainWindow(object):
             except Exception as e:
                 logger.exception(e)
                 raise e
+            self.running = True
             self.startButton.setText('stop connection')
             self.hostInput.setEnabled(False)
             self.portInput.setEnabled(False)
