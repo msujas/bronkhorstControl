@@ -69,7 +69,7 @@ class Ui_MainWindow(object):
         self.connid = f'{socket.gethostname()}GUI'
         self.MainWindow = MainWindow
         self.MainWindow.setObjectName("MainWindow")
-        self.MainWindow.resize(800, 550)
+        
         self.MainWindow.setWindowTitle('Bronkhorst GUI')
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -83,16 +83,17 @@ class Ui_MainWindow(object):
 
         rows = {'wink':0,
                 'address':1,
-                'setpoint':2,
-                'measure':3,
-                'setpointpct':4,
-                'measurepct':5,
-                'valve':6,
-                'controlMode':7,
-                'fluidIndex':8,
-                'fluidName':9,
-                'writesp':10,
-                'usertag':11}
+                'slope':2,
+                'setpoint':3,
+                'measure':4,
+                'setpointpct':5,
+                'measurepct':6,
+                'valve':7,
+                'controlMode':8,
+                'fluidIndex':9,
+                'fluidName':10,
+                'writesp':11,
+                'usertag':12}
 
         self.scrollArea = QtWidgets.QScrollArea()
         self.scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -127,6 +128,7 @@ class Ui_MainWindow(object):
         self.plotBox.setObjectName('plotBox')
         self.plotBox.setText('plot data?')
         self.plotBox.setEnabled(True)
+        self.plotBox.setChecked(True)
         self.bottomLayout.addWidget(self.plotBox)
 
         self.hostInput = QtWidgets.QLineEdit()
@@ -240,6 +242,15 @@ class Ui_MainWindow(object):
         self.fluidNameLabel.setMinimumHeight(self.yspacing)
         self.leftLayout.addWidget(self.fluidNameLabel,rows['fluidName'],0)
 
+        
+        self.slopeLabel = QtWidgets.QLabel()
+        self.slopeLabel.setObjectName('slopeLabel')
+        self.slopeLabel.setText('slope(ms/(ml/min))')
+        self.slopeLabel.adjustSize()
+        self.slopeLabel.setMinimumHeight(self.yspacing)
+        self.leftLayout.addWidget(self.slopeLabel, rows['slope'],0)
+        
+
         self.writespLabel = QtWidgets.QLabel()
         self.writespLabel.setObjectName('writespLabel')
         self.writespLabel.setText('write setpoint')
@@ -291,6 +302,7 @@ class Ui_MainWindow(object):
         self.writeSetpointBoxes = {}
         self.writeSetpointpctBoxes = {}
         self.userTags = {}
+        self.slopeBoxes = {}
 
         self.enabledMFCs = []
 
@@ -409,6 +421,19 @@ class Ui_MainWindow(object):
             self.fluidNameBoxes[i].setMaximumWidth(spinboxsizex)
             self.gridLayout.addWidget(self.fluidNameBoxes[i], rows['fluidName'],i+1)
 
+            self.slopeBoxes[i] = QtWidgets.QSpinBox()
+            self.slopeBoxes[i].setObjectName(f'slopeBoxes{i}')
+            self.slopeBoxes[i].setMinimumHeight(self.yspacing)
+            self.slopeBoxes[i].setMaximumWidth(spinboxsizex)
+            self.slopeBoxes[i].setMinimum(0)
+            self.slopeBoxes[i].setMaximum(30000)
+            self.slopeBoxes[i].setValue(0)
+            self.slopeBoxes[i].setSingleStep(100)
+            self.slopeBoxes[i].setEnabled(False)
+            self.slopeBoxes[i].setKeyboardTracking(False)
+            self.slopeBoxes[i].valueChanged.connect(partial(self.setSlope,i))
+            self.gridLayout.addWidget(self.slopeBoxes[i], rows['slope'],i+1)
+
             self.writeSetpointBoxes[i] = QtWidgets.QDoubleSpinBox()
             self.writeSetpointBoxes[i].setObjectName(f'writeSetpointBox{i}')
             self.writeSetpointBoxes[i].setEnabled(False)
@@ -431,7 +456,7 @@ class Ui_MainWindow(object):
         self.group.setLayout(self.gridLayout)
         
         self.scrollArea.setWidget(self.group)
-        self.scrollArea.setMinimumHeight(int(self.yspacing*1.4*len(rows)))
+        self.scrollArea.setMinimumHeight(int(self.yspacing*1.35*len(rows)))
 
         self.leftLayout.setVerticalSpacing(0)
         self.scrollArea3 = QtWidgets.QScrollArea()
@@ -462,6 +487,8 @@ class Ui_MainWindow(object):
 
         self.outerLayout.addWidget(self.scrollArea2)
         self.centralwidget.setLayout(self.outerLayout)
+
+        self.MainWindow.resize(800, int(1.15*(self.group.height()+self.group2.height())))
         
         self.MainWindow.setCentralWidget(self.centralwidget)
         QtCore.QMetaObject.connectSlotsByName(self.MainWindow)
@@ -497,6 +524,7 @@ class Ui_MainWindow(object):
         self.originalControlModes = {}
         self.originalFluidIndexes = {}
         self.originalSetpoints = {}
+        self.originalSlopes = {}
         for i in df.index.values:
             self.originalSetpoints[i] = df.loc[i]['fSetpoint']
             self.writeSetpointBoxes[i].setValue(self.originalSetpoints[i])
@@ -510,6 +538,9 @@ class Ui_MainWindow(object):
             self.winkbuttons[i].setEnabled(True)
             self.writeSetpointBoxes[i].setEnabled(True)
             self.controlBoxes[i].setEnabled(True)
+            self.slopeBoxes[i].setEnabled(True)
+            self.originalSlopes[i] = df.loc[i]['Setpoint slope']
+            self.slopeBoxes[i].setValue(self.originalSlopes[i])
             if not self.lockFluidIndex.isChecked():
                 self.fluidBoxes[i].setEnabled(True)
             self.userTags[i].setEnabled(True)
@@ -551,6 +582,10 @@ class Ui_MainWindow(object):
                 if newSetpoint != self.originalSetpoints[i]:
                     self.writeSetpointBoxes[i].setValue(newSetpoint)
                     self.originalSetpoints[i] = newSetpoint
+                newslope = df.loc[i]['Setpoint slope']
+                if newslope != self.originalSlopes[i]:
+                    self.slopeBoxes[i].setValue(newslope)
+                    self.originalSlopes[i] = newslope
 
             except TypeError as e:
                 print(df)
@@ -623,6 +658,7 @@ class Ui_MainWindow(object):
             self.userTags[i].setEnabled(False)
             self.winkbuttons[i].setEnabled(False)
             self.addressLabels[i].setStyleSheet('color: gray;')
+            self.slopeBoxes[i].setEnabled(False)
 
     def setFlow(self,i):
         if not self.running:
@@ -674,6 +710,15 @@ class Ui_MainWindow(object):
     def wink(self,i):
         address = self.addressLabels[i].value()
         MFCclient(address,self.host,self.port, connid=self.connid).wink()
+
+    def setSlope(self,i):
+        if not self.running:
+            return
+        value = self.slopeBoxes[i].value()
+        address = self.addressLabels[i].value()
+        print(f'setting slope to {value} on address {address}')
+        newslope = MFCclient(address,self.host,self.port,connid=self.connid).writeSlope(value)
+        self.slopeBoxes[i].setValue(newslope)
     
     def lockFluidIndexes(self):
         for i in self.enabledMFCs:

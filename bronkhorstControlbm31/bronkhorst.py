@@ -37,7 +37,7 @@ class MFC():
         self.mfcMain = mfcMain
         self.com = mfcMain.comport
         self.pollparams = ['User tag', 'Control mode', 'Fluid name', 'Fluidset index','fMeasure', 'fSetpoint', 
-                  'Measure', 'Setpoint', 'Valve output']
+                  'Measure', 'Setpoint', 'Valve output', 'Setpoint slope']
         self.ddenrs = paramDF['dde_nr'].loc[self.pollparams].values
         self.getAddresses()
         #self.pollparamList = propar.database().get_parameters(self.ddenrs)
@@ -176,7 +176,11 @@ class MFC():
             dfstring += '\n'
             dfstring += ';'.join([str(x) for x in df.loc[i]])
         return dfstring
-    
+    def readSlope(self):
+        return self.readParam('Setpoint slope')
+    def writeSlope(self,value):
+        self.writeParam('Setpoint slope',int(value))
+        return self.readSlope()
     def readMeasure_pct(self):
         m = self.readParam('Measure')
         m_pct = m*100/32000
@@ -209,7 +213,8 @@ class MFC():
                      'writeName':self.writeName, 'readMeasure_pct': self.readMeasure_pct,
                      'readSetpoint_pct': self.readSetpoint_pct, 'wink':self.wink,
                      'readValve': self.readValve, 'readParams_names':self.readParams_names,
-                     'readParams_allAddsPars':self.readParams_allAddsPars,'testMessage':self.testMessage}
+                     'readParams_allAddsPars':self.readParams_allAddsPars,'testMessage':self.testMessage,
+                     'readSlope': self.readSlope, 'writeSlope':self.writeSlope}
         method = methodDct[methodName]
         val = method(*args)
         if type(val) == dict:

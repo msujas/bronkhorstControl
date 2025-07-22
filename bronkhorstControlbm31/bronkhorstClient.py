@@ -28,8 +28,8 @@ class MFCclient():
         self.port = port
         self.connid = connid
         self.multi = multi
-        self.types = {'fMeasure': float, 'address':np.uint8, 'fSetpoint':float, 'Setpoint_pct':float, 'Measure_pct':float, 'Valve output': float, 
-                 'Fluidset index': np.uint8,  'Control mode':np.uint8}
+        self.types = {'fMeasure': float, 'address':np.uint8, 'fSetpoint':float, 'Setpoint_pct':float, 'Measure_pct':float, 
+                      'Valve output': float, 'Fluidset index': np.uint8,  'Control mode':np.uint8, 'Setpoint slope': int}
     def strToBool(self,string):
         if string == 'True' or string == 'False':
             return string == 'True'
@@ -103,7 +103,14 @@ class MFCclient():
         string = self.makeMessage(self.address,'readValve')
         data = self.sendMessage(string)
         return float(data)
-
+    def readSlope(self):
+        string = self.makeMessage(self.address,'readSlope')
+        data = self.sendMessage(string)
+        return int(data)
+    def writeSlope(self,value):
+        string = self.makeMessage(self.address,'writeSlope',value)
+        data = self.sendMessage(string)
+        return int(data)
     def pollAll(self):
         string = self.makeMessage(self.address, 'pollAll')
         data = self.sendMessage(string)
