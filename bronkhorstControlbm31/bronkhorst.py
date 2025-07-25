@@ -193,7 +193,10 @@ class MFC():
         value = int(value_pct*32000/100)
         self.writeParam('Setpoint', value)
         return self.readSetpoint_pct()
-        
+    def writeSP_Slope(self,sp, slope):
+        newslope = self.writeSlope(slope)
+        newsp = self.writeSetpoint(sp)
+        return {'Setpoint':newsp,'Slope':newslope}
     def wink(self):
         if not self.com:
             print('com needs to be defined to run this')
@@ -214,7 +217,7 @@ class MFC():
                      'readSetpoint_pct': self.readSetpoint_pct, 'wink':self.wink,
                      'readValve': self.readValve, 'readParams_names':self.readParams_names,
                      'readParams_allAddsPars':self.readParams_allAddsPars,'testMessage':self.testMessage,
-                     'readSlope': self.readSlope, 'writeSlope':self.writeSlope}
+                     'readSlope': self.readSlope, 'writeSlope':self.writeSlope, 'writeSP_slope':self.writeSP_Slope}
         method = methodDct[methodName]
         val = method(*args)
         if type(val) == dict:

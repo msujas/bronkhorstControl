@@ -111,6 +111,11 @@ class MFCclient():
         string = self.makeMessage(self.address,'writeSlope',value)
         data = self.sendMessage(string)
         return int(data)
+    def writeSP_slope(self,sp,slope):
+        string = self.makeMessage(self.address,'writeSP_slope',sp, slope)
+        data = self.sendMessage(string)
+        return json.loads(data)
+        
     def pollAll(self):
         string = self.makeMessage(self.address, 'pollAll')
         data = self.sendMessage(string)
