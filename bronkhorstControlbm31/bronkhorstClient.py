@@ -8,12 +8,9 @@ import logging
 import numpy as np
 
 homedir = pathlib.Path.home()
-#logdir = 'bronkhorstLogger'
 fulllogdir = f'{homedir}/{logdir}'
 os.makedirs(fulllogdir,exist_ok=True)
 logger = logging.getLogger()
-
-
 
 
 def connect(host=HOST, port=PORT):
@@ -85,8 +82,7 @@ class MFCclient():
     def readFluidType(self):
         string = self.makeMessage(self.address, 'readFluidType')
         data = self.sendMessage(string)
-        datadct = json.loads(data)
-        return datadct
+        return json.loads(data)
     def writeFluidIndex(self,value):
         string = self.makeMessage(self.address, 'writeFluidIndex',value)
         data = self.sendMessage(string)
@@ -226,7 +222,6 @@ class MFCclient():
                         return strMessage
                     return
                 
-            
         if mask & selectors.EVENT_WRITE:
             if not data.outb and data.messages:
                 data.outb = data.messages.pop(0)

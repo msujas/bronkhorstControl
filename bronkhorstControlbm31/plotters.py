@@ -116,12 +116,12 @@ def logMFCs(logfile, df, headerString):
     writeLog(logfile,logString)
     return headerString
 
-def getLogFile():
+def getLogFile(host, port = PORT):
     logdir = f'{homedir}/bronkhorstClientLog/'
     t = time.time()
     dt = datetime.fromtimestamp(t)
     dtstring = f'{dt.year:04d}{dt.month:02d}{dt.day:02d}'
-    logfile = f'{logdir}/{dtstring}.log'
+    logfile = f'{logdir}/{dtstring}_{host}_{port}.log'
     if not os.path.exists(logdir):
         os.makedirs(logdir)
     return logfile
@@ -175,7 +175,7 @@ def timePlot(host=HOST, port = PORT,waittime = 1, multi = True, connid = f'{sock
     fig,ax = plt.subplots()
     tlist = []
     if log:
-        logfile = getLogFile()
+        logfile = getLogFile(host,port)
     tlog = 0
     while True:
         try:
@@ -223,7 +223,7 @@ class Plotter():
         self.measureValve = {}
         self.tlist = []
         
-        self.logfile = getLogFile()
+        self.logfile = getLogFile(self.host,self.port)
         self.tlog = 0
         self.mfcclient = MFCclient(1,self.host,self.port, connid=self.connid)
         df = self.mfcclient.pollAll()
