@@ -517,7 +517,7 @@ class Ui_MainWindow(object):
             self.plotter = Plotter(host = self.host, port = self.port, log=False)
 
         self.tlog = 0
-        self.logfile = getLogFile()
+        self.logfile = getLogFile(self.host,self.port)
         self.headerstring = logHeader(self.logfile, df)
 
         self.originalUserTags = {}
