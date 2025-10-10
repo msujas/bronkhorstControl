@@ -666,6 +666,7 @@ class Ui_MainWindow(object):
         self.portInput.setEnabled(True)
         self.pollTimeBox.setEnabled(True)
         self.plotBox.setEnabled(True)
+        self.logDirButton.setEnabled(True)
         self.enabledMFCs = []
         for i in range(self.maxMFCs):
             self.writeSetpointBoxes[i].setEnabled(False)
