@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from .bronkhorstClient import MFCclient
 from .bronkhorstServer import HOST, PORT, logdir
-from .plotters import Plotter, getLogFile, logHeader, logMFCs
+from .plotters import Plotter, getLogFile, logHeader, logMFCs, clientlogdir
 from functools import partial
 import logging
 import pathlib, os, time
@@ -16,6 +16,7 @@ homedir = pathlib.Path.home()
 fulllogdir = f'{homedir}/{logdir}'
 os.makedirs(fulllogdir,exist_ok=True)
 logger = logging.getLogger()
+
 
 
 def parseArguments():
@@ -80,7 +81,7 @@ class Ui_MainWindow(object):
         self.yspacing = 25
 
         spinboxsizex = 100
-
+        
         rows = {'wink':0,
                 'address':1,
                 'slope':2,
@@ -175,6 +176,20 @@ class Ui_MainWindow(object):
         self.lockFluidIndex.setText('lock fluid index')
         self.lockFluidIndex.setChecked(False)
         self.bottomLayout.addWidget(self.lockFluidIndex, 2,1)
+
+        self.logDirectory = QtWidgets.QLineEdit()
+        self.logDirectory.setObjectName('logDirectory')
+        self.logDirectory.setText(clientlogdir)
+        self.bottomLayout.addWidget(self.logDirectory, 2,2,1,2)
+        self.logDirectory.setEnabled(False)
+        self.logDirectory.setStyleSheet('color: black; background-color: white')
+
+        self.logDirButton = QtWidgets.QPushButton()
+        self.logDirButton.setObjectName('logDirButton')
+        self.logDirButton.setText('...')
+        self.logDirButton.setMaximumWidth(50)
+        self.bottomLayout.addWidget(self.logDirButton, 2,4)
+        self.logDirButton.clicked.connect(self.setClientLogDir)
 
         self.winkLabel = QtWidgets.QLabel()
         self.winkLabel.setObjectName('winkLabel')
@@ -517,7 +532,7 @@ class Ui_MainWindow(object):
             self.plotter = Plotter(host = self.host, port = self.port, log=False)
 
         self.tlog = 0
-        self.logfile = getLogFile(self.host,self.port)
+        self.logfile = getLogFile(self.host,self.port, self.logDirectory.text())
         self.headerstring = logHeader(self.logfile, df)
 
         self.originalUserTags = {}
@@ -623,6 +638,7 @@ class Ui_MainWindow(object):
             self.hostInput.setEnabled(False)
             self.portInput.setEnabled(False)
             self.pollTimeBox.setEnabled(False)
+            self.logDirButton.setEnabled(False)
             self.worker = Worker(self.host,self.port, self.waittime)
             self.thread = QtCore.QThread()
             self.worker.moveToThread(self.thread)
@@ -724,6 +740,14 @@ class Ui_MainWindow(object):
         for i in self.enabledMFCs:
             self.fluidBoxes[i].setEnabled(not self.lockFluidIndex.isChecked())
 
+    def setClientLogDir(self):
+        if self.logDirectory.text():
+            currDir = self.logDirectory.text()
+        else:
+            currDir = '.'
+        dialog = QtWidgets.QFileDialog.getExistingDirectory(caption='select log directory', directory=currDir)
+        if dialog:
+            self.logDirectory.setText(dialog)
 
 def main():
     import sys

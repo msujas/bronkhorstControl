@@ -15,7 +15,7 @@ homedir = pathlib.Path.home()
 fulllogdir = f'{homedir}/{logdir}'
 os.makedirs(fulllogdir,exist_ok=True)
 logger = logging.getLogger()
-
+clientlogdir = f'{homedir}/bronkhorstClientLog/'
 def getArgs(host=HOST, port=PORT, connid = socket.gethostname(),waitTime = 0.5, plotTime = 60, log = True, logInterval = 5):
     parser = argparse.ArgumentParser()
 
@@ -116,14 +116,13 @@ def logMFCs(logfile, df, headerString):
     writeLog(logfile,logString)
     return headerString
 
-def getLogFile(host, port = PORT):
-    logdir = f'{homedir}/bronkhorstClientLog/'
+def getLogFile(host, port = PORT, direc = clientlogdir):
     t = time.time()
     dt = datetime.fromtimestamp(t)
     dtstring = f'{dt.year:04d}{dt.month:02d}{dt.day:02d}'
-    logfile = f'{logdir}/{dtstring}_{host}_{port}.log'
-    if not os.path.exists(logdir):
-        os.makedirs(logdir)
+    logfile = f'{direc}/{dtstring}_{host}_{port}.log'
+    if not os.path.exists(direc):
+        os.makedirs(direc)
     return logfile
 
 def logHeader(logfile, df):
