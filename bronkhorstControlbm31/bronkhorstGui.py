@@ -191,6 +191,11 @@ class Ui_MainWindow(object):
         self.bottomLayout.addWidget(self.logDirButton, 2,4)
         self.logDirButton.clicked.connect(self.setClientLogDir)
 
+        self.logLabel = QtWidgets.QLabel()
+        self.logLabel.setObjectName('logLabel')
+        self.logLabel.setText('log directory')
+        self.bottomLayout.addWidget(self.logLabel,3,2)
+
         self.winkLabel = QtWidgets.QLabel()
         self.winkLabel.setObjectName('winkLabel')
         self.winkLabel.setMinimumHeight(self.yspacing)

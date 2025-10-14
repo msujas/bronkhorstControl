@@ -6,6 +6,7 @@ from bronkhorstControlbm31.bronkhorstServer import PORT, HOST, logdir
 import json
 import logging
 import numpy as np
+import time
 
 homedir = pathlib.Path.home()
 fulllogdir = f'{homedir}/{logdir}'
@@ -133,6 +134,14 @@ class MFCclient():
         df = df.rename({'Measure':'Measure_pct', 'Setpoint':'Setpoint_pct'}, axis = 1)
         df = df.astype(self.types)
         return df
+    
+    def checkSetpoint(self, tolerance=0.1):
+        sp = self.readSetpoint()
+        return not sp-tolerance < sp < sp+tolerance
+    
+    def wait(self, tolerance = 0.1):
+        while self.checkSetpoint(tolerance):
+            time.sleep(1)
 
     def testMessage(self):
         string = self.makeMessage(self.address,'testMessage')
