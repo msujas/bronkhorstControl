@@ -112,7 +112,7 @@ class MFCclient():
         string = self.makeMessage(self.address,'writeSP_slope',sp, slope)
         data = self.sendMessage(string)
         return json.loads(data)
-        
+    
     def pollAll(self):
         string = self.makeMessage(self.address, 'pollAll')
         data = self.sendMessage(string)
@@ -137,7 +137,7 @@ class MFCclient():
     
     def checkSetpoint(self, tolerance=0.1):
         sp = self.readSetpoint()
-        return not sp-tolerance < sp < sp+tolerance
+        return not sp-tolerance < self.readFlow() < sp+tolerance
     
     def wait(self, tolerance = 0.1):
         while self.checkSetpoint(tolerance):
