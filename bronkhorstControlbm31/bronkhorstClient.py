@@ -72,6 +72,9 @@ class MFCclient():
         string = self.makeMessage(self.address, 'writeSetpoint', value)
         data = self.sendMessage(string)
         return float(data)
+    def setFlow(self,flow):
+        #alias for writeSetpoint
+        return self.writeSetpoint(flow)
     def readControlMode(self):
         string = self.makeMessage(self.address, 'readControlMode')
         data = self.sendMessage(string)
