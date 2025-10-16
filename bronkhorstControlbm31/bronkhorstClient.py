@@ -130,7 +130,7 @@ class MFCclient():
         based on initialised m and c values. y = m*x+c, y - flow measured by MFC, x - real measured flows (flow meter).
         You input the real flow you want, and it sets the appropriate MFC setpoint
         '''
-        if calculate:
+        if calculate and flow > 0:
             flow = self.calcFlow(flow)
         self.writeSetpoint(flow)
     
