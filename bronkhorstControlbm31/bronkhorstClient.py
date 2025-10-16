@@ -20,12 +20,14 @@ def connect(host=HOST, port=PORT):
     return s
 
 class MFCclient():
-    def __init__(self,address, host=HOST,port=PORT, connid = socket.gethostname(),multi=True):
+    def __init__(self,address, host=HOST,port=PORT, connid = socket.gethostname(),multi=True, m = 1, c = 0):
         self.address = address
         self.host = host
         self.port = port
         self.connid = connid
         self.multi = multi
+        self.m = m
+        self.c = c
         self.types = {'fMeasure': float, 'address':np.uint8, 'fSetpoint':float, 'Setpoint_pct':float, 'Measure_pct':float, 
                       'Valve output': float, 'Fluidset index': np.uint8,  'Control mode':np.uint8, 'Setpoint slope': int}
     def strToBool(self,string):
@@ -73,7 +75,9 @@ class MFCclient():
         data = self.sendMessage(string)
         return float(data)
     def setFlow(self,flow):
-        #alias for writeSetpoint
+        '''
+        alias for writeSetpoint
+        '''
         return self.writeSetpoint(flow)
     def readControlMode(self):
         string = self.makeMessage(self.address, 'readControlMode')
@@ -112,9 +116,23 @@ class MFCclient():
         data = self.sendMessage(string)
         return int(data)
     def writeSP_slope(self,sp,slope):
+        '''
+        args: sp, slope. Write new setpoint and slope simultaneously
+        '''
         string = self.makeMessage(self.address,'writeSP_slope',sp, slope)
         data = self.sendMessage(string)
         return json.loads(data)
+    def calcFlow(self,flow):
+        return self.m*flow + self.c
+    def writeSetpoint2(self,flow,calculate = False):
+        '''
+        same as writeSetpoint, but can use calculate argument to adjust flow to linear calibration 
+        based on initialised m and c values. y = m*x+c, y - flow measured by MFC, x - real measured flows (flow meter).
+        You input the real flow you want, and it sets the appropriate MFC setpoint
+        '''
+        if calculate:
+            flow = self.calcFlow(flow)
+        self.writeSetpoint(flow)
     
     def pollAll(self):
         string = self.makeMessage(self.address, 'pollAll')

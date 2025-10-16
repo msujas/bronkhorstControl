@@ -20,9 +20,21 @@ MFCclient(3,'<hostname or ip address>').pollAll()
 ```
 (this gives information about all MFCs that are connected in a dataframe, the MFC address isn't used and can be anything in this case). 
 
-To change setpoint on MFC address 3:
+Some useful snippets:
 ```python
-MFCclient(3,'<hostname or ip address>').writeSetpoint(value)
+Ar = MFCclient(3,'myPC') #make MFC object
+Ar = MFCclient(3,'myPC', m = 1.2, c = 0.1) #make object with linear calibration values m and c
+Ar.writeSetpoint(5) #set MFC flow setpoint to 5 ml/min (or bar for BRR)
+Ar.readFlow() #get the current measured flow value from the MFC
+Ar.writeSlope(2000) #set the slope of the MFC (in ms/(ml/min)) - 
+                    #e.g. setting to 2000 means it takes 2 s to increase flow by 1 ml/min
+Ar.writeSetpoint2(10,calculate = True) #write setpoint and adjust the flow value so it fits the set linear 
+                                       #calibration (y = m*x + c) - i.e. would set to 12.1 with m=1.2 and c=0.1
+                                       # y - MFC measured flow, x - calibrated flow
+Ar.writeSP_slope(10,1000) #set the setpoint and slope at the same time - sp to 10 ml/min and slope to 1000 ms(ml/min)
+df = Ar.pollAll() #get information on all connected MFCs as pandas DataFrame
+Ar.wait() #block script until measured MFC flow/BPR pressure is within 0.1 of the setpoint
+Ar.wink() #make the LEDs on the MFC wink for 9 s
 ```
 
 There is a gui called mfcgui (still must be used in conjuction with bronkhorstServer). Run in the terminal. There is one option: -m/--maxMFCs - the maximum number of MFCs that may be needed (sets the number of columns of widgets, doesn't matter if it's more than you have), by default this is 10, if you have more, or want to reduce it to make it cleaner, run with the specific number you want. e.g. for 15 MFCs:
