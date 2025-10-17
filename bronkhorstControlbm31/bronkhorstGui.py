@@ -643,7 +643,7 @@ class Ui_MainWindow(object):
             self.hostInput.setEnabled(False)
             self.portInput.setEnabled(False)
             self.pollTimeBox.setEnabled(False)
-            self.logDirButton.setEnabled(False)
+            #self.logDirButton.setEnabled(False)
             self.worker = Worker(self.host,self.port, self.waittime)
             self.thread = QtCore.QThread()
             self.worker.moveToThread(self.thread)
@@ -671,7 +671,7 @@ class Ui_MainWindow(object):
         self.portInput.setEnabled(True)
         self.pollTimeBox.setEnabled(True)
         self.plotBox.setEnabled(True)
-        self.logDirButton.setEnabled(True)
+        #self.logDirButton.setEnabled(True)
         self.enabledMFCs = []
         for i in range(self.maxMFCs):
             self.writeSetpointBoxes[i].setEnabled(False)
@@ -754,6 +754,10 @@ class Ui_MainWindow(object):
         dialog = QtWidgets.QFileDialog.getExistingDirectory(caption='select log directory', directory=currDir)
         if dialog:
             self.logDirectory.setText(dialog)
+            self.logfile = getLogFile(self.host,self.port, self.logDirectory.text())
+            df = MFCclient(1,self.host,self.port, connid='getheader').pollAll()
+            logHeader(self.logfile, df)
+            
 
 def main():
     import sys
