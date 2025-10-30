@@ -55,9 +55,16 @@ class Worker(QtCore.QObject):
             logger.warning(message)
             self.outputs.emit(pd.DataFrame())
             return
+        except KeyError:
+            message = 'no data returned. Stopping'
+            print(message)
+            logger.warning(message)
+            self.outputs.emit(pd.DataFrame())
+            return
         except Exception as e:
             logger.exception(e)
             raise e
+
         self.outputs.emit(df)
         
 
@@ -529,6 +536,7 @@ class Ui_MainWindow(object):
         self.port = self.portInput.value()
         try:
             df = MFCclient(1,self.host,self.port, connid=self.connid).pollAll()
+
         except (OSError, AttributeError) as e:
             raise e
         
@@ -632,6 +640,11 @@ class Ui_MainWindow(object):
                 self.connectMFCs()
             except (OSError, AttributeError):
                 message = f"couldn't find server at host: {self.host}, port: {self.port}. Try starting it or checking host and port settings"
+                print(message)
+                logger.warning(message)
+                return
+            except KeyError:
+                message = 'no data returned. Stopping'
                 print(message)
                 logger.warning(message)
                 return
