@@ -41,6 +41,7 @@ class MFC():
         self.ddenrs = paramDF['dde_nr'].loc[self.pollparams].values
         self.getAddresses()
         #self.pollparamList = propar.database().get_parameters(self.ddenrs)
+        #self.maxCapacity = self.readMaxCapacity()
     def __str__(self):
         return self.readName()
     def getCom(self, com=None):
@@ -96,6 +97,8 @@ class MFC():
         x = self.mfcMain.master.write(self.address,proc_nr,parm_nr,parm_type,value)
         return x
     def writeSetpoint(self,value):
+        #if value > self.maxCapacity:
+        #    value = self.maxCapacity
         name = self.readName()
         value = float(value)
         print(f'setting {name} to {value} ml/min')
@@ -142,8 +145,10 @@ class MFC():
         print(fluiddct)
         return fluiddct
     def readMaxCapacity(self):
-        value = self.readParam('Capacity 100%', self.address)
-        return value
+        if self.address in self.addresses:
+            return self.readParam('Capacity 100%', self.address)
+        return 0
+        
     def writeFluidIndex(self,value):
         value = int(value)
         x = self.writeParam('Fluidset index',value)

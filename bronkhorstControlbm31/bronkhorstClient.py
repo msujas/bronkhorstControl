@@ -20,7 +20,8 @@ def connect(host=HOST, port=PORT):
     return s
 
 class MFCclient():
-    def __init__(self,address, host=HOST,port=PORT, connid = socket.gethostname(),multi=True, m = 1, c = 0):
+    def __init__(self,address, host=HOST,port=PORT, connid = socket.gethostname(),multi=True, m = 1, c = 0, 
+                 getMax = False):
         self.address = address
         self.host = host
         self.port = port
@@ -30,6 +31,10 @@ class MFCclient():
         self.c = c
         self.types = {'fMeasure': float, 'address':np.uint8, 'fSetpoint':float, 'Setpoint_pct':float, 'Measure_pct':float, 
                       'Valve output': float, 'Fluidset index': np.uint8,  'Control mode':np.uint8, 'Setpoint slope': int}
+        self.maxCapacity = 0
+        if getMax:
+            self.readMaxCapacity()
+        
     def strToBool(self,string):
         if string == 'True' or string == 'False':
             return string == 'True'
@@ -70,19 +75,19 @@ class MFCclient():
         string = self.makeMessage(self.address, 'writeParam', name, value)
         data = self.sendMessage(string)
         return self.strToBool(data)
-    def writeSetpoint(self,value, check = False, tries = 1):
+    def writeSetpoint(self,value, check = False):
         string = self.makeMessage(self.address, 'writeSetpoint', value)
         tolerance = 0.001
-        for t in range(tries):
-            data = float(self.sendMessage(string))
-            if value-tolerance < data < value +tolerance:
-                return data
+        if check and self.maxCapacity and value > self.maxCapacity:
+            raise ValueError('new setpoint greater than maximum')
+        data = float(self.sendMessage(string))
         if check and not value - tolerance < data < value + tolerance:
             raise ValueError('new setpoint doesn\'t match given value')
         return data
     def readMaxCapacity(self):
-        data = self.makeSendMessage(self.address, 'readMaxCapacity')
-        return float(data)
+        data = float(self.makeSendMessage(self.address, 'readMaxCapacity'))
+        self.maxCapacity = data
+        return data
 
     def setFlow(self,*args, **kwargs):
         '''
@@ -134,7 +139,7 @@ class MFCclient():
         return json.loads(data)
     def calcFlow(self,flow):
         return self.m*flow + self.c
-    def writeSetpoint2(self,flow,calculate = False, check = False, tries = 1):
+    def writeSetpoint2(self,flow,calculate = False, **kwargs):
         '''
         same as writeSetpoint, but can use calculate argument to adjust flow to linear calibration 
         based on initialised m and c values. y = m*x+c, y - flow measured by MFC, x - real measured flows (flow meter).
@@ -142,7 +147,7 @@ class MFCclient():
         '''
         if calculate and flow > 0:
             flow = self.calcFlow(flow)
-        self.writeSetpoint(flow, check, tries)
+        self.writeSetpoint(flow, **kwargs)
     
     def pollAll(self):
         string = self.makeMessage(self.address, 'pollAll')
