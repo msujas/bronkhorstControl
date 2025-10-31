@@ -141,7 +141,9 @@ class MFC():
         fluiddct = self.readParams_names('Fluidset index', 'Fluid name')
         print(fluiddct)
         return fluiddct
-    
+    def readMaxCapacity(self):
+        value = self.readParam('Capacity 100%', self.address)
+        return value
     def writeFluidIndex(self,value):
         value = int(value)
         x = self.writeParam('Fluidset index',value)
@@ -217,7 +219,8 @@ class MFC():
                      'readSetpoint_pct': self.readSetpoint_pct, 'wink':self.wink,
                      'readValve': self.readValve, 'readParams_names':self.readParams_names,
                      'readParams_allAddsPars':self.readParams_allAddsPars,'testMessage':self.testMessage,
-                     'readSlope': self.readSlope, 'writeSlope':self.writeSlope, 'writeSP_slope':self.writeSP_Slope}
+                     'readSlope': self.readSlope, 'writeSlope':self.writeSlope, 'writeSP_slope':self.writeSP_Slope,
+                     'readMaxCapacity':self.readMaxCapacity}
         method = methodDct[methodName]
         val = method(*args)
         if type(val) == dict:

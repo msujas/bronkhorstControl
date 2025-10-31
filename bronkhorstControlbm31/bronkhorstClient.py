@@ -70,15 +70,25 @@ class MFCclient():
         string = self.makeMessage(self.address, 'writeParam', name, value)
         data = self.sendMessage(string)
         return self.strToBool(data)
-    def writeSetpoint(self,value):
+    def writeSetpoint(self,value, check = False, tries = 1):
         string = self.makeMessage(self.address, 'writeSetpoint', value)
-        data = self.sendMessage(string)
+        tolerance = 0.001
+        for t in range(tries):
+            data = float(self.sendMessage(string))
+            if value-tolerance < data < value +tolerance:
+                return data
+        if check and not value - tolerance < data < value + tolerance:
+            raise ValueError('new setpoint doesn\'t match given value')
+        return data
+    def readMaxCapacity(self):
+        data = self.makeSendMessage(self.address, 'readMaxCapacity')
         return float(data)
-    def setFlow(self,flow, calculate = False):
+
+    def setFlow(self,*args, **kwargs):
         '''
         alias for writeSetpoint2
         '''
-        return self.writeSetpoint2(flow, calculate)
+        return self.writeSetpoint2(*args, **kwargs)
     def readControlMode(self):
         string = self.makeMessage(self.address, 'readControlMode')
         data = self.sendMessage(string)
@@ -124,7 +134,7 @@ class MFCclient():
         return json.loads(data)
     def calcFlow(self,flow):
         return self.m*flow + self.c
-    def writeSetpoint2(self,flow,calculate = False):
+    def writeSetpoint2(self,flow,calculate = False, check = False, tries = 1):
         '''
         same as writeSetpoint, but can use calculate argument to adjust flow to linear calibration 
         based on initialised m and c values. y = m*x+c, y - flow measured by MFC, x - real measured flows (flow meter).
@@ -132,7 +142,7 @@ class MFCclient():
         '''
         if calculate and flow > 0:
             flow = self.calcFlow(flow)
-        self.writeSetpoint(flow)
+        self.writeSetpoint(flow, check, tries)
     
     def pollAll(self):
         string = self.makeMessage(self.address, 'pollAll')
@@ -192,6 +202,9 @@ class MFCclient():
         for arg in args[1:]:
             string += f'{sep}{arg}'
         return string
+    def makeSendMessage(self,*args):
+        string = self.makeMessage(*args)
+        return self.sendMessage(string)
 
     def multiClient(self,message):
         sel = selectors.DefaultSelector()
