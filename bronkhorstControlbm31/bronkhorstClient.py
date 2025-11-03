@@ -22,6 +22,9 @@ def connect(host=HOST, port=PORT):
 class MFCclient():
     def __init__(self,address, host=HOST,port=PORT, connid = socket.gethostname(), m = 1, c = 0, 
                  getMax = False):
+        eventlogfile = f'{homedir}/{logdir}/clientEvents.log'
+        logging.basicConfig(filename=eventlogfile, level = logging.INFO, format = '%(asctime)s %(levelname)-8s %(message)s',
+                            datefmt = '%Y/%m/%d_%H:%M:%S')
         self.address = address
         self.host = host
         self.port = port
@@ -78,13 +81,18 @@ class MFCclient():
     def writeSetpoint(self,value, check = False):   
         tolerance = 0.001
         if self.maxCapacity and value > self.maxCapacity:
-            print('value given greater than maximum. Setting to maximum flow')
+            message = 'value given greater than maximum. Setting to maximum flow'
+            logger.warning(message)
+            print(message)
             value = self.maxCapacity
         string = self.makeMessage(self.address, 'writeSetpoint', value)
-        #if check and self.maxCapacity and value > self.maxCapacity:
-        #    raise ValueError('new setpoint greater than maximum')
+
         data = float(self.sendMessage(string))
-        if check and not value - tolerance < data < value + tolerance:
+        success = value - tolerance < data < value + tolerance
+        if not success:
+            logger.warning(f'tried to write setpoint to {value}, returned setpoint: {data} .  mfc address: {self.address}, host: {self.host} '
+                            f'port: {self.port}')
+        if check and not success:
             raise ValueError('new setpoint doesn\'t match given value')
         return data
     def readMaxCapacity(self):
@@ -103,16 +111,23 @@ class MFCclient():
         return int(data)
     def writeControlMode(self,value):
         string = self.makeMessage(self.address, 'writeControlMode',value)
-        data = self.sendMessage(string)
-        return int(data)
+        data = int(self.sendMessage(string))
+        if not value == data:
+            logger.warning(f'tried to write control mode to {value}, value returned: {data} to mfc address: {self.address}, host: {self.host}, ' 
+                           f'port: {self.port}')
+        return data
     def readFluidType(self):
         string = self.makeMessage(self.address, 'readFluidType')
         data = self.sendMessage(string)
         return json.loads(data)
     def writeFluidIndex(self,value):
         string = self.makeMessage(self.address, 'writeFluidIndex',value)
-        data = self.sendMessage(string)
-        return json.loads(data)
+        data = json.loads(self.sendMessage(string))
+        newFI = data['Fluidset index']
+        if not value == newFI:
+            logger.warning(f'tried to write fluidset index to {value}, value returned: {newFI} to mfc address: {self.address}, host: {self.host}, ' 
+                           f'port: {self.port}')
+        return data
     def readMeasure_pct(self):
         string = self.makeMessage(self.address,'readMeasure_pct')
         data = self.sendMessage(string)
@@ -131,8 +146,10 @@ class MFCclient():
         return int(data)
     def writeSlope(self,value):
         string = self.makeMessage(self.address,'writeSlope',value)
-        data = self.sendMessage(string)
-        return int(data)
+        data = int(self.sendMessage(string))
+        if not value == data:
+            logger.warning(f'tried to write slope to {value}, value returned: {data} to mfc address: {self.address}, host: {self.host}, port: {self.port}')
+        return data
     def writeSP_slope(self,sp,slope):
         '''
         args: sp, slope. Write new setpoint and slope simultaneously
