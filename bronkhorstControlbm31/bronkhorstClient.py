@@ -75,11 +75,14 @@ class MFCclient():
         string = self.makeMessage(self.address, 'writeParam', name, value)
         data = self.sendMessage(string)
         return self.strToBool(data)
-    def writeSetpoint(self,value, check = False):
-        string = self.makeMessage(self.address, 'writeSetpoint', value)
+    def writeSetpoint(self,value, check = False):   
         tolerance = 0.001
-        if check and self.maxCapacity and value > self.maxCapacity:
-            raise ValueError('new setpoint greater than maximum')
+        if self.maxCapacity and value > self.maxCapacity:
+            print('value given greater than maximum. Setting to maximum flow')
+            value = self.maxCapacity
+        string = self.makeMessage(self.address, 'writeSetpoint', value)
+        #if check and self.maxCapacity and value > self.maxCapacity:
+        #    raise ValueError('new setpoint greater than maximum')
         data = float(self.sendMessage(string))
         if check and not value - tolerance < data < value + tolerance:
             raise ValueError('new setpoint doesn\'t match given value')
@@ -147,7 +150,7 @@ class MFCclient():
         '''
         if calculate and flow > 0:
             flow = self.calcFlow(flow)
-        self.writeSetpoint(flow, **kwargs)
+        return self.writeSetpoint(flow, **kwargs)
     
     def pollAll(self):
         string = self.makeMessage(self.address, 'pollAll')
