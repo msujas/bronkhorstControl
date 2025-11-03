@@ -20,13 +20,13 @@ def connect(host=HOST, port=PORT):
     return s
 
 class MFCclient():
-    def __init__(self,address, host=HOST,port=PORT, connid = socket.gethostname(),multi=True, m = 1, c = 0, 
+    def __init__(self,address, host=HOST,port=PORT, connid = socket.gethostname(), m = 1, c = 0, 
                  getMax = False):
         self.address = address
         self.host = host
         self.port = port
         self.connid = connid
-        self.multi = multi
+        self.multi = True
         self.m = m
         self.c = c
         self.types = {'fMeasure': float, 'address':np.uint8, 'fSetpoint':float, 'Setpoint_pct':float, 'Measure_pct':float, 
