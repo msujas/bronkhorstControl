@@ -11,6 +11,7 @@ from functools import partial
 import logging
 import pathlib, os, time
 import socket
+import numpy as np
 
 homedir = pathlib.Path.home()
 fulllogdir = f'{homedir}/{logdir}'
@@ -536,7 +537,7 @@ class Ui_MainWindow(object):
         self.port = self.portInput.value()
         try:
             df = MFCclient(1,self.host,self.port, connid=self.connid).pollAll()
-
+            self.olddf = df
         except (OSError, AttributeError) as e:
             raise e
         
@@ -623,13 +624,15 @@ class Ui_MainWindow(object):
                 print(df)
                 logger.exception(e)
                 raise e
-        
-        if time.time() - self.tlog > 5:
+        measDiff = np.max(np.abs(df['fMeasure'].values - self.olddf['fMeasure'].values))
+        spChange = (df['fSetpoint'].values != self.olddf['fSetpoint'].values).any()
+
+        if time.time() - self.tlog > 20 or measDiff > 0.1 or spChange:
             self.headerstring = logMFCs(self.logfile,df,self.headerstring)
             self.tlog = time.time()
         if self.plot and self.running:
             self.plotter.plotAllSingle(df)
-        
+        self.olddf = df
     def connectLoop(self):
         if not self.running:
             self.host = self.hostInput.text()

@@ -226,6 +226,7 @@ class Plotter():
         self.tlog = 0
         self.mfcclient = MFCclient(1,self.host,self.port, connid=self.connid)
         df = self.mfcclient.pollAll()
+        self.olddf = df
         if self.log:
             self.headerString = logHeader(self.logfile,df)
         axes = plt.axes([0.001, 0.0001, 0.08, 0.05])
@@ -246,7 +247,7 @@ class Plotter():
                 df = self.mfcclient.pollAll()
                 self.plotAllSingle(df)
                 plt.pause(self.waittime)
-                
+                self.olddf = df
             except KeyboardInterrupt:
                 logger.info('keyboard interrupt')
                 plt.close(self.fig)
@@ -277,8 +278,10 @@ class Plotter():
         barPlotSingle(df,self.ax[0,1], self.ax[1,1], title1=True)
 
         timePlotSingle(df,self.ax[0,0],self.measureFlow,self.tlist,self.xlim, xlabel=True, resetAxes=self.resetAxes)
-
-        if self.log and time.time() - self.tlog > self.logInterval:
+        measDiff = np.max(np.abs(df['fMeasure'].values - self.olddf['fMeasure'].values))
+        
+        if self.log and (time.time() - self.tlog > self.logInterval or measDiff > 0.01 or 
+                         (df['fSetpoint'].values != self.olddf['fSetpoint']).any()):
             self.headerString = logMFCs(self.logfile, df, self.headerString)
             self.tlog = time.time()
 

@@ -7,6 +7,7 @@ import json
 import logging
 import numpy as np
 import time
+#from datetime import datetime
 
 homedir = pathlib.Path.home()
 fulllogdir = f'{homedir}/{logdir}'
@@ -22,6 +23,7 @@ def connect(host=HOST, port=PORT):
 class MFCclient():
     def __init__(self,address, host=HOST,port=PORT, connid = socket.gethostname(), m = 1, c = 0, 
                  getMax = False):
+        #dt = datetime.fromtimestamp(time.time())
         eventlogfile = f'{homedir}/{logdir}/clientEvents.log'
         logging.basicConfig(filename=eventlogfile, level = logging.INFO, format = '%(asctime)s %(levelname)-8s %(message)s',
                             datefmt = '%Y/%m/%d_%H:%M:%S')
@@ -86,14 +88,19 @@ class MFCclient():
             print(message)
             value = self.maxCapacity
         string = self.makeMessage(self.address, 'writeSetpoint', value)
-
-        data = float(self.sendMessage(string))
+        try:
+            data = float(self.sendMessage(string))
+        except Exception as e:
+            logger.exception(e)
+            raise e
         success = value - tolerance < data < value + tolerance
         if not success:
-            logger.warning(f'tried to write setpoint to {value}, returned setpoint: {data} .  mfc address: {self.address}, host: {self.host} '
-                            f'port: {self.port}')
+            logger.warning(f'tried to write setpoint to {value}, returned setpoint: {data} .  mfc address: {self.address}, '
+                           f'host: {self.host} port: {self.port}')
         if check and not success:
             raise ValueError('new setpoint doesn\'t match given value')
+        if success:
+            logger.info(f'mfc address {self.address} setpoint set to {data}. Host: {self.host}, port {self.port}')
         return data
     def readMaxCapacity(self):
         data = float(self.makeSendMessage(self.address, 'readMaxCapacity'))
@@ -113,8 +120,8 @@ class MFCclient():
         string = self.makeMessage(self.address, 'writeControlMode',value)
         data = int(self.sendMessage(string))
         if not value == data:
-            logger.warning(f'tried to write control mode to {value}, value returned: {data} to mfc address: {self.address}, host: {self.host}, ' 
-                           f'port: {self.port}')
+            logger.warning(f'tried to write control mode to {value}, value returned: {data} to mfc address: {self.address}, '
+                           f'host: {self.host}, port: {self.port}')
         return data
     def readFluidType(self):
         string = self.makeMessage(self.address, 'readFluidType')
@@ -125,8 +132,8 @@ class MFCclient():
         data = json.loads(self.sendMessage(string))
         newFI = data['Fluidset index']
         if not value == newFI:
-            logger.warning(f'tried to write fluidset index to {value}, value returned: {newFI} to mfc address: {self.address}, host: {self.host}, ' 
-                           f'port: {self.port}')
+            logger.warning(f'tried to write fluidset index to {value}, value returned: {newFI} to mfc address: '
+                           f'{self.address}, host: {self.host}, port: {self.port}')
         return data
     def readMeasure_pct(self):
         string = self.makeMessage(self.address,'readMeasure_pct')
@@ -148,15 +155,28 @@ class MFCclient():
         string = self.makeMessage(self.address,'writeSlope',value)
         data = int(self.sendMessage(string))
         if not value == data:
-            logger.warning(f'tried to write slope to {value}, value returned: {data} to mfc address: {self.address}, host: {self.host}, port: {self.port}')
+            logger.warning(f'tried to write slope to {value}, value returned: {data} to mfc address: {self.address}, '
+                           f'host: {self.host}, port: {self.port}')
+        else:
+            logger.info(f'mfc address {self.address} slope set to {data}. Host: {self.host}, port {self.port}')
         return data
     def writeSP_slope(self,sp,slope):
         '''
         args: sp, slope. Write new setpoint and slope simultaneously
         '''
         string = self.makeMessage(self.address,'writeSP_slope',sp, slope)
-        data = self.sendMessage(string)
-        return json.loads(data)
+        data = json.loads(self.sendMessage(string))
+        newsp = data['Setpoint']
+        newSlope = data['Slope']
+        success = sp-0.001 < newsp < sp+0.001 and newSlope == slope
+        if not success:
+            logger.warning(f'tried to set setpoint to {sp} and slope to {slope}, but returned values '
+                           f'are setpoint: {newsp}, slope: {newSlope} . mfc address: {self.address}, host: {self.host}, '
+                           f'port {self.port}')
+        else:
+            logger.info(f'setpoint set to {newsp} and slope set to {newSlope} . mfc address {self.address}, '
+                        f'host {self.host}, port {self.port}')
+        return data
     def calcFlow(self,flow):
         return self.m*flow + self.c
     def writeSetpoint2(self,flow,calculate = False, **kwargs):
@@ -262,7 +282,7 @@ class MFCclient():
         except KeyboardInterrupt:
             print("Caught keyboard interrupt, exiting")
         except Exception as e:
-            logger.exception(e)
+            logger.exception(f'mfc address {self.address}, host: {self.host}, port {self.port}:\n{e}')
             raise e
         finally:
             sel.close()
