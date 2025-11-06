@@ -537,7 +537,8 @@ class Ui_MainWindow(object):
         self.port = self.portInput.value()
         try:
             df = MFCclient(1,self.host,self.port, connid=self.connid).pollAll()
-            self.olddf = df
+            self.fmeas = df['fMeasure'].values
+            self.fsp = df['fSetpoint'].values
         except (OSError, AttributeError) as e:
             raise e
         
@@ -624,15 +625,17 @@ class Ui_MainWindow(object):
                 print(df)
                 logger.exception(e)
                 raise e
-        measDiff = np.max(np.abs(df['fMeasure'].values - self.olddf['fMeasure'].values))
-        spChange = (df['fSetpoint'].values != self.olddf['fSetpoint'].values).any()
-
-        if time.time() - self.tlog > 20 or measDiff > 0.1 or spChange:
+            
+        measDiff = np.max(np.abs(df['fMeasure'].values - self.fmeas))
+        spChange = (df['fSetpoint'].values != self.fsp).any()
+        if time.time() - self.tlog > 20 or measDiff > 0.2 or spChange:
             self.headerstring = logMFCs(self.logfile,df,self.headerstring)
             self.tlog = time.time()
+            self.fmeas = df['fMeasure'].values
+            self.fsp = df['fSetpoint'].values
         if self.plot and self.running:
             self.plotter.plotAllSingle(df)
-        self.olddf = df
+        
     def connectLoop(self):
         if not self.running:
             self.host = self.hostInput.text()

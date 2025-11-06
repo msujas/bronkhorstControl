@@ -76,6 +76,11 @@ class MFCclient():
         string = self.makeMessage(self.address, 'readSetpoint')
         data = self.sendMessage(string)
         return float(data)
+    def readSpFlow(self):
+        data = self.readParams('fSetpoint', 'fMeasure')
+        #sp = data['fSetpoint']
+        #flow = data['fMeasure']
+        return data
     def writeParam(self, name, value):
         string = self.makeMessage(self.address, 'writeParam', name, value)
         data = self.sendMessage(string)
@@ -212,8 +217,10 @@ class MFCclient():
         return df
     
     def checkSetpoint(self, tolerance=0.1):
-        sp = self.readSetpoint()
-        return not sp-tolerance < self.readFlow() < sp+tolerance
+        data = self.readSpFlow()
+        sp = data['fSetpoint']
+        flow = data['fMeasure']
+        return not sp-tolerance < flow < sp+tolerance
     
     def wait(self, tolerance = 0.1):
         while self.checkSetpoint(tolerance):
