@@ -41,12 +41,11 @@ There is a gui called mfcgui (still must be used in conjuction with bronkhorstSe
 ```
 mfcgui -m 15
 ```
-
-<img width="799" height="578" alt="image" src="https://github.com/user-attachments/assets/6fe75069-f66e-450c-8915-dda187c5501f" />
+<img width="800" height="629" alt="mfcgui_202511" src="https://github.com/user-attachments/assets/9a71184d-8058-4bf2-a8b6-003eeeaad30c" />
 
 When plot data is checked, the following data will be plotted:
 
-![plotter](https://github.com/user-attachments/assets/9f26bbf2-cbeb-4d9d-994d-d15f480fcfa3)
+<img width="1680" height="944" alt="mfc_plot" src="https://github.com/user-attachments/assets/3215205b-d85e-4a93-a4e3-823514936b7a" />
 
 There is a 'reset axes' box on the plotter. If this is checked, the axes for the time plotters will always reset to show all the data. If unchecked, it allows you to zoom into a region, and it will stay there until the box is checked again. If the graph is not zoomed in, the axes will reset as more data comes in.
 
