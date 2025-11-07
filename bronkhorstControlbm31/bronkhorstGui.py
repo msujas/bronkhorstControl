@@ -204,6 +204,12 @@ class Ui_MainWindow(object):
         self.logLabel.setText('log directory')
         self.bottomLayout.addWidget(self.logLabel,3,2)
 
+        self.repollButton = QtWidgets.QPushButton()
+        self.repollButton.setObjectName('repollButton')
+        self.repollButton.setText('update MFC addresses')
+        self.bottomLayout.addWidget(self.repollButton,3,0)
+        self.repollButton.clicked.connect(self.repoll)
+
         self.winkLabel = QtWidgets.QLabel()
         self.winkLabel.setObjectName('winkLabel')
         self.winkLabel.setMinimumHeight(self.yspacing)
@@ -662,6 +668,7 @@ class Ui_MainWindow(object):
             self.hostInput.setEnabled(False)
             self.portInput.setEnabled(False)
             self.pollTimeBox.setEnabled(False)
+            self.repollButton.setEnabled(False)
             #self.logDirButton.setEnabled(False)
             self.worker = Worker(self.host,self.port, self.waittime)
             self.thread = QtCore.QThread()
@@ -690,6 +697,7 @@ class Ui_MainWindow(object):
         self.portInput.setEnabled(True)
         self.pollTimeBox.setEnabled(True)
         self.plotBox.setEnabled(True)
+        self.repollButton.setEnabled(True)
         #self.logDirButton.setEnabled(True)
         self.enabledMFCs = []
         for i in range(self.maxMFCs):
@@ -737,6 +745,16 @@ class Ui_MainWindow(object):
         newmode = MFCclient(address, self.host,self.port, connid=self.connid).writeControlMode(value)
         self.controlBoxes[i].setCurrentIndex(newmode)
 
+    def repoll(self):
+        self.host = self.hostInput.text()
+        self.port = self.portInput.value()
+        plot = self.plotBox.isChecked()
+        mfc = MFCclient(1,self.host,self.port, connid=self.connid)
+        mfc.readAddresses()
+        self.plotBox.setChecked(False)
+        self.connectMFCs()
+        self.disableWidgets()
+        self.plotBox.setChecked(plot)
 
     def setFluidIndex(self,i):
         if not self.running:

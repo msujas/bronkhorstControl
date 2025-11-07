@@ -208,7 +208,7 @@ def plotValvesBar(df, ax):
 
 class Plotter():
     def __init__(self,host=HOST, port = PORT,waittime = 1, connid = f'{socket.gethostname()}allPlot',xlim = 60, 
-                 log = True, logInterval = 5):
+                 log = True, logInterval = 20):
         self.host = host
         self.port = port
         self.waittime = waittime
@@ -281,7 +281,7 @@ class Plotter():
         timePlotSingle(df,self.ax[0,0],self.measureFlow,self.tlist,self.xlim, xlabel=True, resetAxes=self.resetAxes)
         measDiff = np.max(np.abs(df['fMeasure'].values - self.fmeas))
         spchange = (df['fSetpoint'].values != self.fsp).any()
-        if self.log and (time.time() - self.tlog > self.logInterval or measDiff > 0.01 or spchange):
+        if self.log and (time.time() - self.tlog > self.logInterval or measDiff > 0.2 or spchange):
             self.headerString = logMFCs(self.logfile, df, self.headerString)
             self.tlog = time.time()
             self.fmeas = df['fMeasure'].values
