@@ -78,10 +78,12 @@ class Ui_MainWindow(object):
         self.connid = f'{socket.gethostname()}GUI'
         self.MainWindow = MainWindow
         self.MainWindow.setObjectName("MainWindow")
-        
         self.MainWindow.setWindowTitle('Bronkhorst GUI')
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
+
+        self.configfile = f'{fulllogdir}/guiconfig.log'
+
         self.maxMFCs = parseArguments()
         self.box1x = 70
         self.box1y = 20
@@ -527,6 +529,8 @@ class Ui_MainWindow(object):
         self.MainWindow.setCentralWidget(self.centralwidget)
         QtCore.QMetaObject.connectSlotsByName(self.MainWindow)
 
+        self.readConfig()
+
         self.startButton.clicked.connect(self.connectLoop)
         self.lockFluidIndex.stateChanged.connect(self.lockFluidIndexes)
         self.plotBox.stateChanged.connect(self.plotSetup)
@@ -634,7 +638,7 @@ class Ui_MainWindow(object):
             
         measDiff = np.max(np.abs(df['fMeasure'].values - self.fmeas))
         spChange = (df['fSetpoint'].values != self.fsp).any()
-        if time.time() - self.tlog > 20 or measDiff > 0.2 or spChange:
+        if time.time() - self.tlog > 30 or measDiff > 0.2 or spChange:
             self.headerstring = logMFCs(self.logfile,df,self.headerstring)
             self.tlog = time.time()
             self.fmeas = df['fMeasure'].values
@@ -755,6 +759,7 @@ class Ui_MainWindow(object):
         self.connectMFCs()
         self.disableWidgets()
         self.plotBox.setChecked(plot)
+        self.running = False
 
     def setFluidIndex(self,i):
         if not self.running:
@@ -791,9 +796,44 @@ class Ui_MainWindow(object):
         dialog = QtWidgets.QFileDialog.getExistingDirectory(caption='select log directory', directory=currDir)
         if dialog:
             self.logDirectory.setText(dialog)
-            self.logfile = getLogFile(self.host,self.port, self.logDirectory.text())
-            df = MFCclient(1,self.host,self.port, connid='getheader').pollAll()
-            logHeader(self.logfile, df)
+            if self.running:
+                self.logfile = getLogFile(self.host,self.port, self.logDirectory.text())
+                df = MFCclient(1,self.host,self.port, connid='getheader').pollAll()
+                logHeader(self.logfile, df)
+            self.writeConfig()
+
+    def updateConfigDct(self):
+        self.configDct = {}
+        widetList = [self.logDirectory]
+        for w in widetList:
+            self.configDct[w.objectName()] = {'widget': w ,'value':w.text()}
+    def writeConfig(self):
+        self.updateConfigDct()
+        string = ''
+        for item in self.configDct:
+            string += f'{item};{self.configDct[item]['value']}\n'
+        f = open(self.configfile,'w')
+        f.write(string)
+        f.close()
+    def readConfig(self):
+        if not os.path.exists(self.configfile):
+            return
+        self.updateConfigDct()
+        f = open(self.configfile,'r')
+        data = f.read()
+        f.close()
+        for line in data.split('\n'):
+            if not line:
+                continue
+            name, value = line.split(';')
+            self.configDct[name]['widget'].setText(value)
+        self.updateConfigDct()
+        if not os.path.exists(self.logDirectory.text()):
+            print('stored log directory doesn\'t exist, setting to default')
+            self.logDirectory.setText(clientlogdir)
+            self.writeConfig()
+        
+        
             
 
 def main():

@@ -128,6 +128,9 @@ class MFC():
         addressesString = ' '.join([str(a) for a in self.addresses])
         return addressesString
     def readAddresses(self):
+        '''
+        alias for getAddresses
+        '''
         return self.getAddresses()
     def readControlMode(self):
         mode = self.readParam('Control mode')

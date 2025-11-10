@@ -3,6 +3,7 @@ import pandas as pd
 import selectors,types
 import os, pathlib
 from bronkhorstControlbm31.bronkhorstServer import PORT, HOST, logdir
+from bronkhorstControlbm31.bronkhorst import getParamDF
 import json
 import logging
 import numpy as np
@@ -45,45 +46,32 @@ class MFCclient():
             return string == 'True'
         return string
     def readAddresses(self):
-        string = self.makeMessage(self.address, 'getAddresses')
-        addressesString = self.sendMessage(string)
+        addressesString = self.makeSendMessage('getAddresses')
         addresses = [int(a) for a in addressesString.split()]
         self.addresses = addresses
-        print(addresses)
         return addresses
     def readName(self):
-        string = self.makeMessage(self.address, 'readName')
-        data = self.sendMessage(string)
+        data = self.makeSendMessage( 'readName')
         return data
     def writeName(self,newname):
-        string = self.makeMessage(self.address,'writeName',newname)
-        data = self.sendMessage(string)
+        data = self.makeSendMessage('writeName',newname)
         return data
     def readParam(self, name):
-        string = self.makeMessage(self.address, 'readParam', name)
-        data = self.sendMessage(string)
+        data = self.makeSendMessage( 'readParam', name)
         return data
     def readParams(self,*names):
-        string = self.makeMessage(self.address, 'readParams_names', *names)
-        data = self.sendMessage(string)
+        data = self.makeSendMessage( 'readParams_names', *names)
         datadct = json.loads(data)
         return datadct
     def readFlow(self):
-        string = self.makeMessage(self.address, 'readFlow')
-        data = self.sendMessage(string)
+        data = self.makeSendMessage( 'readFlow')
         return float(data)
     def readSetpoint(self):
-        string = self.makeMessage(self.address, 'readSetpoint')
-        data = self.sendMessage(string)
+        data = self.makeSendMessage( 'readSetpoint')
         return float(data)
-    def readSpFlow(self):
-        data = self.readParams('fSetpoint', 'fMeasure')
-        #sp = data['fSetpoint']
-        #flow = data['fMeasure']
-        return data
+
     def writeParam(self, name, value):
-        string = self.makeMessage(self.address, 'writeParam', name, value)
-        data = self.sendMessage(string)
+        data = self.makeSendMessage( 'writeParam', name, value)
         return self.strToBool(data)
     def writeSetpoint(self,value, check = False):   
         tolerance = 0.001
@@ -92,7 +80,7 @@ class MFCclient():
             logger.warning(message)
             print(message)
             value = self.maxCapacity
-        string = self.makeMessage(self.address, 'writeSetpoint', value)
+        string = self.makeMessage( 'writeSetpoint', value)
         try:
             data = float(self.sendMessage(string))
         except Exception as e:
@@ -108,57 +96,48 @@ class MFCclient():
             logger.info(f'mfc address {self.address} setpoint set to {data}. Host: {self.host}, port {self.port}')
         return data
     def readMaxCapacity(self):
-        data = float(self.makeSendMessage(self.address, 'readMaxCapacity'))
+        data = float(self.makeSendMessage( 'readMaxCapacity'))
         self.maxCapacity = data
         return data
-
+    
     def setFlow(self,*args, **kwargs):
         '''
         alias for writeSetpoint2
         '''
         return self.writeSetpoint2(*args, **kwargs)
     def readControlMode(self):
-        string = self.makeMessage(self.address, 'readControlMode')
-        data = self.sendMessage(string)
+        data = self.makeSendMessage( 'readControlMode')
         return int(data)
     def writeControlMode(self,value):
-        string = self.makeMessage(self.address, 'writeControlMode',value)
-        data = int(self.sendMessage(string))
+        data = int(self.makeSendMessage( 'writeControlMode',value))
         if not value == data:
             logger.warning(f'tried to write control mode to {value}, value returned: {data} to mfc address: {self.address}, '
                            f'host: {self.host}, port: {self.port}')
         return data
     def readFluidType(self):
-        string = self.makeMessage(self.address, 'readFluidType')
-        data = self.sendMessage(string)
+        data = self.makeSendMessage( 'readFluidType')
         return json.loads(data)
     def writeFluidIndex(self,value):
-        string = self.makeMessage(self.address, 'writeFluidIndex',value)
-        data = json.loads(self.sendMessage(string))
+        data = json.loads(self.makeSendMessage( 'writeFluidIndex',value))
         newFI = data['Fluidset index']
         if not value == newFI:
             logger.warning(f'tried to write fluidset index to {value}, value returned: {newFI} to mfc address: '
                            f'{self.address}, host: {self.host}, port: {self.port}')
         return data
     def readMeasure_pct(self):
-        string = self.makeMessage(self.address,'readMeasure_pct')
-        data = self.sendMessage(string)
+        data = self.makeSendMessage('readMeasure_pct')
         return float(data)
     def readSetpoint_pct(self):
-        string = self.makeMessage(self.address,'readSetpoint_pct')
-        data = self.sendMessage(string)
+        data = self.makeSendMessage('readSetpoint_pct')
         return float(data)
     def readValve(self):
-        string = self.makeMessage(self.address,'readValve')
-        data = self.sendMessage(string)
+        data = self.makeSendMessage('readValve')
         return float(data)
     def readSlope(self):
-        string = self.makeMessage(self.address,'readSlope')
-        data = self.sendMessage(string)
+        data = self.makeSendMessage('readSlope')
         return int(data)
     def writeSlope(self,value):
-        string = self.makeMessage(self.address,'writeSlope',value)
-        data = int(self.sendMessage(string))
+        data = int(self.makeSendMessage('writeSlope',value))
         if not value == data:
             logger.warning(f'tried to write slope to {value}, value returned: {data} to mfc address: {self.address}, '
                            f'host: {self.host}, port: {self.port}')
@@ -169,8 +148,7 @@ class MFCclient():
         '''
         args: sp, slope. Write new setpoint and slope simultaneously
         '''
-        string = self.makeMessage(self.address,'writeSP_slope',sp, slope)
-        data = json.loads(self.sendMessage(string))
+        data = json.loads(self.makeSendMessage('writeSP_slope',sp, slope))
         newsp = data['Setpoint']
         newSlope = data['Slope']
         success = sp-0.001 < newsp < sp+0.001 and newSlope == slope
@@ -195,8 +173,7 @@ class MFCclient():
         return self.writeSetpoint(flow, **kwargs)
     
     def pollAll(self):
-        string = self.makeMessage(self.address, 'pollAll')
-        data = self.sendMessage(string)
+        data = self.makeSendMessage('pollAll')
         datalines = data.split('\n')
         columns = datalines[0].split(';')
         array = [[i for i in line.split(';')] for line in datalines[1:] if line]
@@ -205,8 +182,7 @@ class MFCclient():
         return df
     
     def pollAll2(self):
-        string = self.makeMessage(self.address,'readParams_allAddsPars')
-        data = self.sendMessage(string)
+        data = self.makeSendMessage('readParams_allAddsPars')
         datadct = json.loads(data)
         df = pd.DataFrame.from_dict(datadct)
         df['Measure'] = df['Measure'].apply(lambda x: x*100/32000)
@@ -217,7 +193,7 @@ class MFCclient():
         return df
     
     def checkSetpoint(self, tolerance=0.1):
-        data = self.readSpFlow()
+        data = self.readParams('fSetpoint', 'fMeasure')
         sp = data['fSetpoint']
         flow = data['fMeasure']
         return not sp-tolerance < flow < sp+tolerance
@@ -227,13 +203,12 @@ class MFCclient():
             time.sleep(1)
 
     def testMessage(self):
-        string = self.makeMessage(self.address,'testMessage')
-        data = self.sendMessage(string)
+        data = self.makeSendMessage('testMessage')
         return data
-
+    def getParamDF(self):
+        return getParamDF()
     def wink(self):
-        string = self.makeMessage(self.address,'wink')
-        data = self.sendMessage(string)
+        data = self.makeSendMessage('wink')
         return data
     def sendMessage(self,message):
         bytemessage = bytes(message,encoding='utf-8')
@@ -250,8 +225,8 @@ class MFCclient():
         return strdata
     def makeMessage(self, *args):
         sep = ';'
-        string = f'{args[0]}'
-        for arg in args[1:]:
+        string = f'{self.address}'
+        for arg in args:
             string += f'{sep}{arg}'
         return string
     def makeSendMessage(self,*args):
