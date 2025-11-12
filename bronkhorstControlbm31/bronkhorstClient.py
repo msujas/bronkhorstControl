@@ -197,21 +197,25 @@ class MFCclient():
         sp = data['fSetpoint']
         flow = data['fMeasure']
         return abs(flow-sp) >tolerance
-    
     def wait(self, tolerance = 0.1):
         while self.checkSetpoint(tolerance):
             time.sleep(1)
+
     def readPID(self):
         return self.readParams('PID-Kp','PID-Ti','PID-Td')
     def writePID(self, paramString,value):
-        return float(self.makeSendMessage('writePID',paramString,value))
+        data = float(self.makeSendMessage('writePID',paramString,value))
+        if abs(data-value) > 0.01:
+            logger.warning(f'tried to change {paramString} to {value}, but failed. Current value {data}')
+        else:
+            logger.info(f'{paramString} set to {data}')
+        return data
     def writeKp(self,value):
         return self.writePID('PID-Kp',value)
     def writeTd(self,value):
         return self.writePID('PID-Td',value)
     def writeTi(self,value):
         return self.writePID('PID-Ti',value)
-
 
     def testMessage(self):
         data = self.makeSendMessage('testMessage')
