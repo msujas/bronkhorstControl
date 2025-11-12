@@ -168,12 +168,13 @@ class MFC():
         if not paramString in ['PID-Kp', 'PID-Ti', 'PID-Td']:
             print('can only use to modify PID parameters')
             return
+        value = float(value)
         self.writeParam('Initreset',64)
         self.writeParam(paramString, value)
         self.writeParam('Initreset',82)
         return self.readParam(paramString)
     def writeKp(self, value):
-        self.writePID(self,'PID-Kp', value)
+        self.writePID('PID-Kp', value)
     def writeTi(self,value):
         self.writePID('PID-Ti',value)
     def writeTd(self,value):
