@@ -196,11 +196,22 @@ class MFCclient():
         data = self.readParams('fSetpoint', 'fMeasure')
         sp = data['fSetpoint']
         flow = data['fMeasure']
-        return not sp-tolerance < flow < sp+tolerance
+        return abs(flow-sp) >tolerance
     
     def wait(self, tolerance = 0.1):
         while self.checkSetpoint(tolerance):
             time.sleep(1)
+    def readPID(self):
+        return self.readParams('PID-Kp','PID-Ti','PID-Td')
+    def writePID(self, paramString,value):
+        return float(self.makeSendMessage('writePID',paramString,value))
+    def writeKp(self,value):
+        return self.writePID('PID-Kp',value)
+    def writeTd(self,value):
+        return self.writePID('PID-Td',value)
+    def writeTi(self,value):
+        return self.writePID('PID-Ti',value)
+
 
     def testMessage(self):
         data = self.makeSendMessage('testMessage')

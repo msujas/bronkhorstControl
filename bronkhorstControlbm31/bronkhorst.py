@@ -164,6 +164,21 @@ class MFC():
     def testMessage(self):
         return 'a'*1000 + 'b'*1000
     
+    def writePID(self, paramString, value):
+        if not paramString in ['PID-Kp', 'PID-Ti', 'PID-Td']:
+            print('can only use to modify PID parameters')
+            return
+        self.writeParam('Initreset',64)
+        self.writeParam(paramString, value)
+        self.writeParam('Initreset',82)
+        return self.readParam(paramString)
+    def writeKp(self, value):
+        self.writePID(self,'PID-Kp', value)
+    def writeTi(self,value):
+        self.writePID('PID-Ti',value)
+    def writeTd(self,value):
+        self.writePID('PID-Td',value)
+    
     def pollAll(self):
         datadct = {}
         for par in ['address']+self.pollparams:
@@ -228,7 +243,7 @@ class MFC():
                      'readValve': self.readValve, 'readParams_names':self.readParams_names,
                      'readParams_allAddsPars':self.readParams_allAddsPars,'testMessage':self.testMessage,
                      'readSlope': self.readSlope, 'writeSlope':self.writeSlope, 'writeSP_slope':self.writeSP_Slope,
-                     'readMaxCapacity':self.readMaxCapacity}
+                     'readMaxCapacity':self.readMaxCapacity, 'writePID':self.writePID}
         method = methodDct[methodName]
         val = method(*args)
         if type(val) == dict:
