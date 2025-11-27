@@ -15,3 +15,4 @@ build
 bronkhorst_control_modes.png
 timeTest.py
 *.png
+.vscode

@@ -293,8 +293,45 @@ class Plotter():
         plt.subplots_adjust(top = 0.95, bottom = 0.07, right = 0.99, left = 0.1, 
             hspace = 0.2, wspace = 0.2)
 
+import matplotlib.dates as mdates
+import matplotlib.units as munits
 
-            
+def logplotargs():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('filename', type = str, help = 'name of log file to plot')
+    args = parser.parse_args()
+    filename = args.filename
+    return filename
+
+def logPlotter(logfile = None):
+    if not logfile:
+        logfile = logplotargs()
+    f = open(logfile, 'r')
+    lines = f.readlines()
+    f.close()
+    skiplines = [i for i in range(len(lines)) if 'datetime' in lines[i]]
+    header = lines[skiplines[-1]]
+    header = header.split()
+    df = pd.read_csv(logfile, skiprows=skiplines, header = None, sep = ' ')
+    df.columns = header
+    fig,ax = plt.subplots(1,dpi = 150)
+    xfmt = mdates.DateFormatter('%Y-%m-%d %H:%M:%S')
+    ax.xaxis.set_major_formatter(xfmt)
+    time = df['unixTime(s)'].values
+    dt = np.array([datetime.fromtimestamp(t) for t in time])
+    plotCols = [col for col in df.columns if 'Measure' in col]
+    for c in plotCols:
+        ax.plot(dt, df[c].values, 'o-', label = c.replace('Measure',''), markersize = 2)
+    ax.legend()
+    ax.set_ylabel('MFC/BPR measure')
+    ax.set_xlabel('date time')
+    ax.tick_params(axis = 'x', labelrotation = 45)
+    plt.tight_layout()
+    plt.show()
+
+
+
+
 def plotAll(host = HOST, port = PORT, connid = f'{socket.gethostname()}allPlot', xlim = 60, log = True, 
             logInterval = 5, waittime = 0.5):
     host,port,connid,waittime, xlim, log, logInterval = getArgs(host=host,port=port,connid=connid, waitTime=waittime,plotTime=xlim, 

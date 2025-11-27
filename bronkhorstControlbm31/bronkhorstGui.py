@@ -18,11 +18,10 @@ fulllogdir = f'{homedir}/{logdir}'
 os.makedirs(fulllogdir,exist_ok=True)
 logger = logging.getLogger()
 
-
-
 def parseArguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-m','--maxMFCs', default=10, type=int, help='maximum number of MFCs that might be needed (default 10)')
+    parser.add_argument('-m','--maxMFCs', default=10, type=int, help=('maximum number of MFCs that might be ' 
+                                                                      'needed (default 10)'))
     args = parser.parse_args()
     maxMFCs = args.maxMFCs
     return maxMFCs
@@ -65,21 +64,18 @@ class Worker(QtCore.QObject):
         except Exception as e:
             logger.exception(e)
             raise e
-
         self.outputs.emit(df)
         
 
-class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
+class Ui_MainWindow(QtWidgets.QMainWindow):
+    def setupUi(self):
         eventlogfile = f'{homedir}/{logdir}/mfcgui.log'
         logging.basicConfig(filename=eventlogfile, level = logging.INFO, format = '%(asctime)s %(levelname)-8s %(message)s',
                             datefmt = '%Y/%m/%d_%H:%M:%S')
         logger.info('mfcgui opened')
         self.connid = f'{socket.gethostname()}GUI'
-        self.MainWindow = MainWindow
-        self.MainWindow.setObjectName("MainWindow")
-        self.MainWindow.setWindowTitle('Bronkhorst GUI')
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.setWindowTitle('Bronkhorst GUI')
+        self.centralwidget = QtWidgets.QWidget()
         self.centralwidget.setObjectName("centralwidget")
 
         self.configfile = f'{fulllogdir}/guiconfig.log'
@@ -524,10 +520,10 @@ class Ui_MainWindow(object):
         self.outerLayout.addWidget(self.scrollArea2)
         self.centralwidget.setLayout(self.outerLayout)
 
-        self.MainWindow.resize(800, int(1.15*(self.group.height()+self.group2.height())))
+        #self.resize(800, int(1.15*(self.group.height()+self.group2.height())))
         
-        self.MainWindow.setCentralWidget(self.centralwidget)
-        QtCore.QMetaObject.connectSlotsByName(self.MainWindow)
+        self.setCentralWidget(self.centralwidget)
+        QtCore.QMetaObject.connectSlotsByName(self)
 
         self.readConfig()
 
@@ -688,12 +684,11 @@ class Ui_MainWindow(object):
     def stopConnect(self):
         self.worker.stop()
         self.thread.quit()
-        self.running = False
         self.worker.deleteLater()
-        
         if self.plot:
             plt.close()
-    
+        self.thread.wait()
+        self.running = False
     def disableWidgets(self):
         self.running = False
         self.startButton.setText('connect MFCs')
@@ -702,7 +697,6 @@ class Ui_MainWindow(object):
         self.pollTimeBox.setEnabled(True)
         self.plotBox.setEnabled(True)
         self.repollButton.setEnabled(True)
-        #self.logDirButton.setEnabled(True)
         self.enabledMFCs = []
         for i in range(self.maxMFCs):
             self.writeSetpointBoxes[i].setEnabled(False)
@@ -833,14 +827,16 @@ class Ui_MainWindow(object):
             self.logDirectory.setText(clientlogdir)
             self.writeConfig()
         
+    def closeEvent(self,event):
+        if self.running:
+            self.stopConnect()
+        super().closeEvent(event)
+        event.accept()
         
-            
-
 def main():
     import sys
     app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
+    ui.setupUi()
+    ui.show()
     sys.exit(app.exec())

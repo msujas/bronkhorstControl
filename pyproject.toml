@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bronkhorstControlbm31"
-version = "1.4.0"
+version = "1.4.1"
 requires-python = ">= 3.10"
 dependencies = ["bronkhorst-propar", "pandas", "matplotlib", "pyqt6"]
 authors = [{name = "Kenneth P. Marshall", email = "kenneth.marshall@esrf.fr"}]
@@ -15,8 +15,7 @@ keywords = ["Bronkhorst", "MFCs"]
 license = "GPL-3.0"
 license-files = ["LICENSE.md"]
 classifiers = [
-"Development Status :: 4 - Beta",
-"Programming Language :: Python :: 3.12"]
+"Programming Language :: Python :: 3.13"]
 
 [project.scripts]
 bronkhorstServer = "bronkhorstControlbm31.bronkhorstServer:multiServer"
@@ -26,6 +25,7 @@ timePlot = "bronkhorstControlbm31.plotters:timePlot"
 barPlot = "bronkhorstControlbm31.plotters:barPlot"
 mfcPlotAll = "bronkhorstControlbm31.plotters:plotAll"
 mfcgui = "bronkhorstControlbm31.bronkhorstGui:main"
+mfclogplotter = "bronkhorstControlbm31.plotters:logPlotter"
 
 [tool.setuptools]
 packages = ["bronkhorstControlbm31"]
