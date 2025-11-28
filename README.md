@@ -55,6 +55,8 @@ The logs can be plotted with the program
 ```
 mfclogplotter <filename>
 ```
+<img width="957" height="701" alt="image" src="https://github.com/user-attachments/assets/b23b3fef-4b34-4bb7-9a3a-c0212b0ae707" />
+
 
 There are also 3 plotting programs which can be run independently of the GUI, called barPlot, timePlot, and mfcPlotAll which can be run in conjunction with the bronkhorstServer. Takes host as a positional argument (default 'localhost'). Run e.g. 'timePlot \<hostname\>'. Use --help to display options. mfcPlotAll plots the same data as the GUI. timePlot and mfcPlotAll also log the data.
 
