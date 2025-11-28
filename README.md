@@ -51,6 +51,11 @@ There is a 'reset axes' box on the plotter. If this is checked, the axes for the
 
 The GUI also logs the measure values and setpoints every 5 seconds. This is saved in the \<home>/bronkhorstClientLog/ folder.
 
+The logs can be plotted with the program
+```
+mfclogplotter <filename>
+```
+
 There are also 3 plotting programs which can be run independently of the GUI, called barPlot, timePlot, and mfcPlotAll which can be run in conjunction with the bronkhorstServer. Takes host as a positional argument (default 'localhost'). Run e.g. 'timePlot \<hostname\>'. Use --help to display options. mfcPlotAll plots the same data as the GUI. timePlot and mfcPlotAll also log the data.
 
 Can also be controlled more directly, without the server, using the MFC class in the bronkhorst.py module, but the GUI and plotting programs won't work in that case, and it must be on the same PC as the MFCs. e.g.

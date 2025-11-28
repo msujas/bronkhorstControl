@@ -828,6 +828,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.writeConfig()
         
     def closeEvent(self,event):
+        print('closing')
         if self.running:
             self.stopConnect()
         super().closeEvent(event)
