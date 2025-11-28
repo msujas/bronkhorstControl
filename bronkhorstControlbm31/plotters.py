@@ -325,7 +325,7 @@ def logPlotter(logfile = None):
     ax.legend()
     ax.set_ylabel('MFC/BPR measure')
     ax.set_xlabel('date time')
-    ax.tick_params(axis = 'x', labelrotation = 45)
+    ax.tick_params(axis = 'x', labelrotation = 90, labelsize = 10)
     plt.tight_layout()
     plt.show()
 
