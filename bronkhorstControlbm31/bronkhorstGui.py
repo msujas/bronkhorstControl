@@ -79,7 +79,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.centralwidget.setObjectName("centralwidget")
 
         self.configfile = f'{fulllogdir}/guiconfig.log'
-
+        curpath = os.path.dirname(os.path.realpath(__file__))
+        iconfile = f'{curpath}/images/drawing.ico'
+        self.setWindowIcon(QtGui.QIcon(iconfile))
         self.maxMFCs = parseArguments()
         self.box1x = 70
         self.box1y = 20
