@@ -14,5 +14,13 @@ build
 *.docx
 bronkhorst_control_modes.png
 timeTest.py
-*.png
 .vscode
+bronkhorst_control_modes.png
+gui.png
+image.png
+mfcgui.png
+MFCs.png
+plotter-1.png
+plotter.png
+*.paint
+bronkhorstControlbm31/images/drawing2.png

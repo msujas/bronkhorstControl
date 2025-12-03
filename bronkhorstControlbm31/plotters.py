@@ -294,7 +294,6 @@ class Plotter():
             hspace = 0.2, wspace = 0.2)
 
 import matplotlib.dates as mdates
-import matplotlib.units as munits
 
 def logplotargs():
     parser = argparse.ArgumentParser()
