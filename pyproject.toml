@@ -27,8 +27,13 @@ mfcPlotAll = "bronkhorstControlbm31.plotters:plotAll"
 mfcgui = "bronkhorstControlbm31.bronkhorstGui:main"
 mfclogplotter = "bronkhorstControlbm31.plotters:logPlotter"
 
+[project.gui-scripts]
+mfcgui2 = "bronkhorstControlbm31.bronkhorstGui:main"
+
 [tool.setuptools]
+include-package-data = true
 packages = ["bronkhorstControlbm31"]
+package-data = {"images"=["drawing.ico","drawing.png"]}
 
 [project.urls]
 repository = "https://github.com/msujas/bronkhorstControl"
