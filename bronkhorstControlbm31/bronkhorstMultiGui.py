@@ -7,6 +7,7 @@ from .bronkhorstGui import parseArguments
 import time
 from .plotters import clientlogdir, Plotter, getLogFile, logHeader
 import logging, socket, os
+import matplotlib.pyplot as plt
 
 logger = logging.getLogger()
 
@@ -180,7 +181,11 @@ class MultiServerGui(QtWidgets.QMainWindow, CommonFunctions):
         self.userTags[i].setText(newtag)
 
     def plotSetup(self):
-        pass
+        self.plot = self.plotBox.isChecked()
+        if self.plot and self.running:
+            self.plotter = Plotter(host = self.hosts[0], port = self.ports[0], log = False, initDF=self.initdf)
+        elif not self.plot:
+            plt.close()
 
     def initialDF(self):
         dfs = {}
@@ -204,7 +209,7 @@ class MultiServerGui(QtWidgets.QMainWindow, CommonFunctions):
             df = self.initialDF()
         except (OSError, AttributeError) as e:
             raise e
-        
+        self.initdf = df
         self.plot = self.plotBox.isChecked()
         if self.plot:
             self.plotter = Plotter(host = self.hosts[0], port = self.ports[0], log=False, initDF=df)
