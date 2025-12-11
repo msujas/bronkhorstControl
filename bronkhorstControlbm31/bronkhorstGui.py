@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from .bronkhorstClient import MFCclient
 from .bronkhorstServer import HOST, PORT, logdir
 from .plotters import Plotter, getLogFile, logHeader, logMFCs, clientlogdir
-from .guiLayout import guiLayout, formatLayouts
+from .guiLayout import guiLayout, formatLayouts, CommonFunctions
 from functools import partial
 import logging
 import pathlib, os, time
@@ -68,7 +68,7 @@ class Worker(QtCore.QObject):
         self.outputs.emit(df)
         
 
-class Ui_MainWindow(QtWidgets.QMainWindow):
+class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
     def setupUi(self):
         eventlogfile = f'{homedir}/{logdir}/mfcgui.log'
         logging.basicConfig(filename=eventlogfile, level = logging.INFO, format = '%(asctime)s %(levelname)-8s %(message)s',
@@ -100,6 +100,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
         self.maxMFCs = parseArguments()
         guiLayout(self)
+        self.portInput = QtWidgets.QSpinBox()
+        self.portInput.setObjectName('portInput')
+        self.portInput.setMinimumWidth(120)
+        self.portInput.setMaximum(2**16)
+        self.portInput.setMinimum(8000)
+        self.portInput.setValue(PORT)
+        self.bottomLayout.addWidget(self.portInput,0,2)
         formatLayouts(self)
         self.centralwidget.setLayout(self.outerLayout)
 
@@ -110,10 +117,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
         self.readConfig()
 
-        self.startButton.clicked.connect(self.connectLoop)
-        self.lockFluidIndex.stateChanged.connect(self.lockFluidIndexes)
-        self.plotBox.stateChanged.connect(self.plotSetup)
-    
+
     def plotSetup(self):
         self.plot = self.plotBox.isChecked()
         if self.plot and self.running:
@@ -167,63 +171,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.updateMFCs(df)
         logger.info(f'connected to server. Host: {self.host}, port: {self.port}')
 
-    def updateMFCs(self,df):
 
-        if len(df.columns) == 0:
-            self.stopConnect()
-            self.disableWidgets()
-            return
-        checkValue = self.runningIndicator.isChecked()
-        self.runningIndicator.setChecked(not checkValue)
-        for i in df.index.values:
-            try:
-                newSetpoint = df.loc[i]['fSetpoint']
-                newControlMode = df.loc[i]['Control mode']
-                newFluidIndex = df.loc[i]['Fluidset index']
-                self.addressLabels[i].setValue(df.loc[i]['address'])
-                self.setpointBoxes[i].setValue(newSetpoint)
-                self.measureBoxes[i].setValue(df.loc[i]['fMeasure'])
-                self.valveBoxes[i].setValue(df.loc[i]['Valve output'])
-                self.setpointpctBoxes[i].setValue(df.loc[i]['Setpoint_pct'])
-                self.measurepctBoxes[i].setValue(df.loc[i]['Measure_pct'])
-                self.fluidNameBoxes[i].setText(df.loc[i]['Fluid name'])
-                if newControlMode != self.originalControlModes[i]:
-                    self.controlBoxes[i].setCurrentIndex(newControlMode)
-                    self.originalControlModes[i] = newControlMode
-                
-                if newFluidIndex != self.originalFluidIndexes[i]:
-                    self.fluidBoxes[i].setValue(newFluidIndex)
-                    self.originalFluidIndexes[i] = newFluidIndex
-                newUserTag = df.loc[i]['User tag']
-                if newUserTag != self.originalUserTags[i]:
-                    self.userTags[i].setText(df.loc[i]['User tag'])
-                    self.originalUserTags[i] = newUserTag
-                if newSetpoint != self.originalSetpoints[i]:
-                    self.writeSetpointBoxes[i].setValue(newSetpoint)
-                    self.originalSetpoints[i] = newSetpoint
-                newslope = df.loc[i]['Setpoint slope']
-                if newslope != self.originalSlopes[i]:
-                    self.slopeBoxes[i].setValue(newslope)
-                    self.originalSlopes[i] = newslope
-
-            except TypeError as e:
-                print(df)
-                logger.warning(e)
-                return
-            except Exception as e:
-                print(df)
-                logger.exception(e)
-                raise e
-            
-        measDiff = np.max(np.abs(df['fMeasure'].values - self.fmeas))
-        spChange = (df['fSetpoint'].values != self.fsp).any()
-        if time.time() - self.tlog > 30 or measDiff > 0.2 or spChange:
-            self.headerstring = logMFCs(self.logfile,df,self.headerstring)
-            self.tlog = time.time()
-            self.fmeas = df['fMeasure'].values
-            self.fsp = df['fSetpoint'].values
-        if self.plot and self.running:
-            self.plotter.plotAllSingle(df)
         
     def connectLoop(self):
         if not self.running:
@@ -264,14 +212,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.disableWidgets()
             logger.info(f'connection closed to server at host: {self.host}, port {self.port}')
 
-    def stopConnect(self):
-        self.worker.stop()
-        self.thread.quit()
-        self.worker.deleteLater()
-        if self.plot:
-            plt.close()
-        self.thread.wait()
-        self.running = False
+
     def disableWidgets(self):
         self.running = False
         self.startButton.setText('connect MFCs')
@@ -361,54 +302,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         newslope = MFCclient(address,self.host,self.port,connid=self.connid).writeSlope(value)
         self.slopeBoxes[i].setValue(newslope)
     
-    def lockFluidIndexes(self):
-        for i in self.enabledMFCs:
-            self.fluidBoxes[i].setEnabled(not self.lockFluidIndex.isChecked())
 
-    def setClientLogDir(self):
-        if self.logDirectory.text():
-            currDir = self.logDirectory.text()
-        else:
-            currDir = '.'
-        dialog = QtWidgets.QFileDialog.getExistingDirectory(caption='select log directory', directory=currDir)
-        if dialog:
-            self.logDirectory.setText(dialog)
-            if self.running:
-                self.logfile = getLogFile(self.host,self.port, self.logDirectory.text())
-                df = MFCclient(1,self.host,self.port, connid='getheader').pollAll()
-                logHeader(self.logfile, df)
-            self.writeConfig()
-
-    def updateConfigDct(self):
-        self.configDct = {}
-        widetList = [self.logDirectory]
-        for w in widetList:
-            self.configDct[w.objectName()] = {'widget': w ,'value':w.text()}
-    def writeConfig(self):
-        self.updateConfigDct()
-        string = ''
-        for item in self.configDct:
-            string += f'{item};{self.configDct[item]['value']}\n'
-        f = open(self.configfile,'w')
-        f.write(string)
-        f.close()
-    def readConfig(self):
-        if not os.path.exists(self.configfile):
-            return
-        self.updateConfigDct()
-        f = open(self.configfile,'r')
-        data = f.read()
-        f.close()
-        for line in data.split('\n'):
-            if not line:
-                continue
-            name, value = line.split(';')
-            self.configDct[name]['widget'].setText(value)
-        self.updateConfigDct()
-        if not os.path.exists(self.logDirectory.text()):
-            print('stored log directory doesn\'t exist, setting to default')
-            self.logDirectory.setText(clientlogdir)
-            self.writeConfig()
         
     def closeEvent(self,event):
         print('closing')

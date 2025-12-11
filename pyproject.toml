@@ -26,9 +26,11 @@ barPlot = "bronkhorstControlbm31.plotters:barPlot"
 mfcPlotAll = "bronkhorstControlbm31.plotters:plotAll"
 mfcgui = "bronkhorstControlbm31.bronkhorstGui:main"
 mfclogplotter = "bronkhorstControlbm31.plotters:logPlotter"
+multigui = "bronkhorstControlbm31.bronkhorstMultiGui:main"
 
 [project.gui-scripts]
 mfcgui2 = "bronkhorstControlbm31.bronkhorstGui:main"
+
 
 [tool.setuptools]
 include-package-data = true
