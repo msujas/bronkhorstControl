@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from .bronkhorstClient import MFCclient
 from .bronkhorstServer import HOST, PORT, logdir
 from .plotters import Plotter, getLogFile, logHeader, logMFCs, clientlogdir
-from .guiLayout import guiLayout, formatLayouts, CommonFunctions
+from .guiLayout import CommonFunctions
 from functools import partial
 import logging
 import pathlib, os, time
@@ -99,7 +99,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
                 'usertag':12}
 
         self.maxMFCs = parseArguments()
-        guiLayout(self)
+        super().guiLayout()
         self.portInput = QtWidgets.QSpinBox()
         self.portInput.setObjectName('portInput')
         self.portInput.setMinimumWidth(120)
@@ -107,7 +107,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
         self.portInput.setMinimum(8000)
         self.portInput.setValue(PORT)
         self.bottomLayout.addWidget(self.portInput,0,2)
-        formatLayouts(self)
+        super().formatLayouts()
         self.centralwidget.setLayout(self.outerLayout)
 
         #self.resize(800, int(1.15*(self.group.height()+self.group2.height())))
@@ -116,7 +116,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
         QtCore.QMetaObject.connectSlotsByName(self)
 
         self.readConfig()
-
+        self.startButton.clicked.connect(self.connectLoop)
+        self.lockFluidIndex.stateChanged.connect(self.lockFluidIndexes)
+        self.plotBox.stateChanged.connect(self.plotSetup)
 
     def plotSetup(self):
         self.plot = self.plotBox.isChecked()
@@ -137,7 +139,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
         
         self.plot = self.plotBox.isChecked()
         if self.plot:
-            self.plotter = Plotter(host = self.host, port = self.port, log=False)
+            self.plotter = Plotter(host = self.host, port = self.port, log=False, initDF=df)
 
         self.tlog = 0
         self.logfile = getLogFile(self.host,self.port, self.logDirectory.text())
@@ -170,15 +172,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
             self.addressLabels[i].setStyleSheet('color: black;')
         self.updateMFCs(df)
         logger.info(f'connected to server. Host: {self.host}, port: {self.port}')
-
-
         
     def connectLoop(self):
         if not self.running:
             self.host = self.hostInput.text()
             self.port = self.portInput.value()
             self.waittime = self.pollTimeBox.value()
-            
             try:
                 self.connectMFCs()
             except (OSError, AttributeError):
@@ -212,24 +211,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
             self.disableWidgets()
             logger.info(f'connection closed to server at host: {self.host}, port {self.port}')
 
-
-    def disableWidgets(self):
-        self.running = False
-        self.startButton.setText('connect MFCs')
-        self.hostInput.setEnabled(True)
-        self.portInput.setEnabled(True)
-        self.pollTimeBox.setEnabled(True)
-        self.plotBox.setEnabled(True)
-        self.repollButton.setEnabled(True)
-        self.enabledMFCs = []
-        for i in range(self.maxMFCs):
-            self.writeSetpointBoxes[i].setEnabled(False)
-            self.controlBoxes[i].setEnabled(False)
-            self.fluidBoxes[i].setEnabled(False)
-            self.userTags[i].setEnabled(False)
-            self.winkbuttons[i].setEnabled(False)
-            self.addressLabels[i].setStyleSheet('color: gray;')
-            self.slopeBoxes[i].setEnabled(False)
 
     def setFlow(self,i):
         if not self.running:

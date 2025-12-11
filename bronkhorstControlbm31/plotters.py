@@ -208,7 +208,7 @@ def plotValvesBar(df, ax):
 
 class Plotter():
     def __init__(self,host=HOST, port = PORT,waittime = 1, connid = f'{socket.gethostname()}allPlot',xlim = 60, 
-                 log = True, logInterval = 20):
+                 log = True, logInterval = 20, initDF = pd.DataFrame()):
         self.host = host
         self.port = port
         self.waittime = waittime
@@ -224,8 +224,11 @@ class Plotter():
         
         self.logfile = getLogFile(self.host,self.port)
         self.tlog = 0
-        self.mfcclient = MFCclient(1,self.host,self.port, connid=self.connid)
-        df = self.mfcclient.pollAll()
+        if not len(initDF.columns):
+            self.mfcclient = MFCclient(1,self.host,self.port, connid=self.connid)
+            df = self.mfcclient.pollAll()
+        else:
+            df = initDF
         self.fmeas = df['fMeasure'].values
         self.fsp = df['fSetpoint'].values
         if self.log:

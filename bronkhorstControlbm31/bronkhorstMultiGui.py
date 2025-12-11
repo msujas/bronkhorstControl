@@ -1,18 +1,22 @@
 from PyQt6 import QtCore,QtWidgets, QtGui
 import pandas as pd
 from .bronkhorstClient import MFCclient
-from .bronkhorstServer import PORT
-from .guiLayout import guiLayout, formatLayouts, CommonFunctions
+from .bronkhorstServer import PORT, homedir, logdir
+from .guiLayout import CommonFunctions
 from .bronkhorstGui import parseArguments
 import time
-from .plotters import clientlogdir, Plotter
+from .plotters import clientlogdir, Plotter, getLogFile, logHeader
 import logging, socket
 
 logger = logging.getLogger()
 
-class MultiWorker():
+class MultiWorker(QtCore.QObject):
     outputs = QtCore.pyqtSignal(pd.DataFrame)
     def __init__(self,hosts,ports, waittime = 1):
+        super(MultiWorker,self).__init__()
+        eventlogfile = f'{homedir}/{logdir}/multigui.log'
+        logging.basicConfig(filename=eventlogfile, level = logging.INFO, format = '%(asctime)s %(levelname)-8s %(message)s',
+                            datefmt = '%Y/%m/%d_%H:%M:%S')
         self.hosts = hosts
         self.ports=ports
         self.waittime = waittime
@@ -35,7 +39,8 @@ class MultiWorker():
                 self.dfs[i] = self.mfcs[i].pollAll()
                 self.dfs[i]['host'] = [self.hosts[i]]*len(self.dfs[i].index.values)
                 self.dfs[i]['port'] = [self.ports[i]]*len(self.dfs[i].index.values)
-            dfAll = pd.concat([self.dfs[i] for i in self.dfs], axis=0)
+            dfAll = pd.concat([self.dfs[i] for i in self.dfs], axis=0, ignore_index=True)
+            
         except (OSError, AttributeError, ConnectionResetError):
             message = "connection to server lost. Stopping polling"
             print(message)
@@ -77,7 +82,7 @@ class MultiServerGui(QtWidgets.QMainWindow, CommonFunctions):
                 'fluidName':12,
                 'writesp':13,
                 'usertag':14}
-        guiLayout(self)
+        super().guiLayout()
         self.portInput = QtWidgets.QLineEdit()
         self.portInput.setObjectName('portInput')
         self.portInput.setMinimumWidth(120)
@@ -95,6 +100,7 @@ class MultiServerGui(QtWidgets.QMainWindow, CommonFunctions):
             self.portBoxes[i] = QtWidgets.QSpinBox()
             self.portBoxes[i].setObjectName(f'portBoxes{i}')
             self.portBoxes[i].setEnabled(False)
+            self.portBoxes[i].setMaximum(2**16)
             self.gridLayout.addWidget(self.portBoxes[i], self.rows['port'],i+1)
         
         self.hostBoxLabel = QtWidgets.QLabel()
@@ -107,11 +113,14 @@ class MultiServerGui(QtWidgets.QMainWindow, CommonFunctions):
         self.portBoxLabel.setText('port')
         self.leftLayout.addWidget(self.portBoxLabel, self.rows['port'],0)
 
-        formatLayouts(self)
+        super().formatLayouts()
 
         self.centralWidget.setLayout(self.outerLayout)
         self.setCentralWidget(self.centralWidget)
         QtCore.QMetaObject.connectSlotsByName(self)
+        self.startButton.clicked.connect(self.connectLoop)
+        self.lockFluidIndex.stateChanged.connect(self.lockFluidIndexes)
+        self.plotBox.stateChanged.connect(self.plotSetup)
 
     def repoll(self):
         pass
@@ -173,9 +182,10 @@ class MultiServerGui(QtWidgets.QMainWindow, CommonFunctions):
         print(self.hosts, self.ports)
         for i,(host,port) in enumerate(zip(self.hosts,self.ports)):
             dfs[i] = MFCclient(1,host,port, connid=self.connid).pollAll()
+            dfs[i].index.values 
             dfs[i]['host'] = [host]*len(dfs[i].index.values)
             dfs[i]['port'] = [port]*len(dfs[i].index.values)
-        df = pd.concat([dfs[i] for i in dfs], axis = 0)
+        df = pd.concat([dfs[i] for i in dfs], axis = 0, ignore_index=True)
         self.fmeas = df['fMeasure'].values
         self.fsp = df['fSetpoint'].values
         return df
@@ -192,12 +202,11 @@ class MultiServerGui(QtWidgets.QMainWindow, CommonFunctions):
         
         self.plot = self.plotBox.isChecked()
         if self.plot:
-            self.plotter = Plotter(host = self.hosts[0], port = self.ports[0], log=False)
+            self.plotter = Plotter(host = self.hosts[0], port = self.ports[0], log=False, initDF=df)
 
         self.tlog = 0
         self.logfile = getLogFile(self.hosts[0],self.ports[0], self.logDirectory.text())
         self.headerstring = logHeader(self.logfile, df)
-
         self.originalUserTags = {}
         self.originalControlModes = {}
         self.originalFluidIndexes = {}
@@ -228,9 +237,9 @@ class MultiServerGui(QtWidgets.QMainWindow, CommonFunctions):
         self.updateMFCs(df)
         message = f'connected to server. Hosts: '
         for host in self.hosts:
-            mesage += f'{host}, '
-        mesage += 'ports: '
-        for port in ports:
+            message += f'{host}, '
+        message += 'ports: '
+        for port in self.ports:
             message += f':{port}, '
         logger.info(message)
 
@@ -241,9 +250,9 @@ class MultiServerGui(QtWidgets.QMainWindow, CommonFunctions):
             try:
                 self.connect()
             except (OSError, AttributeError):
-                #message = f"couldn't find server at host: {self.host}, port: {self.port}. Try starting it or checking host and port settings"
-                #print(message)
-                #logger.warning(message)
+                message = f"couldn't find server at hosts: {self.hosts}, ports: {self.ports}. Try starting it or checking host and port settings"
+                print(message)
+                logger.warning(message)
                 return
             except KeyError:
                 message = 'no data returned. Stopping'
@@ -269,7 +278,7 @@ class MultiServerGui(QtWidgets.QMainWindow, CommonFunctions):
         else:
             self.stopConnect()
             self.disableWidgets()
-            logger.info(f'connection closed to server at host: {self.host}, port {self.port}')
+            logger.info(f'connection closed to server at hosts: {self.hosts}, ports: {self.ports}')
 import sys
 def main():
     app = QtWidgets.QApplication(sys.argv)
