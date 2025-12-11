@@ -6,7 +6,7 @@ from .guiLayout import CommonFunctions
 from .bronkhorstGui import parseArguments
 import time
 from .plotters import clientlogdir, Plotter, getLogFile, logHeader
-import logging, socket
+import logging, socket, os
 
 logger = logging.getLogger()
 
@@ -14,9 +14,7 @@ class MultiWorker(QtCore.QObject):
     outputs = QtCore.pyqtSignal(pd.DataFrame)
     def __init__(self,hosts,ports, waittime = 1):
         super(MultiWorker,self).__init__()
-        eventlogfile = f'{homedir}/{logdir}/multigui.log'
-        logging.basicConfig(filename=eventlogfile, level = logging.INFO, format = '%(asctime)s %(levelname)-8s %(message)s',
-                            datefmt = '%Y/%m/%d_%H:%M:%S')
+
         self.hosts = hosts
         self.ports=ports
         self.waittime = waittime
@@ -61,9 +59,16 @@ class MultiWorker(QtCore.QObject):
 class MultiServerGui(QtWidgets.QMainWindow, CommonFunctions):
     def __init__(self):
         super().__init__()
+        eventlogfile = f'{homedir}/{logdir}/multigui.log'
+        logging.basicConfig(filename=eventlogfile, level = logging.INFO, format = '%(asctime)s %(levelname)-8s %(message)s',
+                            datefmt = '%Y/%m/%d_%H:%M:%S')
         self.centralWidget = QtWidgets.QWidget()
         self.centralWidget.setObjectName("centralWidget")
         self.setWindowTitle('bronkhorst multi server GUI')
+        curpath = os.path.dirname(os.path.realpath(__file__))
+        iconfile = f'{curpath}/images/drawingMulti.ico'
+        icon = QtGui.QIcon(iconfile)
+        self.setWindowIcon(icon)
         self.connid = f'{socket.gethostname()}GUI'
         self.maxMFCs = parseArguments()
         self.running = False
