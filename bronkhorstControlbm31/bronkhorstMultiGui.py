@@ -101,12 +101,14 @@ class MultiServerGui(QtWidgets.QMainWindow, CommonFunctions):
             self.hostBoxes[i] = QtWidgets.QLineEdit()
             self.hostBoxes[i].setObjectName(f'hostBoxes{i}')
             self.hostBoxes[i].setEnabled(False)
+            self.hostBoxes[i].setMaximumWidth(self.spinboxsizex)
             self.gridLayout.addWidget(self.hostBoxes[i], self.rows['host'],i+1)
 
             self.portBoxes[i] = QtWidgets.QSpinBox()
             self.portBoxes[i].setObjectName(f'portBoxes{i}')
             self.portBoxes[i].setEnabled(False)
             self.portBoxes[i].setMaximum(2**16)
+            self.portBoxes[i].setMaximumWidth(self.spinboxsizex)
             self.gridLayout.addWidget(self.portBoxes[i], self.rows['port'],i+1)
         
         self.hostBoxLabel = QtWidgets.QLabel()
@@ -278,17 +280,28 @@ class MultiServerGui(QtWidgets.QMainWindow, CommonFunctions):
             self.portInput.setEnabled(False)
             self.pollTimeBox.setEnabled(False)
             self.repollButton.setEnabled(False)
-            #self.logDirButton.setEnabled(False)
+            self.startWorker()
+        else:
+            self.stopConnect()
+            self.disableWidgets()
+            logger.info(f'connection closed to server at hosts: {self.hosts}, ports: {self.ports}')
+
+    def startWorker(self):
             self.worker = MultiWorker(self.hosts,self.ports, self.waittime)
             self.thread = QtCore.QThread()
             self.worker.moveToThread(self.thread)
             self.thread.started.connect(self.worker.run)
             self.worker.outputs.connect(self.updateMFCs)
             self.thread.start()
-        else:
+
+    
+    def closeEvent(self,event):
+        print('closing')
+        if self.running:
             self.stopConnect()
-            self.disableWidgets()
-            logger.info(f'connection closed to server at hosts: {self.hosts}, ports: {self.ports}')
+        super().closeEvent(event)
+        event.accept()
+
 import sys
 def main():
     app = QtWidgets.QApplication(sys.argv)

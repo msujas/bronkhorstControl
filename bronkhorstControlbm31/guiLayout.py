@@ -127,7 +127,7 @@ class CommonFunctions():
         self.xspacing = 90
         self.yspacing = 25
 
-        spinboxsizex = 100
+        self.spinboxsizex = 100
         
         self.scrollArea = QtWidgets.QScrollArea()
         self.scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -360,7 +360,7 @@ class CommonFunctions():
             self.winkbuttons[i] = QtWidgets.QPushButton()
             self.winkbuttons[i].setText('wink')
             self.winkbuttons[i].setObjectName(f'winkbuttons{i}')
-            self.winkbuttons[i].setMaximumWidth(spinboxsizex)
+            self.winkbuttons[i].setMaximumWidth(self.spinboxsizex)
             self.winkbuttons[i].setMinimumHeight(self.yspacing)
             self.winkbuttons[i].setEnabled(False)
             self.gridLayout.addWidget(self.winkbuttons[i], self.rows['wink'],i+1)
@@ -371,7 +371,7 @@ class CommonFunctions():
             self.addressLabels[i].setMinimum(-1)
             self.addressLabels[i].setMaximum(99)
             self.addressLabels[i].setValue(-1)
-            self.addressLabels[i].setMaximumWidth(spinboxsizex)
+            self.addressLabels[i].setMaximumWidth(self.spinboxsizex)
             self.addressLabels[i].setMinimumHeight(self.yspacing)
             self.addressLabels[i].setEnabled(False)
             self.gridLayout.addWidget(self.addressLabels[i], self.rows['address'], i+1)
@@ -383,7 +383,7 @@ class CommonFunctions():
             self.setpointBoxes[i].setStyleSheet('color: black;')
             self.setpointBoxes[i].setMaximum(200)
             self.setpointBoxes[i].setMinimumHeight(self.yspacing)
-            self.setpointBoxes[i].setMaximumWidth(spinboxsizex)
+            self.setpointBoxes[i].setMaximumWidth(self.spinboxsizex)
             self.gridLayout.addWidget(self.setpointBoxes[i], self.rows['setpoint'], i+1)
 
             self.measureBoxes[i] = QtWidgets.QDoubleSpinBox()
@@ -401,7 +401,7 @@ class CommonFunctions():
             self.setpointpctBoxes[i].setStyleSheet('color: black;')
             self.setpointpctBoxes[i].setMaximum(200)
             self.setpointpctBoxes[i].setMinimumHeight(self.yspacing)
-            self.setpointpctBoxes[i].setMaximumWidth(spinboxsizex)
+            self.setpointpctBoxes[i].setMaximumWidth(self.spinboxsizex)
             self.gridLayout.addWidget(self.setpointpctBoxes[i],self.rows['setpointpct'],i+1)
 
             self.measurepctBoxes[i] = QtWidgets.QDoubleSpinBox()
@@ -410,21 +410,21 @@ class CommonFunctions():
             self.measurepctBoxes[i].setStyleSheet('color: black;')
             self.measurepctBoxes[i].setMaximum(200)
             self.measurepctBoxes[i].setMinimumHeight(self.yspacing)
-            self.measurepctBoxes[i].setMaximumWidth(spinboxsizex)
+            self.measurepctBoxes[i].setMaximumWidth(self.spinboxsizex)
             self.gridLayout.addWidget(self.measurepctBoxes[i], self.rows['measurepct'],i+1)
 
             self.valveBoxes[i] = QtWidgets.QDoubleSpinBox()
             self.valveBoxes[i].setObjectName(f'valveBox{i}')
             self.valveBoxes[i].setEnabled(False)
             self.valveBoxes[i].setStyleSheet('color: black;')
-            self.valveBoxes[i].setMaximumWidth(spinboxsizex)
+            self.valveBoxes[i].setMaximumWidth(self.spinboxsizex)
             self.valveBoxes[i].setMinimumHeight(self.yspacing)
             self.gridLayout.addWidget(self.valveBoxes[i], self.rows['valve'],i+1)
 
             self.controlBoxes[i] = QtWidgets.QComboBox()
             self.controlBoxes[i].setObjectName(f'controlBoxes{i}')
             self.controlBoxes[i].setEnabled(False)
-            self.controlBoxes[i].setMaximumWidth(spinboxsizex)
+            self.controlBoxes[i].setMaximumWidth(self.spinboxsizex)
             self.controlBoxes[i].setMinimumHeight(self.yspacing)
             #for mode in self.controlModeDct:
             #    self.controlBoxes[i].addItem(mode)
@@ -459,7 +459,7 @@ class CommonFunctions():
             self.fluidBoxes[i].setStyleSheet('color: black;')
             self.fluidBoxes[i].setMaximum(20)
             self.fluidBoxes[i].setMinimumHeight(self.yspacing)
-            self.fluidBoxes[i].setMaximumWidth(spinboxsizex)
+            self.fluidBoxes[i].setMaximumWidth(self.spinboxsizex)
             self.fluidBoxes[i].setKeyboardTracking(False)
             self.fluidBoxes[i].valueChanged.connect(partial(self.setFluidIndex,i))
             self.gridLayout.addWidget(self.fluidBoxes[i], self.rows['fluidIndex'],i+1)
@@ -467,13 +467,13 @@ class CommonFunctions():
             self.fluidNameBoxes[i] = QtWidgets.QLabel()
             self.fluidNameBoxes[i].setObjectName(f'fluidNameBoxes{i}')
             self.fluidNameBoxes[i].setMinimumHeight(self.yspacing)
-            self.fluidNameBoxes[i].setMaximumWidth(spinboxsizex)
+            self.fluidNameBoxes[i].setMaximumWidth(self.spinboxsizex)
             self.gridLayout.addWidget(self.fluidNameBoxes[i], self.rows['fluidName'],i+1)
 
             self.slopeBoxes[i] = QtWidgets.QSpinBox()
             self.slopeBoxes[i].setObjectName(f'slopeBoxes{i}')
             self.slopeBoxes[i].setMinimumHeight(self.yspacing)
-            self.slopeBoxes[i].setMaximumWidth(spinboxsizex)
+            self.slopeBoxes[i].setMaximumWidth(self.spinboxsizex)
             self.slopeBoxes[i].setMinimum(0)
             self.slopeBoxes[i].setMaximum(30000)
             self.slopeBoxes[i].setValue(0)
@@ -490,7 +490,7 @@ class CommonFunctions():
             self.writeSetpointBoxes[i].setMaximum(200)
             self.writeSetpointBoxes[i].setKeyboardTracking(False)
             self.writeSetpointBoxes[i].valueChanged.connect(partial(self.setFlow, i))
-            self.writeSetpointBoxes[i].setMaximumWidth(spinboxsizex)
+            self.writeSetpointBoxes[i].setMaximumWidth(self.spinboxsizex)
             self.writeSetpointBoxes[i].setMinimumHeight(self.yspacing)
             self.gridLayout.addWidget(self.writeSetpointBoxes[i],self.rows['writesp'],i+1)
 
@@ -498,12 +498,9 @@ class CommonFunctions():
             self.userTags[i].setObjectName(f'userTag{i}')
             self.userTags[i].setEnabled(False)
             self.userTags[i].returnPressed.connect(partial(self.setUserTag, i))
-            self.userTags[i].setMaximumWidth(spinboxsizex)
+            self.userTags[i].setMaximumWidth(self.spinboxsizex)
             self.userTags[i].setMinimumHeight(self.yspacing)
             self.gridLayout.addWidget(self.userTags[i],self.rows['usertag'],i+1)
-
-
-
 
     def formatLayouts(self):
         self.group.setLayout(self.gridLayout)

@@ -282,8 +282,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
         print(f'setting slope to {value} on address {address}')
         newslope = MFCclient(address,self.host,self.port,connid=self.connid).writeSlope(value)
         self.slopeBoxes[i].setValue(newslope)
-    
-
         
     def closeEvent(self,event):
         print('closing')
