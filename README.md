@@ -41,6 +41,10 @@ There is a gui called mfcgui (still must be used in conjuction with bronkhorstSe
 ```
 mfcgui -m 15
 ```
+Alternatively, there is mfcgui2 to run without command line (otherwise they are the same):
+```
+mfcgui2 -m 15
+```
 <img width="800" height="629" alt="mfcgui_202511" src="https://github.com/user-attachments/assets/9a71184d-8058-4bf2-a8b6-003eeeaad30c" />
 
 When plot data is checked, the following data will be plotted:
