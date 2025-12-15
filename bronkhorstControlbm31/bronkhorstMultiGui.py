@@ -5,9 +5,10 @@ from .bronkhorstServer import PORT, homedir, logdir
 from .guiLayout import CommonFunctions
 from .bronkhorstGui import parseArguments
 import time
-from .plotters import clientlogdir, Plotter, getLogFile, logHeader
+from .plotters import clientlogdir, Plotter, getLogFile, logHeader, getdatestring
 import logging, socket, os
 import matplotlib.pyplot as plt
+from datetime import datetime
 
 logger = logging.getLogger()
 
@@ -22,7 +23,7 @@ class MultiWorker(QtCore.QObject):
         self.dfs = {}
         self.mfcs = {}
         for i in range(len(self.hosts)):
-            self.mfcs[i] = MFCclient(1, self.hosts[i],self.ports[i])
+            self.mfcs[i] = MFCclient(1, self.hosts[i],self.ports[i], connid=f'{socket.gethostname()}_multiGuiThread')
     def run(self):
         self.running = True
         while self.running:
@@ -73,6 +74,8 @@ class MultiServerGui(QtWidgets.QMainWindow, CommonFunctions):
         self.connid = f'{socket.gethostname()}GUI'
         self.maxMFCs = parseArguments()
         self.running = False
+        self.hostlabeltext = 'host names'
+        self.portlabeltext = 'port values'
         self.rows = {'wink':0,
                 'host':1,
                 'port':2,
@@ -217,7 +220,12 @@ class MultiServerGui(QtWidgets.QMainWindow, CommonFunctions):
             self.plotter = Plotter(host = self.hosts[0], port = self.ports[0], log=False, initDF=df)
 
         self.tlog = 0
-        self.logfile = getLogFile(self.hosts[0],self.ports[0], self.logDirectory.text())
+        datestring =getdatestring()
+        hpstring = ''
+        for host, port in zip(self.hosts,self.ports):
+            hpstring += f'_{host}{port}'
+        self.logfile = f'{self.logDirectory.text()}/{datestring}_multi{hpstring}.log'
+        #self.logfile = getLogFile(self.hosts[0],self.ports[0], self.logDirectory.text())
         self.headerstring = logHeader(self.logfile, df)
         self.originalUserTags = {}
         self.originalControlModes = {}

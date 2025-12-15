@@ -116,10 +116,13 @@ def logMFCs(logfile, df, headerString):
     writeLog(logfile,logString)
     return headerString
 
-def getLogFile(host, port = PORT, direc = clientlogdir):
+def getdatestring():
     t = time.time()
     dt = datetime.fromtimestamp(t)
-    dtstring = f'{dt.year:04d}{dt.month:02d}{dt.day:02d}'
+    return f'{dt.year:04d}{dt.month:02d}{dt.day:02d}'
+    
+def getLogFile(host, port = PORT, direc = clientlogdir):
+    dtstring = getdatestring()
     logfile = f'{direc}/{dtstring}_{host}_{port}.log'
     if not os.path.exists(direc):
         os.makedirs(direc)

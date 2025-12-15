@@ -83,7 +83,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
         curpath = os.path.dirname(os.path.realpath(__file__))
         iconfile = f'{curpath}/images/drawing.ico'
         icon = QtGui.QIcon(iconfile)
-        self.setWindowIcon(icon)
+        super().setWindowIcon(icon)
+        self.hostlabeltext = 'host name'
+        self.portlabeltext = 'port value'
         self.rows = {'wink':0,
                 'address':1,
                 'slope':2,

@@ -172,12 +172,12 @@ class CommonFunctions():
 
         self.hostLabel = QtWidgets.QLabel()
         self.hostLabel.setObjectName('hostLabel')
-        self.hostLabel.setText('host name')
+        self.hostLabel.setText(self.hostlabeltext)
         self.bottomLayout.addWidget(self.hostLabel,1,1)
 
         self.portLabel = QtWidgets.QLabel()
         self.portLabel.setObjectName('portLabel')
-        self.portLabel.setText('port value')
+        self.portLabel.setText(self.portlabeltext)
         self.bottomLayout.addWidget(self.portLabel,1,2)
 
         self.pollTimeBox = QtWidgets.QDoubleSpinBox()
