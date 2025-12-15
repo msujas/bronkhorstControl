@@ -55,6 +55,11 @@ There is a 'reset axes' box on the plotter. If this is checked, the axes for the
 
 The GUI also logs the measure values and setpoints every 5 seconds. This is saved in the \<home>/bronkhorstClientLog/ folder.
 
+There is also mfcmultigui which allows you to connect to multiple servers with comma separated host and port values.
+```
+mfcmultigui
+```
+
 The logs can be plotted with the program
 ```
 mfclogplotter <filename>
