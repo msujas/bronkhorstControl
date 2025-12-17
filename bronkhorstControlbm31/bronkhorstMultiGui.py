@@ -14,7 +14,7 @@ logger = logging.getLogger()
 
 class MultiWorker(QtCore.QObject):
     outputs = QtCore.pyqtSignal(pd.DataFrame)
-    def __init__(self,hosts,ports, waittime = 1):
+    def __init__(self,hosts: list,ports: list, waittime = 1):
         super(MultiWorker,self).__init__()
 
         self.hosts = hosts
@@ -206,8 +206,8 @@ class MultiServerGui(QtWidgets.QMainWindow, CommonFunctions):
         return df
     
     def getHPs(self):
-        self.hosts = self.hostInput.text().split(',')
-        self.ports = [int(p) for p in self.portInput.text().split(',')]
+        self.hosts = self.hostInput.text().replace(' ','').split(',')
+        self.ports = [int(p) for p in self.portInput.text().replace(' ','').split(',')]
     def connect(self):
         self.getHPs()
         try:
