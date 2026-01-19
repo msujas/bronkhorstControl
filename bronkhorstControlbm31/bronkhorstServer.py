@@ -144,7 +144,7 @@ class BronkhorstServer():
     def accept_wrapper(self,sock,sel):
         conn,addr =sock.accept()
         conn.setblocking(False)
-        print(f'Accepted connection from {addr}')
+        self.v.print(f'Accepted connection from {addr}',plevel=1)
         data = types.SimpleNamespace(addr=addr,inb = b'',outb = b'')
         events = selectors.EVENT_READ | selectors.EVENT_WRITE
         sel.register(conn,events,data=data)
@@ -176,7 +176,7 @@ class BronkhorstServer():
                 logger.info(connectionLostMessage)
                 recvData = b''
             if recvData:
-                print(recvData)
+                self.v.print(recvData,plevel=1)
                 data.outb += recvData
                 strmessage = data.outb.decode()
                 try:
@@ -245,6 +245,7 @@ class BronkhorstServer():
                         if not hostname in allhosts:
                             allhosts.append(hostname)
                             logger.info(f'new client {hostname}')
+                            self.v.print(f'connection from {hostname}')
                         self.service_connection(key, mask,sel)
         except KeyboardInterrupt:
             logger.info('keyboard interupt')
