@@ -5,6 +5,7 @@ import argparse
 import selectors, types
 import subprocess
 import logging
+from .verbose import Verbose
 
 logger = logging.getLogger()
 homedir = pathlib.Path.home()
@@ -138,6 +139,7 @@ class BronkhorstServer():
         com,self.port, self.host, self.acceptedHosts, self.debug, vlevel = getArgs()
         mfcMain = startMfc(com)
         self.mfc = MFC(0,mfcMain, vlevel=vlevel)
+        self.v = Verbose(vlevel)
         
     def accept_wrapper(self,sock,sel):
         conn,addr =sock.accept()
@@ -154,7 +156,7 @@ class BronkhorstServer():
         connectionLostMessage = f'connection lost with client: {data.addr}'
         bytemessage = b''
         def closeConnection():
-            print(f'closing connection to {data.addr}')
+            self.v.print(f'closing connection to {data.addr}', plevel=1)
             sel.unregister(sock)
             sock.close()
         if self.acceptedHosts:
@@ -196,7 +198,7 @@ class BronkhorstServer():
         if mask & selectors.EVENT_WRITE:
 
             if bytemessage:
-                print(f'sending data to {data.addr}')
+                self.v.print(f'sending data to {data.addr}', plevel=1)
                 try:
                     sent = sock.send(bytemessage)
                     bytemessage = bytemessage[sent:]
