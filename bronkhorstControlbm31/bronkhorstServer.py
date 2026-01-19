@@ -54,6 +54,7 @@ def getArgs(port=PORT):
     parser.add_argument('-a','--accepted-hosts', default = None, type = str, help= ('list of comma separated hosts that can be'
                                                                                     'accepted (default - accept all). E.g. -a pc1,pc2'))
     parser.add_argument('-d','--debug', action='store_true')
+    parser.add_argument('-v','--verbose',default= 0, type=  int, help = 'verbose level, integer. -1 -> 1, default 0')
 
     args = parser.parse_args()
     f = open(configfile,'w')
@@ -65,6 +66,7 @@ def getArgs(port=PORT):
     print(f'port: {PORT}')
     host = args.host
     debug = args.debug
+    vlevel = args.verbose
     acceptedHosts = None
     if args.accepted_hosts:
         acceptedHosts = args.accepted_hosts.split(',')
@@ -82,10 +84,9 @@ def getArgs(port=PORT):
         print('host must must be "local", "remote", "remoteip" or nothing (local)')
         return
     print(host)
-    return com, PORT, host, acceptedHosts, debug
-
+    return com, PORT, host, acceptedHosts, debug, vlevel
 def run(port = PORT):
-    com, port, host, acceptedHosts = getArgs()
+    com, port, host, acceptedHosts, vlevel = getArgs()
     
     if not acceptedHosts:
         ahstring = 'all'
@@ -95,7 +96,7 @@ def run(port = PORT):
     print(f'accepted hosts: {ahstring}')
     print('running single client server')
     mfcMain = startMfc(com)
-    mfc = MFC(0,mfcMain)
+    mfc = MFC(0,mfcMain, vlevel=vlevel)
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind((host, port))
         s.listen()
@@ -132,120 +133,125 @@ def run(port = PORT):
                         print(f'sending data to {addr}')
                         conn.sendall(byteResult)
 
-def accept_wrapper(sock,sel):
-    conn,addr =sock.accept()
-    conn.setblocking(False)
-    print(f'Accepted connection from {addr}')
-    data = types.SimpleNamespace(addr=addr,inb = b'',outb = b'')
-    events = selectors.EVENT_READ | selectors.EVENT_WRITE
-    sel.register(conn,events,data=data)
+class BronkhorstServer():
+    def __init__(self):
+        com,self.port, self.host, self.acceptedHosts, self.debug, vlevel = getArgs()
+        mfcMain = startMfc(com)
+        self.mfc = MFC(0,mfcMain, vlevel=vlevel)
+        
+    def accept_wrapper(self,sock,sel):
+        conn,addr =sock.accept()
+        conn.setblocking(False)
+        print(f'Accepted connection from {addr}')
+        data = types.SimpleNamespace(addr=addr,inb = b'',outb = b'')
+        events = selectors.EVENT_READ | selectors.EVENT_WRITE
+        sel.register(conn,events,data=data)
 
-def service_connection(key,mask,sel,mfc, acceptedHosts = None):
-    sock = key.fileobj
-    data = key.data
-    #logger.debug(f'accepted connection from {data.addr}')
-    connectionLostMessage = f'connection lost with client: {data.addr}'
-    bytemessage = b''
-    def closeConnection():
-        print(f'closing connection to {data.addr}')
-        sel.unregister(sock)
-        sock.close()
-    if acceptedHosts:
-        acceptedIPs = [socket.gethostbyname(h) for h in acceptedHosts]
-        hostName = data.addr[0]
-        if hostName not in acceptedHosts and hostName not in acceptedIPs:
-            print('host name not in accepted hosts')
-            closeConnection()
-            return
-    if mask & selectors.EVENT_READ:
-        try:
-            recvData = sock.recv(1024)
-            
-        except (ConnectionAbortedError, ConnectionResetError):
-            
-            print(connectionLostMessage)
-            logger.info(connectionLostMessage)
-            recvData = b''
-        if recvData:
-            print(recvData)
-            data.outb += recvData
-            strmessage = data.outb.decode()
-            try:
-                address = int(strmessage.split(';')[0])
-                mfc.address = address
-                mainmessage = mfc.strToMethod(strmessage)
-                #endmessageMarker = '!'
-                fullmessage = f'{mainmessage}!'
-                bytemessage += bytes(fullmessage,encoding='utf-8')
-            except (ValueError, KeyError):
-                bytemessage = b'invalid message!'
-            except ConnectionResetError:
-                print(f'connection lost with client: {data.addr}')
-                bytemessage = b''
+    def service_connection(self,key,mask,sel):
+        sock = key.fileobj
+        data = key.data
+        #logger.debug(f'accepted connection from {data.addr}')
+        connectionLostMessage = f'connection lost with client: {data.addr}'
+        bytemessage = b''
+        def closeConnection():
+            print(f'closing connection to {data.addr}')
+            sel.unregister(sock)
+            sock.close()
+        if self.acceptedHosts:
+            acceptedIPs = [socket.gethostbyname(h) for h in self.acceptedHosts]
+            hostName = data.addr[0]
+            if hostName not in self.acceptedHosts and hostName not in acceptedIPs:
+                print('host name not in accepted hosts')
                 closeConnection()
-        else:
-            logger.debug(f'no data received from {data.addr}')
-            closeConnection()
-    if mask & selectors.EVENT_WRITE:
-
-        if bytemessage:
-            print(f'sending data to {data.addr}')
+                return
+        if mask & selectors.EVENT_READ:
             try:
-                sent = sock.send(bytemessage)
-                bytemessage = bytemessage[sent:]
-                #logger.debug(f'data sent to {data.addr}')
-            except ConnectionResetError:
+                recvData = sock.recv(1024)
+                
+            except (ConnectionAbortedError, ConnectionResetError):
+                
                 print(connectionLostMessage)
                 logger.info(connectionLostMessage)
-                bytemessage = b''
+                recvData = b''
+            if recvData:
+                print(recvData)
+                data.outb += recvData
+                strmessage = data.outb.decode()
+                try:
+                    address = int(strmessage.split(';')[0])
+                    self.mfc.address = address
+                    mainmessage = self.mfc.strToMethod(strmessage)
+                    #endmessageMarker = '!'
+                    fullmessage = f'{mainmessage}!'
+                    bytemessage += bytes(fullmessage,encoding='utf-8')
+                except (ValueError, KeyError):
+                    bytemessage = b'invalid message!'
+                except ConnectionResetError:
+                    print(f'connection lost with client: {data.addr}')
+                    bytemessage = b''
+                    closeConnection()
+            else:
+                logger.debug(f'no data received from {data.addr}')
                 closeConnection()
+        if mask & selectors.EVENT_WRITE:
 
-def multiServer():
-    com,port, host, acceptedHosts, debug = getArgs()
-    loglevel = logging.INFO
-    if debug:
-        loglevel = logging.DEBUG
-    logging.basicConfig(filename=logfile, level = loglevel, format = '%(asctime)s %(levelname)-8s %(message)s',
-                        datefmt = '%Y/%m/%d_%H:%M:%S')
-    logger.info('server started')
-    
-    allhosts = []
-    if not acceptedHosts:
-        ahstring = 'all'
-    else:
-        ahstring = ','.join(acceptedHosts)
-    print(f'accepted hosts: {ahstring}')
-    mfcMain = startMfc(com)
-    mfc = MFC(0,mfcMain)
-    sel = selectors.DefaultSelector()
-    print('running multiServer')
-    s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind((host, port))
-    s.listen()
-    s.settimeout(5)
-    #s.setblocking(False)
-    sel.register(s,selectors.EVENT_READ,data=None)
+            if bytemessage:
+                print(f'sending data to {data.addr}')
+                try:
+                    sent = sock.send(bytemessage)
+                    bytemessage = bytemessage[sent:]
+                    #logger.debug(f'data sent to {data.addr}')
+                except ConnectionResetError:
+                    print(connectionLostMessage)
+                    logger.info(connectionLostMessage)
+                    bytemessage = b''
+                    closeConnection()
 
-    try:
-        while True:
-            events = sel.select(timeout=5)
-            for key, mask in events:
-                if key.data is None:
-                    accept_wrapper(key.fileobj,sel)
-                else:
-                    hostname = socket.gethostbyaddr(key.data.addr[0])
-                    if not hostname in allhosts:
-                        allhosts.append(hostname)
-                        logger.info(f'new client {hostname}')
-                    service_connection(key, mask,sel,mfc, acceptedHosts)
-    except KeyboardInterrupt:
-        logger.info('keyboard interupt')
-        print("caught keyboard interrupt, exiting")
-    except Exception as e:
-        logger.exception(e)
-        raise e
-    finally:
-        sel.close()
+    def multiServer(self):
+        
+        loglevel = logging.INFO
+        if self.debug:
+            loglevel = logging.DEBUG
+        logging.basicConfig(filename=logfile, level = loglevel, format = '%(asctime)s %(levelname)-8s %(message)s',
+                            datefmt = '%Y/%m/%d_%H:%M:%S')
+        logger.info('server started')
+        
+        allhosts = []
+        if not self.acceptedHosts:
+            ahstring = 'all'
+        else:
+            ahstring = ','.join(self.acceptedHosts)
+        print(f'accepted hosts: {ahstring}')
 
-if __name__ == '__main__':
-    run()
+        sel = selectors.DefaultSelector()
+        print('running multiServer')
+        s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.bind((self.host, self.port))
+        s.listen()
+        s.settimeout(5)
+        #s.setblocking(False)
+        sel.register(s,selectors.EVENT_READ,data=None)
+
+        try:
+            while True:
+                events = sel.select(timeout=5)
+                for key, mask in events:
+                    if key.data is None:
+                        self.accept_wrapper(key.fileobj,sel)
+                    else:
+                        hostname = socket.gethostbyaddr(key.data.addr[0])
+                        if not hostname in allhosts:
+                            allhosts.append(hostname)
+                            logger.info(f'new client {hostname}')
+                        self.service_connection(key, mask,sel)
+        except KeyboardInterrupt:
+            logger.info('keyboard interupt')
+            print("caught keyboard interrupt, exiting")
+        except Exception as e:
+            logger.exception(e)
+            raise e
+        finally:
+            sel.close()
+
+def runMulti():
+    BronkhorstServer().multiServer()

@@ -72,7 +72,8 @@ class MultiServerGui(QtWidgets.QMainWindow, CommonFunctions):
         icon = QtGui.QIcon(iconfile)
         self.setWindowIcon(icon)
         self.connid = f'{socket.gethostname()}GUI'
-        self.maxMFCs = parseArguments()
+        #self.maxMFCs = parseArguments()
+        super().parseArguments()
         self.running = False
         self.hostlabeltext = 'host names'
         self.portlabeltext = 'port values'

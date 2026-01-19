@@ -1,6 +1,7 @@
 import propar
 import pandas as pd
 import pathlib, os, json
+from .verbose import Verbose
 
 homedir = pathlib.Path.home()
 configfile = f'{homedir}/bronkhorstServerConfig/comConfg.log'
@@ -32,7 +33,7 @@ def startMfc(com = 'COM1'):
 
 
 class MFC():
-    def __init__(self,address, mfcMain):
+    def __init__(self,address, mfcMain, vlevel = 0):
         self.address = address
         self.mfcMain = mfcMain
         self.com = mfcMain.comport
@@ -42,6 +43,7 @@ class MFC():
         self.getAddresses()
         #self.pollparamList = propar.database().get_parameters(self.ddenrs)
         #self.maxCapacity = self.readMaxCapacity()
+        self.v = Verbose(vlevel)
     def __str__(self):
         return self.readName()
     def getCom(self, com=None):
@@ -101,19 +103,19 @@ class MFC():
         #    value = self.maxCapacity
         name = self.readName()
         value = float(value)
-        print(f'setting {name} to {value} ml/min')
+        self.v.print(f'setting {name} to {value} ml/min', plevel=0)
         x =  self.writeParam('fSetpoint',value)
         return self.readSetpoint()
         
     def readSetpoint(self):
         sp = self.readParam('fSetpoint')
         name = self.readName()
-        print(f'{name} setpoint {sp} ml/min')
+        self.v.print(f'{name} setpoint {sp} ml/min')
         return sp
     def readFlow(self):
         flowRate = self.readParam('fMeasure')
         name = self.readName()
-        print(f'{name} flow {flowRate} ml/min')
+        self.v.print(f'{name} flow {flowRate} ml/min')
         return flowRate
     def readName(self):
         name = self.readParam('User tag')
@@ -135,7 +137,7 @@ class MFC():
     def readControlMode(self):
         mode = self.readParam('Control mode')
         name = self.readName()
-        print(f'{name} control mode: {mode}')
+        self.v.print(f'{name} control mode: {mode}')
         return mode
     def writeControlMode(self, value):
         value = int(value)
@@ -145,7 +147,7 @@ class MFC():
     def readFluidType(self):
         name = self.readName()
         fluiddct = self.readParams_names('Fluidset index', 'Fluid name')
-        print(fluiddct)
+        self.v.print(fluiddct)
         return fluiddct
     def readMaxCapacity(self):
         if self.address in self.addresses:
@@ -196,7 +198,7 @@ class MFC():
         return df
     def pollAllServer(self):
         df = self.pollAll()
-        print(df)
+        self.v.print(df, plevel=1)
         dfstring = ';'.join(df.columns)
         for i in df.index.values:
             dfstring += '\n'

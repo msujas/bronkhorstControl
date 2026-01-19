@@ -8,6 +8,7 @@ import json
 import logging
 import numpy as np
 import time
+from .verbose import Verbose
 #from datetime import datetime
 
 homedir = pathlib.Path.home()
@@ -23,7 +24,7 @@ def connect(host=HOST, port=PORT):
 
 class MFCclient():
     def __init__(self,address, host=HOST,port=PORT, connid = socket.gethostname(), m = 1, c = 0, 
-                 getMax = False):
+                 getMax = False, vlevel = 1):
         #dt = datetime.fromtimestamp(time.time())
         eventlogfile = f'{homedir}/{logdir}/clientEvents.log'
         logging.basicConfig(filename=eventlogfile, level = logging.INFO, format = '%(asctime)s %(levelname)-8s %(message)s',
@@ -40,7 +41,7 @@ class MFCclient():
         self.maxCapacity = 0
         if getMax:
             self.readMaxCapacity()
-        
+        self.v = Verbose(vlevel)
     def strToBool(self,string):
         if string == 'True' or string == 'False':
             return string == 'True'
@@ -236,7 +237,7 @@ class MFCclient():
             strdata = strdata.replace('!','')
         else:
             strdata = self.multiClient(bytemessage)
-        print(strdata)
+        self.v.print(strdata, plevel=1)
         return strdata
     def makeMessage(self, *args):
         sep = ';'
@@ -251,7 +252,7 @@ class MFCclient():
     def multiClient(self,message):
         sel = selectors.DefaultSelector()
         server_addr = (self.host, self.port)
-        print(f"Starting connection {self.connid} to {server_addr}")
+        self.v.print(f"Starting connection {self.connid} to {server_addr}", plevel=1)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(5)
         #sock.setblocking(False)
@@ -300,7 +301,7 @@ class MFCclient():
                     if receivedMessage:
                         strMessage = receivedMessage.decode()
                 if not recv_data or '!' in strMessage:
-                    print(f"Closing connection {data.connid}")
+                    self.v.print(f"Closing connection {data.connid}",plevel=1)
                     sel.unregister(sock)
                     sock.close()
                     if recv_data:
@@ -311,7 +312,7 @@ class MFCclient():
             if not data.outb and data.messages:
                 data.outb = data.messages.pop(0)
             if data.outb:
-                print(f"Sending {data.outb} to connection {data.connid}")
+                self.v.print(f"Sending {data.outb} to connection {data.connid}", plevel=1)
                 sent = sock.send(data.outb)  # Should be ready to write
                 data.outb = data.outb[sent:]
 

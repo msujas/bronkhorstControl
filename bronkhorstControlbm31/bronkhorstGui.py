@@ -13,6 +13,7 @@ import logging
 import pathlib, os, time
 import socket
 import numpy as np
+from .verbose import Verbose
 
 homedir = pathlib.Path.home()
 fulllogdir = f'{homedir}/{logdir}'
@@ -23,18 +24,20 @@ def parseArguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('-m','--maxMFCs', default=10, type=int, help=('maximum number of MFCs that might be ' 
                                                                       'needed (default 10)'))
+    parser.add_argument('-v', '--verbose', default=0, type = int, help= 'verbose level. Integer, default 0. 1 to print more, -1 to print less')
     args = parser.parse_args()
     maxMFCs = args.maxMFCs
-    return maxMFCs
+    vlevel = parser.verbose
+    return maxMFCs, vlevel
 
 class Worker(QtCore.QObject):
     outputs = QtCore.pyqtSignal(pd.DataFrame)
-    def __init__(self, host, port, waittime = 1):
+    def __init__(self, host, port, waittime = 1, vlevel = 0):
         super(Worker,self).__init__()
         self.host = host
         self.port = port
         self.waittime = waittime
-        self.mfc = MFCclient(1,self.host,self.port, connid=f'{socket.gethostname()}GUIthread')
+        self.mfc = MFCclient(1,self.host,self.port, connid=f'{socket.gethostname()}GUIthread', vlevel=vlevel)
         self.running = True
     def run(self):
         while self.running:
@@ -100,7 +103,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
                 'writesp':11,
                 'usertag':12}
 
-        self.maxMFCs = parseArguments()
+        #self.maxMFCs, self.vlevel = parseArguments()
+        super().parseArguments()
         super().guiLayout()
         self.portInput = QtWidgets.QSpinBox()
         self.portInput.setObjectName('portInput')
@@ -202,7 +206,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
             self.pollTimeBox.setEnabled(False)
             self.repollButton.setEnabled(False)
             #self.logDirButton.setEnabled(False)
-            self.worker = Worker(self.host,self.port, self.waittime)
+            self.worker = Worker(self.host,self.port, self.waittime, vlevel = self.vlevel)
             self.thread = QtCore.QThread()
             self.worker.moveToThread(self.thread)
             self.thread.started.connect(self.worker.run)

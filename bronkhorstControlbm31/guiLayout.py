@@ -7,8 +7,19 @@ import os, time, logging
 logger = logging.getLogger()
 import numpy as np
 import matplotlib.pyplot as plt
+import argparse
 
 class CommonFunctions():
+    def parseArguments(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument('-m','--maxMFCs', default=10, type=int, help=('maximum number of MFCs that might be ' 
+                                                                        'needed (default 10)'))
+        parser.add_argument('-v', '--verbose', default=0, type = int, help= 'verbose level. Integer, default 0. 1 to print more, -1 to print less')
+        args = parser.parse_args()
+        self.maxMFCs = args.maxMFCs
+        self.vlevel = args.verbose
+        #return maxMFCs, vlevel   
+
     def lockFluidIndexes(self):
         for i in self.enabledMFCs:
             self.fluidBoxes[i].setEnabled(not self.lockFluidIndex.isChecked())
