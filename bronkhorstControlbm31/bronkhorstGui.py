@@ -216,7 +216,20 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
             self.disableWidgets()
             logger.info(f'connection closed to server at host: {self.host}, port {self.port}')
 
-
+    def setClientLogDir(self):
+        if self.logDirectory.text():
+            currDir = self.logDirectory.text()
+        else:
+            currDir = '.'
+        dialog = QtWidgets.QFileDialog.getExistingDirectory(caption='select log directory', directory=currDir)
+        if dialog:
+            self.logDirectory.setText(dialog)
+            if self.running:
+                self.logfile = getLogFile(self.host,self.port, self.logDirectory.text())
+                df = MFCclient(1,self.host,self.port, connid='getheader').pollAll()
+                logHeader(self.logfile, df)
+            self.writeConfig()
+            
     def setFlow(self,i):
         if not self.running:
             return

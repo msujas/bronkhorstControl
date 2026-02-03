@@ -225,7 +225,8 @@ class MultiServerGui(QtWidgets.QMainWindow, CommonFunctions):
         hpstring = ''
         for host, port in zip(self.hosts,self.ports):
             hpstring += f'_{host}{port}'
-        self.logfile = f'{self.logDirectory.text()}/{datestring}_multi{hpstring}.log'
+        self.logbasefile = f'{datestring}_multi{hpstring}.log'
+        self.logfile = f'{self.logDirectory.text()}/{self.logbasefile}'
         #self.logfile = getLogFile(self.hosts[0],self.ports[0], self.logDirectory.text())
         self.headerstring = logHeader(self.logfile, df)
         self.originalUserTags = {}
@@ -310,6 +311,20 @@ class MultiServerGui(QtWidgets.QMainWindow, CommonFunctions):
             self.stopConnect()
         super().closeEvent(event)
         event.accept()
+    
+    def setClientLogDir(self):
+        if self.logDirectory.text():
+            currDir = self.logDirectory.text()
+        else:
+            currDir = '.'
+        dialog = QtWidgets.QFileDialog.getExistingDirectory(caption='select log directory', directory=currDir)
+        if dialog:
+            self.logDirectory.setText(dialog)
+            if self.running:
+                self.logfile = f'{self.logDirectory.text()}/{self.logbasefile}'
+                df = self.initialDF()
+                logHeader(self.logfile, df)
+            self.writeConfig()
 
 import sys
 def main():

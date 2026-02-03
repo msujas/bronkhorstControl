@@ -27,20 +27,6 @@ class CommonFunctions():
         for i in self.enabledMFCs:
             self.fluidBoxes[i].setEnabled(not self.lockFluidIndex.isChecked())
 
-    def setClientLogDir(self):
-        if self.logDirectory.text():
-            currDir = self.logDirectory.text()
-        else:
-            currDir = '.'
-        dialog = QtWidgets.QFileDialog.getExistingDirectory(caption='select log directory', directory=currDir)
-        if dialog:
-            self.logDirectory.setText(dialog)
-            if self.running:
-                self.logfile = getLogFile(self.host,self.port, self.logDirectory.text())
-                df = MFCclient(1,self.host,self.port, connid='getheader').pollAll()
-                logHeader(self.logfile, df)
-            self.writeConfig()
-
     def updateConfigDct(self):
         self.configDct = {}
         widetList = [self.logDirectory]
@@ -125,6 +111,7 @@ class CommonFunctions():
             self.tlog = time.time()
             self.fmeas = df['fMeasure'].values
             self.fsp = df['fSetpoint'].values
+        
         if self.plot and self.running:
             self.plotter.plotAllSingle(df)
             
