@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from .bronkhorstClient import MFCclient
 from .bronkhorstServer import HOST, PORT, logdir
 from .plotters import Plotter, getLogFile, logHeader, logMFCs, clientlogdir
-from .guiLayout import CommonFunctions
+from .guiLayout import CommonFunctions, fulllogdir
 from functools import partial
 import logging
 import pathlib, os, time
@@ -16,8 +16,7 @@ import numpy as np
 from .verbose import Verbose
 
 homedir = pathlib.Path.home()
-fulllogdir = f'{homedir}/{logdir}'
-os.makedirs(fulllogdir,exist_ok=True)
+
 logger = logging.getLogger()
 
 def parseArguments():
@@ -82,7 +81,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
         self.centralwidget = QtWidgets.QWidget()
         self.centralwidget.setObjectName("centralwidget")
 
-        self.configfile = f'{fulllogdir}/guiconfig.log'
+        
         curpath = os.path.dirname(os.path.realpath(__file__))
         iconfile = f'{curpath}/images/drawing.ico'
         icon = QtGui.QIcon(iconfile)

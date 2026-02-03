@@ -1,6 +1,6 @@
 from PyQt6 import QtWidgets, QtCore
 from functools import partial
-from .bronkhorstServer import PORT, HOST
+from .bronkhorstServer import PORT, HOST, logdir, homedir
 from .plotters import clientlogdir, getLogFile, logHeader, logMFCs
 from .bronkhorstClient import MFCclient
 import os, time, logging
@@ -8,6 +8,9 @@ logger = logging.getLogger()
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
+
+fulllogdir = f'{homedir}/{logdir}'
+os.makedirs(fulllogdir,exist_ok=True)
 
 class CommonFunctions():
     def parseArguments(self):
@@ -135,6 +138,7 @@ class CommonFunctions():
         self.running = False
 
     def guiLayout(self):
+        self.configfile = f'{fulllogdir}/guiconfig.log'
         self.xspacing = 90
         self.yspacing = 25
 
