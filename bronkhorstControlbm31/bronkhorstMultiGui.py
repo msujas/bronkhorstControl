@@ -197,7 +197,7 @@ class MultiServerGui(QtWidgets.QMainWindow, CommonFunctions):
         dfs = {}
         print(self.hosts, self.ports)
         for i,(host,port) in enumerate(zip(self.hosts,self.ports)):
-            dfs[i] = MFCclient(1,host,port, connid=self.connid).pollAll()
+            dfs[i] = MFCclient(1,host,port, connid=self.connid, vlevel=self.vlevel).pollAll()
             dfs[i].index.values 
             dfs[i]['host'] = [host]*len(dfs[i].index.values)
             dfs[i]['port'] = [port]*len(dfs[i].index.values)
