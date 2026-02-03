@@ -14,7 +14,7 @@ logger = logging.getLogger()
 
 class MultiWorker(QtCore.QObject):
     outputs = QtCore.pyqtSignal(pd.DataFrame)
-    def __init__(self,hosts: list,ports: list, waittime = 1):
+    def __init__(self,hosts: list,ports: list, waittime = 1, vlevel = 0):
         super(MultiWorker,self).__init__()
 
         self.hosts = hosts
@@ -23,7 +23,7 @@ class MultiWorker(QtCore.QObject):
         self.dfs = {}
         self.mfcs = {}
         for i in range(len(self.hosts)):
-            self.mfcs[i] = MFCclient(1, self.hosts[i],self.ports[i], connid=f'{socket.gethostname()}_multiGuiThread')
+            self.mfcs[i] = MFCclient(1, self.hosts[i],self.ports[i], connid=f'{socket.gethostname()}_multiGuiThread', vlevel=vlevel)
     def run(self):
         self.running = True
         while self.running:
@@ -297,7 +297,7 @@ class MultiServerGui(QtWidgets.QMainWindow, CommonFunctions):
             logger.info(f'connection closed to server at hosts: {self.hosts}, ports: {self.ports}')
 
     def startWorker(self):
-            self.worker = MultiWorker(self.hosts,self.ports, self.waittime)
+            self.worker = MultiWorker(self.hosts,self.ports, self.waittime, self.vlevel)
             self.thread = QtCore.QThread()
             self.worker.moveToThread(self.thread)
             self.thread.started.connect(self.worker.run)
