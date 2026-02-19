@@ -96,6 +96,8 @@ class MFCclient():
         if success:
             logger.info(f'mfc address {self.address} setpoint set to {data}. Host: {self.host}, port {self.port}')
         return data
+    def stopFlow(self):
+        self.writeSetpoint(0)
     def readMaxCapacity(self):
         data = float(self.makeSendMessage( 'readMaxCapacity'))
         self.maxCapacity = data
