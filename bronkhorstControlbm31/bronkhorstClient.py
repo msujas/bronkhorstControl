@@ -42,6 +42,7 @@ class MFCclient():
         if getMax:
             self.readMaxCapacity()
         self.v = Verbose(vlevel)
+        self.setFlow = self.writeSetpoint2 #create alias
     def strToBool(self,string):
         if string == 'True' or string == 'False':
             return string == 'True'
@@ -103,11 +104,6 @@ class MFCclient():
         self.maxCapacity = data
         return data
     
-    def setFlow(self,*args, **kwargs):
-        '''
-        alias for writeSetpoint2
-        '''
-        return self.writeSetpoint2(*args, **kwargs)
     def readControlMode(self):
         data = self.makeSendMessage( 'readControlMode')
         return int(data)

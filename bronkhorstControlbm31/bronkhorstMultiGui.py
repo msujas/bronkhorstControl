@@ -9,6 +9,11 @@ from .plotters import clientlogdir, Plotter, getLogFile, logHeader, getdatestrin
 import logging, socket, os
 import matplotlib.pyplot as plt
 from datetime import datetime
+import platform
+if platform.system() == 'Windows':
+	import ctypes
+	myappid = '_mfcmultigui' 
+	ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
 logger = logging.getLogger()
 
@@ -309,6 +314,7 @@ class MultiServerGui(QtWidgets.QMainWindow, CommonFunctions):
         print('closing')
         if self.running:
             self.stopConnect()
+        logger.info('mfcmultigui closed normally')
         super().closeEvent(event)
         event.accept()
     

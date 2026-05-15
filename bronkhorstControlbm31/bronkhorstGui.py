@@ -8,12 +8,16 @@ from .bronkhorstClient import MFCclient
 from .bronkhorstServer import HOST, PORT, logdir
 from .plotters import Plotter, getLogFile, logHeader, logMFCs, clientlogdir
 from .guiLayout import CommonFunctions, fulllogdir
-from functools import partial
 import logging
 import pathlib, os, time
 import socket
-import numpy as np
-from .verbose import Verbose
+import platform
+
+if platform.system() == 'Windows':
+	import ctypes
+	myappid = '_mfcgui' 
+	ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+
 
 homedir = pathlib.Path.home()
 
@@ -305,6 +309,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
         print('closing')
         if self.running:
             self.stopConnect()
+        logger.info('mfcgui closed normally')
         super().closeEvent(event)
         event.accept()
        
