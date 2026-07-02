@@ -35,6 +35,7 @@ def parseArguments():
 
 class Worker(QtCore.QObject):
     outputs = QtCore.pyqtSignal(pd.DataFrame)
+    stopsignal = QtCore.pyqtSignal()
     def __init__(self, host, port, waittime = 1, vlevel = 0):
         super(Worker,self).__init__()
         self.host = host
@@ -43,7 +44,10 @@ class Worker(QtCore.QObject):
         self.mfc = MFCclient(1,self.host,self.port, connid=f'{socket.gethostname()}GUIthread', vlevel=vlevel)
         self.running = True
     def run(self):
+        self.wait = False
         while self.running:
+            if self.wait:
+                continue
             #os.system('cls')
             self.runOnce()
             #QtCore.QThread.msleep(int(self.waittime*1000))
@@ -62,15 +66,19 @@ class Worker(QtCore.QObject):
             logger.warning(message)
             self.outputs.emit(pd.DataFrame())
             return
-        except KeyError:
-            message = 'no data returned. Stopping'
+        except KeyError as e:
+            message = f'no data returned. Stopping:\n{e}'
             print(message)
             logger.warning(message)
             self.outputs.emit(pd.DataFrame())
             return
         except Exception as e:
             logger.exception(e)
-            raise e
+            print(e)
+            self.wait = True
+            self.stopsignal.emit()
+            return
+            #raise e
         self.outputs.emit(df)
         
 
@@ -214,6 +222,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
             self.worker.moveToThread(self.thread)
             self.thread.started.connect(self.worker.run)
             self.worker.outputs.connect(self.updateMFCs)
+            self.worker.stopsignal.connect(self.closefromthread)
             self.thread.start()
         else:
             self.stopConnect()
@@ -312,6 +321,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
         logger.info('mfcgui closed normally')
         super().closeEvent(event)
         event.accept()
+    def closefromthread(self):
+        logging.error('mfcgui error in thread')
+        super().close()
        
 import sys       
 def main():
