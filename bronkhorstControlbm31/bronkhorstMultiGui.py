@@ -33,7 +33,8 @@ class MultiWorker(QtCore.QObject):
         self.running = True
         while self.running:
             self.runOnce()
-            time.sleep(self.waittime)
+            #time.sleep(self.waittime)
+            QtCore.QThread.msleep(int(self.waittime*1000))
         print('stopped polling')
     def stop(self):
         self.running=False 

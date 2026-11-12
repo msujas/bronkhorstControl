@@ -50,8 +50,8 @@ class Worker(QtCore.QObject):
                 continue
             #os.system('cls')
             self.runOnce()
-            #QtCore.QThread.msleep(int(self.waittime*1000))
-            time.sleep(self.waittime)
+            QtCore.QThread.msleep(int(self.waittime*1000))
+            #time.sleep(self.waittime)
         print('stopping polling')
 
     def stop(self):
