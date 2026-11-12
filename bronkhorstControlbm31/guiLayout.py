@@ -3,6 +3,7 @@ from functools import partial
 from .bronkhorstServer import PORT, HOST, logdir, homedir
 from .plotters import clientlogdir, getLogFile, logHeader, logMFCs
 from .bronkhorstClient import MFCclient
+from .qtClient import Client_qt
 import os, time, logging
 logger = logging.getLogger()
 import numpy as np
@@ -114,17 +115,39 @@ class CommonFunctions():
         
         if self.plot and self.running:
             self.plotter.plotAllSingle(df)
+
+    def updateQ(self, pollstr:str):
+        #print(pollstr)
+        df = MFCclient.pollAlldecode(pollstr)
+        print(df)
+        self.updateMFCs(df)
+
+    def connectQt(self):
+        self.host = self.hostInput.text()
+        self.port = self.portInput.value()
+        if self.qclient is None:
+            self.qclient = Client_qt(self.host,self.port,parent=self)
+            self.qclient.line_received.connect(self.updateQ)
+
+            self.qclient.start()
+        else:
+            self.qclient.stop()
+            self.qclient.deleteLater()
+            self.qclient = None
+
             
     def stopConnect(self):
-        self.worker.stop()
-        self.thread.quit()
-        self.worker.deleteLater()
+        if not self.worker is None:
+            self.worker.stop()
+            self.thread.quit()
+            self.worker.deleteLater()
         if self.plot:
             plt.close()
         self.thread.wait()
         self.running = False
 
     def guiLayout(self):
+        self.qclient :Client_qt|None = None
         self.configfile = f'{fulllogdir}/guiconfig.log'
         self.xspacing = 90
         self.yspacing = 25

@@ -1,15 +1,13 @@
 from PyQt6 import QtWidgets, QtCore, QtGui
 import argparse
-import time
 import pandas as pd
 import matplotlib.pyplot as plt
-
 from .bronkhorstClient import MFCclient
 from .bronkhorstServer import HOST, PORT, logdir
 from .plotters import Plotter, getLogFile, logHeader, logMFCs, clientlogdir
 from .guiLayout import CommonFunctions, fulllogdir
 import logging
-import pathlib, os, time
+import pathlib, os
 import socket
 import platform
 
@@ -84,6 +82,8 @@ class Worker(QtCore.QObject):
 
 class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
     def setupUi(self):
+        self.worker:Worker|None=None
+        self.useQclient = True
         eventlogfile = f'{homedir}/{logdir}/mfcgui.log'
         logging.basicConfig(filename=eventlogfile, level = logging.INFO, format = '%(asctime)s %(levelname)-8s %(message)s',
                             datefmt = '%Y/%m/%d_%H:%M:%S')
@@ -189,9 +189,16 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
             self.addressLabels[i].setStyleSheet('color: black;')
         self.updateMFCs(df)
         logger.info(f'connected to server. Host: {self.host}, port: {self.port}')
-        
+
+
+    def setwidgets(self,enabled:bool):
+        self.hostInput.setEnabled(enabled)
+        self.portInput.setEnabled(enabled)
+        self.pollTimeBox.setEnabled(enabled)
+        self.repollButton.setEnabled(enabled)
+        #self.logDirButton.setEnabled(enabled)
     def connectLoop(self):
-        if not self.running:
+        if not self.running and not self.useQclient:
             self.host = self.hostInput.text()
             self.port = self.portInput.value()
             self.waittime = self.pollTimeBox.value()
@@ -212,11 +219,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
                 raise e
             self.running = True
             self.startButton.setText('stop connection')
-            self.hostInput.setEnabled(False)
-            self.portInput.setEnabled(False)
-            self.pollTimeBox.setEnabled(False)
-            self.repollButton.setEnabled(False)
-            #self.logDirButton.setEnabled(False)
+            self.setwidgets()
             self.worker = Worker(self.host,self.port, self.waittime, vlevel = self.vlevel)
             self.thread = QtCore.QThread()
             self.worker.moveToThread(self.thread)
@@ -224,7 +227,11 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
             self.worker.outputs.connect(self.updateMFCs)
             self.worker.stopsignal.connect(self.closefromthread)
             self.thread.start()
-        else:
+        elif self.useQclient: #handles running and not running
+            self.connectMFCs()
+            self.setwidgets()
+            self.connectQt()
+        elif self.running and not self.useQclient:
             self.stopConnect()
             self.disableWidgets()
             logger.info(f'connection closed to server at host: {self.host}, port {self.port}')
@@ -314,10 +321,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
         newslope = MFCclient(address,self.host,self.port,connid=self.connid).writeSlope(value)
         self.slopeBoxes[i].setValue(newslope)
         
-    def closeEvent(self,event):
+    def closeEvent(self,event:QtCore.QEvent):
         print('closing')
         if self.running:
             self.stopConnect()
+        if self.qclient:
+            self.qclient.stop()
         logger.info('mfcgui closed normally')
         super().closeEvent(event)
         event.accept()

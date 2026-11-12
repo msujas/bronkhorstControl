@@ -187,7 +187,7 @@ class BronkhorstServer():
                     fullmessage = f'{mainmessage}!'
                     bytemessage += bytes(fullmessage,encoding='utf-8')
                 except (ValueError, KeyError):
-                    bytemessage = b'invalid message!'
+                    bytemessage = f'invalid message: {strmessage}!'.encode()
                 except ConnectionResetError:
                     print(f'connection lost with client: {data.addr}')
                     bytemessage = b''
