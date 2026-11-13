@@ -219,7 +219,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
                 raise e
             self.running = True
             self.startButton.setText('stop connection')
-            self.setwidgets()
+            self.setwidgets(False)
             self.worker = Worker(self.host,self.port, self.waittime, vlevel = self.vlevel)
             self.thread = QtCore.QThread()
             self.worker.moveToThread(self.thread)
@@ -229,7 +229,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
             self.thread.start()
         elif self.useQclient: #handles running and not running
             self.connectMFCs()
-            self.setwidgets()
+            self.setwidgets(False)
             self.connectQt()
         elif self.running and not self.useQclient:
             self.stopConnect()

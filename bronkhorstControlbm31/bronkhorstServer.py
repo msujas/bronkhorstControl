@@ -178,20 +178,22 @@ class BronkhorstServer():
             if recvData:
                 self.v.print(recvData,plevel=1)
                 data.outb += recvData
-                strmessage = data.outb.decode()
-                try:
-                    address = int(strmessage.split(';')[0])
-                    self.mfc.address = address
-                    mainmessage = self.mfc.strToMethod(strmessage)
-                    #endmessageMarker = '!'
-                    fullmessage = f'{mainmessage}!'
-                    bytemessage += bytes(fullmessage,encoding='utf-8')
-                except (ValueError, KeyError):
-                    bytemessage = f'invalid message: {strmessage}!'.encode()
-                except ConnectionResetError:
-                    print(f'connection lost with client: {data.addr}')
-                    bytemessage = b''
-                    closeConnection()
+                bmessages:list[bytes] = data.outb.split(b'!')
+                for bm in bmessages:
+                    strmessage = bm.decode()
+                    try:
+                        address = int(strmessage.split(';')[0])
+                        self.mfc.address = address
+                        mainmessage = self.mfc.strToMethod(strmessage)
+                        #endmessageMarker = '!'
+                        fullmessage = f'{mainmessage}!'
+                        bytemessage += bytes(fullmessage,encoding='utf-8')
+                    except (ValueError, KeyError):
+                        bytemessage = f'invalid message: {strmessage}!'.encode()
+                    except ConnectionResetError:
+                        print(f'connection lost with client: {data.addr}')
+                        bytemessage = b''
+                        closeConnection()
             else:
                 logger.debug(f'no data received from {data.addr}')
                 closeConnection()

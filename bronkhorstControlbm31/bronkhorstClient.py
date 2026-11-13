@@ -240,6 +240,7 @@ class MFCclient():
         data = self.makeSendMessage('wink')
         return data
     def sendMessage(self,message):
+        message += '!'
         bytemessage = bytes(message,encoding='utf-8')
         if not self.multi:
             self.s = connect(self.host,self.port)

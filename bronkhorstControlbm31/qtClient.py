@@ -1,10 +1,13 @@
 from PyQt6.QtNetwork import QTcpSocket, QAbstractSocket
 from PyQt6.QtCore import QObject, QTimer, pyqtSignal, pyqtSlot
+from collections import deque
+
+DEBUG = True
 
 class Client_qt(QObject):
     line_received = pyqtSignal(str)
     status_changed = pyqtSignal(str)
-    def __init__(self, host,port, interval_ms :int = 1000, parent=None):
+    def __init__(self, host,port, interval_ms :int = 1500, parent=None):
         super().__init__(parent)
         self.host=host
         self.port=port
@@ -12,6 +15,8 @@ class Client_qt(QObject):
         self._buffer = bytearray()
         self.socket = QTcpSocket(self)
         self.doconnect=False
+        self._inflight = None
+        self._queue = deque()
 
         self.socket.connected.connect(self._on_connected)
         self.socket.disconnected.connect(self._on_disconnected)
@@ -51,6 +56,14 @@ class Client_qt(QObject):
             self.status_changed.emit(f"Connecting to {self.host}:{self.port}")
             self.socket.connectToHost(self.host,self.port)
 
+    def _send_next(self):
+        if (self._inflight is None and self._queue and self.socket.state() == QAbstractSocket.SocketState.ConnectedState):
+            self._inflight = self._queue.popleft()
+            if DEBUG:
+                print("SENT", repr(self._inflight))
+            self.socket.write(self._inflight)
+            
+
     @pyqtSlot()
     def _on_connected(self):
         self.status_changed.emit("Connected")
@@ -71,6 +84,8 @@ class Client_qt(QObject):
         while (idx := self._buffer.find(b'!')) != -1:
             line = bytes(self._buffer[:idx]).decode(errors='replace')
             del self._buffer[:idx+1]
+            if DEBUG:
+                print(line)
             self.line_received.emit(line)
 
     @pyqtSlot(QAbstractSocket.SocketError)
