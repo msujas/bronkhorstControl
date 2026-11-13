@@ -196,6 +196,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
         self.portInput.setEnabled(enabled)
         self.pollTimeBox.setEnabled(enabled)
         self.repollButton.setEnabled(enabled)
+        if not enabled:
+            self.startButton.setText('stop connection')
+        else:
+            self.startButton.setText('connect MFCs')
         #self.logDirButton.setEnabled(enabled)
     def connectLoop(self):
         if not self.running and not self.useQclient:
@@ -218,7 +222,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
                 logger.exception(e)
                 raise e
             self.running = True
-            self.startButton.setText('stop connection')
+            
             self.setwidgets(False)
             self.worker = Worker(self.host,self.port, self.waittime, vlevel = self.vlevel)
             self.thread = QtCore.QThread()
@@ -227,11 +231,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
             self.worker.outputs.connect(self.updateMFCs)
             self.worker.stopsignal.connect(self.closefromthread)
             self.thread.start()
-        elif self.useQclient: #handles running and not running
+        elif self.useQclient and not self.running: #handles running and not running
             self.connectMFCs()
+            self.running = True
             self.setwidgets(False)
             self.connectQt()
-        elif self.running and not self.useQclient:
+        elif self.running:
             self.stopConnect()
             self.disableWidgets()
             logger.info(f'connection closed to server at host: {self.host}, port {self.port}')
@@ -325,8 +330,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
         print('closing')
         if self.running:
             self.stopConnect()
-        if self.qclient:
-            self.qclient.stop()
         logger.info('mfcgui closed normally')
         super().closeEvent(event)
         event.accept()

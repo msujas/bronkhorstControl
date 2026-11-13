@@ -13,6 +13,8 @@ import argparse
 fulllogdir = f'{homedir}/{logdir}'
 os.makedirs(fulllogdir,exist_ok=True)
 
+DEBUG = True
+
 class CommonFunctions():
     def parseArguments(self):
         parser = argparse.ArgumentParser()
@@ -119,7 +121,8 @@ class CommonFunctions():
     def updateQ(self, pollstr:str):
         #print(pollstr)
         df = MFCclient.pollAlldecode(pollstr)
-        print(df)
+        if DEBUG:
+            print(df)
         self.updateMFCs(df)
 
     def connectQt(self):
@@ -141,9 +144,13 @@ class CommonFunctions():
             self.worker.stop()
             self.thread.quit()
             self.worker.deleteLater()
+            self.thread.wait()
         if self.plot:
             plt.close()
-        self.thread.wait()
+        if not self.qclient is None:
+            self.qclient.stop()
+            self.qclient.deleteLater()
+            self.qclient = None
         self.running = False
 
     def guiLayout(self):

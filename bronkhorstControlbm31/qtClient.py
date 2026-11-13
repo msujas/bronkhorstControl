@@ -32,6 +32,11 @@ class Client_qt(QObject):
         self.reconnect_timer.setInterval(2000)
         self.reconnect_timer.timeout.connect(self._connect)
 
+        self.replytimer = QTimer(self)
+        self.replytimer.setSingleShot(True)
+        self.replytimer.setInterval(3000)
+        self.replytimer.timeout.connect(self._onreplytimeout)
+
 
     def start(self):
         self.doconnect = True
@@ -43,13 +48,21 @@ class Client_qt(QObject):
         self.reconnect_timer.stop()
         self.socket.disconnectFromHost()
 
+    def _onreplytimeout(self):
+        pass
+
     def send(self,data:bytes):
-        if self.socket.state() == QAbstractSocket.SocketState.ConnectedState:
+        #if self.socket.state() == QAbstractSocket.SocketState.ConnectedState:
+        if DEBUG:
             print(data)
-            self.socket.write(data)
+        self._queue.append(data)
+        self._send_next()
+        #self.socket.write(data)
 
     def _poll(self):
-        self.send(b"1;pollAll")
+        POLLREQUEST = b'1;pollAll!'
+        if self._inflight != POLLREQUEST and POLLREQUEST not in self._queue:
+            self.send(POLLREQUEST)
 
     def _connect(self):
         if self.socket.state() == QAbstractSocket.SocketState.UnconnectedState:
@@ -62,7 +75,12 @@ class Client_qt(QObject):
             if DEBUG:
                 print("SENT", repr(self._inflight))
             self.socket.write(self._inflight)
+            self.replytimer.start()
             
+    def _resetExchange(self):
+        self._buffer.clear()
+        self._inflight = None
+        
 
     @pyqtSlot()
     def _on_connected(self):
@@ -86,7 +104,11 @@ class Client_qt(QObject):
             del self._buffer[:idx+1]
             if DEBUG:
                 print(line)
+            #req = (self._inflight or b"").decode(errors="replace")
+            self._inflight=None
+            self.replytimer.stop()
             self.line_received.emit(line)
+        self._send_next()
 
     @pyqtSlot(QAbstractSocket.SocketError)
     def _on_error(self):

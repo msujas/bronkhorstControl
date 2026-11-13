@@ -181,6 +181,8 @@ class BronkhorstServer():
                 bmessages:list[bytes] = data.outb.split(b'!')
                 for bm in bmessages:
                     strmessage = bm.decode()
+                    if not strmessage:
+                        continue
                     try:
                         address = int(strmessage.split(';')[0])
                         self.mfc.address = address
