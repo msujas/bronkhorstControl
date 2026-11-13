@@ -24,6 +24,7 @@ class Client_qt(QObject):
         self.socket.errorOccurred.connect(self._on_error)
 
         self.poll_timer = QTimer(self)
+        self.poll_timer.setSingleShot(True)
         self.poll_timer.setInterval(self.interval_ms)
         self.poll_timer.timeout.connect(self._poll)
 
@@ -49,7 +50,11 @@ class Client_qt(QObject):
         self.socket.disconnectFromHost()
 
     def _onreplytimeout(self):
-        pass
+        self.status_changed.emit(f"no reply to {self._inflight!r}; reconnecting")
+        self.socket.abort()
+        if self.doconnect:
+            self._resetExchange()
+            self.reconnect_timer.start()
 
     def send(self,data:bytes):
         #if self.socket.state() == QAbstractSocket.SocketState.ConnectedState:
@@ -80,6 +85,7 @@ class Client_qt(QObject):
     def _resetExchange(self):
         self._buffer.clear()
         self._inflight = None
+        self.replytimer.stop()
         
 
     @pyqtSlot()

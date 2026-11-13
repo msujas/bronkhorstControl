@@ -196,6 +196,7 @@ class BronkhorstServer():
                         print(f'connection lost with client: {data.addr}')
                         bytemessage = b''
                         closeConnection()
+                data.outb = b''
             else:
                 logger.debug(f'no data received from {data.addr}')
                 closeConnection()

@@ -129,6 +129,7 @@ class CommonFunctions():
         self.host = self.hostInput.text()
         self.port = self.portInput.value()
         if self.qclient is None:
+            print('setting up qclient')
             self.qclient = Client_qt(self.host,self.port,parent=self)
             self.qclient.line_received.connect(self.updateQ)
 
