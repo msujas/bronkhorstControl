@@ -196,7 +196,7 @@ class BronkhorstServer():
                         print(f'connection lost with client: {data.addr}')
                         bytemessage = b''
                         closeConnection()
-                data.outb = b''
+                
             else:
                 logger.debug(f'no data received from {data.addr}')
                 closeConnection()
@@ -252,6 +252,7 @@ class BronkhorstServer():
                             logger.info(f'new client {hostname}')
                             self.v.print(f'connection from {hostname}')
                         self.service_connection(key, mask,sel)
+                        key.data.outb = b''
         except KeyboardInterrupt:
             logger.info('keyboard interupt')
             print("caught keyboard interrupt, exiting")
