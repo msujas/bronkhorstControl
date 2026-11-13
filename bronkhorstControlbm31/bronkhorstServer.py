@@ -200,19 +200,21 @@ class BronkhorstServer():
             else:
                 logger.debug(f'no data received from {data.addr}')
                 closeConnection()
-        if mask & selectors.EVENT_WRITE:
-
-            if bytemessage:
-                self.v.print(f'sending data to {data.addr}', plevel=1)
-                try:
-                    sent = sock.send(bytemessage)
-                    bytemessage = bytemessage[sent:]
-                    #logger.debug(f'data sent to {data.addr}')
-                except ConnectionResetError:
-                    print(connectionLostMessage)
-                    logger.info(connectionLostMessage)
-                    bytemessage = b''
-                    closeConnection()
+        if mask & selectors.EVENT_WRITE and bytemessage:
+            self.v.print(f'sending data to {data.addr}', plevel=1)
+            try:
+                sent = sock.send(bytemessage)
+                bytemessage = bytemessage[sent:]
+                #logger.debug(f'data sent to {data.addr}')
+            except ConnectionResetError:
+                print(connectionLostMessage)
+                logger.info(connectionLostMessage)
+                bytemessage = b''
+                closeConnection()
+                return
+        wanted = selectors.EVENT_READ | (selectors.EVENT_WRITE if bytemessage else 0)
+        if wanted != key.events:
+            sel.modify(sock, wanted, data = key.data)
 
     def multiServer(self):
         
