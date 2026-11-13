@@ -178,9 +178,9 @@ class BronkhorstServer():
             if recvData:
                 self.v.print(recvData,plevel=1)
                 data.outb += recvData
-                bmessages:list[bytes] = data.outb.split(b'!')
-                for bm in bmessages:
-                    strmessage = bm.decode()
+                while b'!' in data.outb:
+                    bmessage, data.outb = data.outb.split(b'!',1)
+                    strmessage = bmessage.decode()
                     if not strmessage:
                         continue
                     try:
@@ -252,7 +252,7 @@ class BronkhorstServer():
                             logger.info(f'new client {hostname}')
                             self.v.print(f'connection from {hostname}')
                         self.service_connection(key, mask,sel)
-                        key.data.outb = b''
+                        #key.data.outb = b''
         except KeyboardInterrupt:
             logger.info('keyboard interupt')
             print("caught keyboard interrupt, exiting")
