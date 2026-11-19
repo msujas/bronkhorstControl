@@ -14,6 +14,10 @@ fulllogdir = f'{homedir}/{logdir}'
 os.makedirs(fulllogdir,exist_ok=True)
 logfile = f'{homedir}/{logdir}/bronkhorstServer.log'
 
+DEBUG = True
+def dprint(*args,**kwargs):
+    if DEBUG:
+        print(*args,**kwargs)
 
 HOST = 'localhost'
 PORT = 61245
@@ -180,6 +184,7 @@ class BronkhorstServer():
                 data.inb += recvData
                 while b'!' in data.inb:
                     bmessage, data.inb = data.inb.split(b'!',1)
+                    dprint(f'message received {bmessage!r}')
                     strmessage = bmessage.decode()
                     if not strmessage:
                         continue
@@ -205,6 +210,7 @@ class BronkhorstServer():
         if mask & selectors.EVENT_WRITE and data.outb:
             self.v.print(f'sending data to {data.addr}', plevel=1)
             try:
+                dprint(f'sending {data.outb!r}')
                 sent = sock.send(data.outb)
                 data.outb = data.outb[sent:]
                 #logger.debug(f'data sent to {data.addr}')
