@@ -224,7 +224,9 @@ class BronkhorstServer():
                 closeConnection()
                 return
         wanted = selectors.EVENT_READ | (selectors.EVENT_WRITE if data.outb else 0)
+        dprint(f'end: mask={mask} registered={key.events} wanted={wanted} outb={data.outb!r}')
         if wanted != key.events:
+            
             sel.modify(sock, wanted, data = data)
         dprint('service_connection done')
 
@@ -257,6 +259,7 @@ class BronkhorstServer():
             while True:
                 events = sel.select(timeout=None)
                 for key, mask in events:
+                    dprint(f'event: fd={key.fileobj.fileno()} mask={mask} data = {key.data is not None}')
                     if key.data is None:
                         self.accept_wrapper(key.fileobj,sel)
                     else:
