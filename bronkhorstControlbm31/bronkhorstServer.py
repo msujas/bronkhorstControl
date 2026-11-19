@@ -145,7 +145,7 @@ class BronkhorstServer():
         conn,addr =sock.accept()
         conn.setblocking(False)
         self.v.print(f'Accepted connection from {addr}',plevel=1)
-        data = types.SimpleNamespace(addr=addr,inb = b'',outb = b'')
+        data = types.SimpleNamespace(addr=addr,inb = b'',outb = b'', inb=b'')
         events = selectors.EVENT_READ | selectors.EVENT_WRITE
         sel.register(conn,events,data=data)
 
@@ -154,7 +154,7 @@ class BronkhorstServer():
         data = key.data
         #logger.debug(f'accepted connection from {data.addr}')
         connectionLostMessage = f'connection lost with client: {data.addr}'
-        bytemessage = b''
+        data.outb = b''
         def closeConnection():
             self.v.print(f'closing connection to {data.addr}', plevel=1)
             sel.unregister(sock)
@@ -177,9 +177,9 @@ class BronkhorstServer():
                 recvData = b''
             if recvData:
                 self.v.print(recvData,plevel=1)
-                data.outb += recvData
-                while b'!' in data.outb:
-                    bmessage, data.outb = data.outb.split(b'!',1)
+                data.inb += recvData
+                while b'!' in data.inb:
+                    bmessage, data.inb = data.outb.split(b'!',1)
                     strmessage = bmessage.decode()
                     if not strmessage:
                         continue
@@ -189,30 +189,32 @@ class BronkhorstServer():
                         mainmessage = self.mfc.strToMethod(strmessage)
                         #endmessageMarker = '!'
                         fullmessage = f'{mainmessage}!'
-                        bytemessage += bytes(fullmessage,encoding='utf-8')
+                        data.outb += bytes(fullmessage,encoding='utf-8')
                     except (ValueError, KeyError):
-                        bytemessage = f'invalid message: {strmessage}!'.encode()
+                        data.outb = f'invalid message: {bmessage!r}!'.encode()
                     except ConnectionResetError:
                         print(f'connection lost with client: {data.addr}')
-                        bytemessage = b''
+                        data.outb = b''
                         closeConnection()
+                        return
                 
             else:
                 logger.debug(f'no data received from {data.addr}')
                 closeConnection()
-        if mask & selectors.EVENT_WRITE and bytemessage:
+                return
+        if mask & selectors.EVENT_WRITE and data.outb:
             self.v.print(f'sending data to {data.addr}', plevel=1)
             try:
-                sent = sock.send(bytemessage)
-                bytemessage = bytemessage[sent:]
+                sent = sock.send(data.outb)
+                data.outb = data.outb[sent:]
                 #logger.debug(f'data sent to {data.addr}')
             except ConnectionResetError:
                 print(connectionLostMessage)
                 logger.info(connectionLostMessage)
-                bytemessage = b''
+                data.outb = b''
                 closeConnection()
                 return
-        wanted = selectors.EVENT_READ | (selectors.EVENT_WRITE if bytemessage else 0)
+        wanted = selectors.EVENT_READ | (selectors.EVENT_WRITE if data.outb else 0)
         if wanted != key.events:
             sel.modify(sock, wanted, data = key.data)
 
