@@ -246,13 +246,13 @@ class BronkhorstServer():
         s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.bind((self.host, self.port))
         s.listen()
-        s.settimeout(5)
-        #s.setblocking(False)
+        #s.settimeout(5)
+        s.setblocking(False)
         sel.register(s,selectors.EVENT_READ,data=None)
 
         try:
             while True:
-                events = sel.select(timeout=5)
+                events = sel.select(timeout=None)
                 for key, mask in events:
                     if key.data is None:
                         self.accept_wrapper(key.fileobj,sel)
