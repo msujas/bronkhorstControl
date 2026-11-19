@@ -265,6 +265,7 @@ class BronkhorstServer():
                             self.v.print(f'connection from {hostname}')
                         self.service_connection(key, mask,sel)
                         #key.data.outb = b''
+                dprint('iter')
         except KeyboardInterrupt:
             logger.info('keyboard interupt')
             print("caught keyboard interrupt, exiting")
