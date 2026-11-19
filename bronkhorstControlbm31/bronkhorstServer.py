@@ -208,6 +208,7 @@ class BronkhorstServer():
                 logger.debug(f'no data received from {data.addr}')
                 closeConnection()
                 return
+            dprint('finished reading')
         if mask & selectors.EVENT_WRITE and data.outb:
             self.v.print(f'sending data to {data.addr}', plevel=1)
             try:
