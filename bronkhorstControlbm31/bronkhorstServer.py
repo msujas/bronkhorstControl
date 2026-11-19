@@ -179,7 +179,7 @@ class BronkhorstServer():
                 self.v.print(recvData,plevel=1)
                 data.inb += recvData
                 while b'!' in data.inb:
-                    bmessage, data.inb = data.outb.split(b'!',1)
+                    bmessage, data.inb = data.inb.split(b'!',1)
                     strmessage = bmessage.decode()
                     if not strmessage:
                         continue
