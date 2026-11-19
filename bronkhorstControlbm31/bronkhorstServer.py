@@ -224,9 +224,9 @@ class BronkhorstServer():
                 return
         wanted = selectors.EVENT_READ | (selectors.EVENT_WRITE if data.outb else 0)
         if wanted != key.events:
-            sel.modify(sock, wanted, data = key.data)
+            sel.modify(sock, wanted, data = data)
         dprint('service_connection done')
-        
+
     def multiServer(self):
         
         loglevel = logging.INFO
