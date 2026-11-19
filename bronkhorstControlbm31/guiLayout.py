@@ -1,7 +1,7 @@
 from PyQt6 import QtWidgets, QtCore
 from functools import partial
 from .bronkhorstServer import PORT, HOST, logdir, homedir
-from .plotters import clientlogdir, getLogFile, logHeader, logMFCs
+from .plotters import clientlogdir, getLogFile, logHeader, logMFCs, Plotter
 from .bronkhorstClient import MFCclient
 from .qtClient import Client_qt
 import os, time, logging
@@ -134,6 +134,9 @@ class CommonFunctions():
     def updateQ(self, pollstr:str):
         #print(pollstr)
         df = MFCclient.pollAlldecode(pollstr)
+        if self.plot and self.firstconnect:
+            self.plotter = Plotter(host = self.host, port = self.port, log=False, initDF=df)
+        self.headerstring = logHeader(self.logfile, df)
         self.fmeas = df['fMeasure']
         self.fsp = df['fSetpoint']
         if DEBUG:
@@ -141,8 +144,13 @@ class CommonFunctions():
         self.updateMFCs(df)
 
     def connectQt(self):
+        self.tlog = 0
+        
+        self.plot = self.plotBox.isChecked()
+
         self.host = self.hostInput.text()
         self.port = self.portInput.value()
+        self.logfile = getLogFile(self.host,self.port, self.logDirectory.text())
         self.firstconnect = True
         if self.qclient is None:
             print('setting up qclient')
