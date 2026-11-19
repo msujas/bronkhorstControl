@@ -158,7 +158,7 @@ class BronkhorstServer():
         data = key.data
         #logger.debug(f'accepted connection from {data.addr}')
         connectionLostMessage = f'connection lost with client: {data.addr}'
-        data.outb = b''
+        #data.outb = b''
         def closeConnection():
             self.v.print(f'closing connection to {data.addr}', plevel=1)
             sel.unregister(sock)

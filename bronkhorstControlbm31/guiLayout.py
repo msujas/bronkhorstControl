@@ -134,6 +134,8 @@ class CommonFunctions():
     def updateQ(self, pollstr:str):
         #print(pollstr)
         df = MFCclient.pollAlldecode(pollstr)
+        self.fmeas = df['fMeasure']
+        self.fsp = df['fSetpoint']
         if DEBUG:
             print(df)
         self.updateMFCs(df)
