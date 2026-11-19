@@ -194,6 +194,7 @@ class BronkhorstServer():
                         mainmessage = self.mfc.strToMethod(strmessage)
                         #endmessageMarker = '!'
                         fullmessage = f'{mainmessage}!'
+                        dprint(f'return message: {fullmessage}')
                         data.outb += bytes(fullmessage,encoding='utf-8')
                     except (ValueError, KeyError):
                         data.outb = f'invalid message: {bmessage!r}!'.encode()
