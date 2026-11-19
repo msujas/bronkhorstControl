@@ -60,6 +60,18 @@ class CommonFunctions():
             print('stored log directory doesn\'t exist, setting to default')
             self.logDirectory.setText(clientlogdir)
             self.writeConfig()
+    def initialisevaluedcts(self):
+        self.originalUserTags = {}
+        self.originalControlModes = {}
+        self.originalFluidIndexes = {}
+        self.originalSetpoints = {}
+        self.originalSlopes = {}
+        for i in range(self.maxMFCs):
+            self.originalUserTags[i] = -1
+            self.originalControlModes[i] = -1
+            self.originalFluidIndexes[i] = -1
+            self.originalSetpoints[i] = -1
+            self.originalSlopes[i] = -1
     def updateMFCs(self,df):
         if len(df.columns) == 0:
             self.stopConnect()
@@ -67,6 +79,7 @@ class CommonFunctions():
             return
         checkValue = self.runningIndicator.isChecked()
         self.runningIndicator.setChecked(not checkValue)
+        
         for i in df.index.values:
             try:
                 newSetpoint = df.loc[i]['fSetpoint']
@@ -79,25 +92,25 @@ class CommonFunctions():
                 self.setpointpctBoxes[i].setValue(df.loc[i]['Setpoint_pct'])
                 self.measurepctBoxes[i].setValue(df.loc[i]['Measure_pct'])
                 self.fluidNameBoxes[i].setText(df.loc[i]['Fluid name'])
-                if newControlMode != self.originalControlModes[i]:
+                if self.firstconnect or newControlMode != self.originalControlModes[i]:
                     self.controlBoxes[i].setCurrentIndex(newControlMode)
                     self.originalControlModes[i] = newControlMode
                 
-                if newFluidIndex != self.originalFluidIndexes[i]:
+                if self.firstconnect or newFluidIndex != self.originalFluidIndexes[i]:
                     self.fluidBoxes[i].setValue(newFluidIndex)
                     self.originalFluidIndexes[i] = newFluidIndex
                 newUserTag = df.loc[i]['User tag']
-                if newUserTag != self.originalUserTags[i]:
+                if self.firstconnect or newUserTag != self.originalUserTags[i]:
                     self.userTags[i].setText(df.loc[i]['User tag'])
                     self.originalUserTags[i] = newUserTag
-                if newSetpoint != self.originalSetpoints[i]:
+                if self.firstconnect or newSetpoint != self.originalSetpoints[i]:
                     self.writeSetpointBoxes[i].setValue(newSetpoint)
                     self.originalSetpoints[i] = newSetpoint
                 newslope = df.loc[i]['Setpoint slope']
-                if newslope != self.originalSlopes[i]:
+                if self.firstconnect or newslope != self.originalSlopes[i]:
                     self.slopeBoxes[i].setValue(newslope)
                     self.originalSlopes[i] = newslope
-
+                self.firstconnect = False
             except TypeError as e:
                 print(df)
                 logger.warning(e)
@@ -128,6 +141,7 @@ class CommonFunctions():
     def connectQt(self):
         self.host = self.hostInput.text()
         self.port = self.portInput.value()
+        self.firstconnect = True
         if self.qclient is None:
             print('setting up qclient')
             self.qclient = Client_qt(self.host,self.port,parent=self)
@@ -534,6 +548,8 @@ class CommonFunctions():
             self.userTags[i].setMaximumWidth(self.spinboxsizex)
             self.userTags[i].setMinimumHeight(self.yspacing)
             self.gridLayout.addWidget(self.userTags[i],self.rows['usertag'],i+1)
+
+            self.initialisevaluedcts()
 
     def formatLayouts(self):
         self.group.setLayout(self.gridLayout)

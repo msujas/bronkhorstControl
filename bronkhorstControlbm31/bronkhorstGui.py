@@ -144,6 +144,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
         elif not self.plot:
             plt.close()
 
+
+
     def connectMFCs(self):
         self.host = self.hostInput.text()
         self.port = self.portInput.value()
@@ -162,11 +164,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
         self.logfile = getLogFile(self.host,self.port, self.logDirectory.text())
         self.headerstring = logHeader(self.logfile, df)
 
-        self.originalUserTags = {}
-        self.originalControlModes = {}
-        self.originalFluidIndexes = {}
-        self.originalSetpoints = {}
-        self.originalSlopes = {}
+        self.initialisevaluedcts()
         for i in df.index.values:
             self.originalSetpoints[i] = df.loc[i]['fSetpoint']
             self.writeSetpointBoxes[i].setValue(self.originalSetpoints[i])
@@ -232,10 +230,11 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
             self.worker.stopsignal.connect(self.closefromthread)
             self.thread.start()
         elif self.useQclient and not self.running: #handles running and not running
-            self.connectMFCs()
-            self.running = True
+            #self.connectMFCs()
+            
             self.setwidgets(False)
             self.connectQt()
+            self.running = True
         elif self.running:
             self.stopConnect()
             self.disableWidgets()
@@ -265,7 +264,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
         self.writeSetpointBoxes[i].setValue(newflow)
         
     def setUserTag(self,i):
-        if not self.running:
+        if not self.running or self.firstconnect:
             return
         value = self.userTags[i].text()
         address = self.addressLabels[i].value()
