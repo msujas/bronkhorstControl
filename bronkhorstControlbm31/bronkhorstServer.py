@@ -145,7 +145,7 @@ class BronkhorstServer():
         conn,addr =sock.accept()
         conn.setblocking(False)
         self.v.print(f'Accepted connection from {addr}',plevel=1)
-        data = types.SimpleNamespace(addr=addr,inb = b'',outb = b'', inb=b'')
+        data = types.SimpleNamespace(addr=addr,inb = b'',outb = b'')
         events = selectors.EVENT_READ | selectors.EVENT_WRITE
         sel.register(conn,events,data=data)
 
