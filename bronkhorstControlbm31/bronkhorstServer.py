@@ -197,7 +197,7 @@ class BronkhorstServer():
                         dprint(f'return message: {fullmessage}')
                         data.outb += bytes(fullmessage,encoding='utf-8')
                     except (ValueError, KeyError):
-                        data.outb = f'invalid message: {bmessage!r}!'.encode()
+                        data.outb += f'invalid message: {bmessage!r}!'.encode()
                     except ConnectionResetError:
                         print(f'connection lost with client: {data.addr}')
                         data.outb = b''
@@ -209,6 +209,7 @@ class BronkhorstServer():
                 closeConnection()
                 return
             dprint('finished reading')
+            dprint(selectors.EVENT_WRITE)
         if mask & selectors.EVENT_WRITE and data.outb:
             self.v.print(f'sending data to {data.addr}', plevel=1)
             try:
