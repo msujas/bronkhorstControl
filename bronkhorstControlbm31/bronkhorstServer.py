@@ -249,13 +249,13 @@ class BronkhorstServer():
         s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.bind((self.host, self.port))
         s.listen()
-        s.settimeout(5)
-        #s.setblocking(False)
+        #s.settimeout(5)
+        s.setblocking(False)
         sel.register(s,selectors.EVENT_READ,data=None)
 
         try:
             while True:
-                events = sel.select(timeout=5)
+                events = sel.select(timeout=1)
                 for key, mask in events:
                     dprint(f'event: fd={key.fileobj.fileno()} mask={mask} data = {key.data is not None}')
                     if key.data is None:
@@ -267,7 +267,6 @@ class BronkhorstServer():
                             logger.info(f'new client {hostname}')
                             self.v.print(f'connection from {hostname}')
                         self.service_connection(key, mask,sel)
-                        #key.data.outb = b''
                 dprint('iter')
         except KeyboardInterrupt:
             logger.info('keyboard interupt')
