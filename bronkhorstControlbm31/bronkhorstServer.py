@@ -14,7 +14,7 @@ fulllogdir = f'{homedir}/{logdir}'
 os.makedirs(fulllogdir,exist_ok=True)
 logfile = f'{homedir}/{logdir}/bronkhorstServer.log'
 
-DEBUG = True
+DEBUG = False
 def dprint(*args,**kwargs):
     if DEBUG:
         print(*args,**kwargs)
@@ -91,7 +91,7 @@ def getArgs(port=PORT):
     print(host)
     return com, PORT, host, acceptedHosts, debug, vlevel
 def run(port = PORT):
-    com, port, host, acceptedHosts, vlevel = getArgs()
+    com, port, host, acceptedHosts, debug,vlevel = getArgs()
     
     if not acceptedHosts:
         ahstring = 'all'
@@ -209,7 +209,6 @@ class BronkhorstServer():
                 closeConnection()
                 return
             dprint('finished reading')
-            dprint(selectors.EVENT_WRITE)
         if mask & selectors.EVENT_WRITE and data.outb:
             self.v.print(f'sending data to {data.addr}', plevel=1)
             try:
@@ -225,8 +224,7 @@ class BronkhorstServer():
                 return
         wanted = selectors.EVENT_READ | (selectors.EVENT_WRITE if data.outb else 0)
         dprint(f'end: mask={mask} registered={key.events} wanted={wanted} outb={data.outb!r}')
-        if wanted != key.events:
-            
+        if wanted != key.events: 
             sel.modify(sock, wanted, data = data)
         dprint('service_connection done')
 

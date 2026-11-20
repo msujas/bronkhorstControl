@@ -83,6 +83,7 @@ class Worker(QtCore.QObject):
 class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
     def setupUi(self):
         self.worker:Worker|None=None
+        self.multi = False
         self.useQclient = True
         eventlogfile = f'{homedir}/{logdir}/mfcgui.log'
         logging.basicConfig(filename=eventlogfile, level = logging.INFO, format = '%(asctime)s %(levelname)-8s %(message)s',
@@ -133,6 +134,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
         QtCore.QMetaObject.connectSlotsByName(self)
 
         self.readConfig()
+        self.initialisevaluedcts()
         self.startButton.clicked.connect(self.connectLoop)
         self.lockFluidIndex.stateChanged.connect(self.lockFluidIndexes)
         self.plotBox.stateChanged.connect(self.plotSetup)
@@ -149,6 +151,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
     def connectMFCs(self):
         self.host = self.hostInput.text()
         self.port = self.portInput.value()
+        
         try:
             df = MFCclient(1,self.host,self.port, connid=self.connid).pollAll()
             self.fmeas = df['fMeasure'].values
@@ -164,7 +167,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
         self.logfile = getLogFile(self.host,self.port, self.logDirectory.text())
         self.headerstring = logHeader(self.logfile, df)
 
-        self.initialisevaluedcts()
+        
         for i in df.index.values:
             self.originalSetpoints[i] = df.loc[i]['fSetpoint']
             self.writeSetpointBoxes[i].setValue(self.originalSetpoints[i])
@@ -200,10 +203,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
             self.startButton.setText('connect MFCs')
         #self.logDirButton.setEnabled(enabled)
     def connectLoop(self):
+        self.logfile = getLogFile(self.hostInput.text() ,self.portInput.value(), self.logDirectory.text())
         if not self.running and not self.useQclient:
             self.host = self.hostInput.text()
             self.port = self.portInput.value()
             self.waittime = self.pollTimeBox.value()
+            self.firstconnect = True
+            '''
             try:
                 self.connectMFCs()
             except (OSError, AttributeError):
@@ -219,6 +225,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
             except Exception as e:
                 logger.exception(e)
                 raise e
+            '''
             self.running = True
             
             self.setwidgets(False)
@@ -231,13 +238,14 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
             self.thread.start()
         elif self.useQclient and not self.running: #handles running and not running
             #self.connectMFCs()
-            
+
             self.setwidgets(False)
             self.connectQt()
             self.running = True
         elif self.running:
             self.stopConnect()
             self.disableWidgets()
+            
             logger.info(f'connection closed to server at host: {self.host}, port {self.port}')
 
     def setClientLogDir(self):

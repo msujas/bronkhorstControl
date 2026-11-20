@@ -30,3 +30,4 @@ rungui*
 bronkhorstControlbm31/mfcgui.exe.spec
 .idea
 testgui.py
+tcp_client_gui.py

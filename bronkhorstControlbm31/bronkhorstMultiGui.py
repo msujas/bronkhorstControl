@@ -21,7 +21,6 @@ class MultiWorker(QtCore.QObject):
     outputs = QtCore.pyqtSignal(pd.DataFrame)
     def __init__(self,hosts: list,ports: list, waittime = 1, vlevel = 0):
         super(MultiWorker,self).__init__()
-
         self.hosts = hosts
         self.ports=ports
         self.waittime = waittime
@@ -67,6 +66,8 @@ class MultiWorker(QtCore.QObject):
 class MultiServerGui(QtWidgets.QMainWindow, CommonFunctions):
     def __init__(self):
         super().__init__()
+        self.multi = True
+        self.useQclient = False
         eventlogfile = f'{homedir}/{logdir}/multigui.log'
         logging.basicConfig(filename=eventlogfile, level = logging.INFO, format = '%(asctime)s %(levelname)-8s %(message)s',
                             datefmt = '%Y/%m/%d_%H:%M:%S')
@@ -273,8 +274,19 @@ class MultiServerGui(QtWidgets.QMainWindow, CommonFunctions):
 
     def connectLoop(self):
         if not self.running:
+            self.firstconnect = True
             self.getHPs()
+            self.tlog = 0
+            datestring =getdatestring()
+            hpstring = ''
+            connectprint = 'starting connection to: '
+            for host, port in zip(self.hosts,self.ports):
+                hpstring += f'_{host}{port}'
+                connectprint += f'{host}:{port}, '
+            self.logbasefile = f'{datestring}_multi{hpstring}.log'
+            self.logfile = f'{self.logDirectory.text()}/{self.logbasefile}'
             self.waittime = self.pollTimeBox.value()
+            '''
             try:
                 self.connect()
             except (OSError, AttributeError):
@@ -290,6 +302,8 @@ class MultiServerGui(QtWidgets.QMainWindow, CommonFunctions):
             except Exception as e:
                 logger.exception(e)
                 raise e
+            '''
+            print(connectprint)
             self.running = True
             self.startButton.setText('stop connection')
             self.hostInput.setEnabled(False)

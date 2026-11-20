@@ -9,11 +9,12 @@ logger = logging.getLogger()
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
+import pandas as pd
 
 fulllogdir = f'{homedir}/{logdir}'
 os.makedirs(fulllogdir,exist_ok=True)
 
-DEBUG = True
+DEBUG = False
 
 class CommonFunctions():
     def parseArguments(self):
@@ -72,7 +73,22 @@ class CommonFunctions():
             self.originalFluidIndexes[i] = -1
             self.originalSetpoints[i] = -1
             self.originalSlopes[i] = -1
-    def updateMFCs(self,df):
+    def updateMFCs(self,df:pd.DataFrame):
+        if self.firstconnect:
+            self.initdf = df
+            self.fmeas = df['fMeasure'].values
+            self.fsp = df['fSetpoint'].values
+            self.tlog = 0
+
+            self.headerstring = logHeader(self.logfile, df)
+            self.plot = self.plotBox.isChecked()
+            if self.plot:
+                if self.multi:
+                    self.plotSetup()
+                else:
+                    self.plotter = Plotter(host = self.host, port = self.port, log=False, initDF=df)
+            self.setMFCwidgets(True,df)
+
         if len(df.columns) == 0:
             self.stopConnect()
             self.disableWidgets()
@@ -130,18 +146,31 @@ class CommonFunctions():
         
         if self.plot and self.running:
             self.plotter.plotAllSingle(df)
+        self.firstconnect = False
+
+    def setMFCwidgets(self, enabled, df:pd.DataFrame):
+        self.enabledMFCs = []
+        for i in df.index.values:
+            self.writeSetpointBoxes[i].setEnabled(enabled)
+            self.userTags[i].setEnabled(enabled)
+            self.fluidBoxes[i].setEnabled(not self.lockFluidIndex.isChecked())
+            self.enabledMFCs.append(i)
 
     def updateQ(self, pollstr:str):
         #print(pollstr)
         df = MFCclient.pollAlldecode(pollstr)
         if self.plot and self.firstconnect:
             self.plotter = Plotter(host = self.host, port = self.port, log=False, initDF=df)
+        if self.firstconnect:
+            self.setMFCwidgets(True,df)
+
         self.headerstring = logHeader(self.logfile, df)
-        self.fmeas = df['fMeasure']
-        self.fsp = df['fSetpoint']
+        self.fmeas = df['fMeasure'].values
+        self.fsp = df['fSetpoint'].values
         if DEBUG:
             print(df)
         self.updateMFCs(df)
+        self.firstconnect = False
 
     def connectQt(self):
         self.tlog = 0
@@ -154,8 +183,10 @@ class CommonFunctions():
         self.firstconnect = True
         if self.qclient is None:
             print('setting up qclient')
-            self.qclient = Client_qt(self.host,self.port,parent=self)
+            self.qclient = Client_qt(self.host,self.port, interval_ms=int(self.pollTimeBox.value()*1000),parent=self)
             self.qclient.line_received.connect(self.updateQ)
+            self.qclient.status_changed.connect(self.processQStatusChange)
+            
 
             self.qclient.start()
         else:
@@ -163,7 +194,15 @@ class CommonFunctions():
             self.qclient.deleteLater()
             self.qclient = None
 
-            
+    def processQStatusChange(self,message:str):
+        if message.lower().startswith('error'):
+            #print(message)
+            print('stopping')
+            self.stopConnect()
+            self.disableWidgets()
+            logger.info('client disconnected')
+
+    
     def stopConnect(self):
         if not self.worker is None:
             self.worker.stop()
@@ -179,6 +218,7 @@ class CommonFunctions():
         self.running = False
 
     def guiLayout(self):
+        
         self.qclient :Client_qt|None = None
         self.configfile = f'{fulllogdir}/guiconfig.log'
         self.xspacing = 90
@@ -395,20 +435,20 @@ class CommonFunctions():
                 "20;Valve steering":20,
                 "21;An. valve steering":21}
         
-        self.winkbuttons= {}
-        self.addressLabels = {}
-        self.setpointBoxes = {}
-        self.measureBoxes = {}
-        self.setpointpctBoxes = {}
-        self.measurepctBoxes = {}
-        self.valveBoxes = {}
-        self.controlBoxes = {}
-        self.fluidBoxes = {}
-        self.fluidNameBoxes = {}
-        self.writeSetpointBoxes = {}
-        self.writeSetpointpctBoxes = {}
-        self.userTags = {}
-        self.slopeBoxes = {}
+        self.winkbuttons: dict[int,QtWidgets.QPushButton]= {}
+        self.addressLabels: dict[int,QtWidgets.QSpinBox] = {}
+        self.setpointBoxes: dict[int,QtWidgets.QDoubleSpinBox] = {}
+        self.measureBoxes: dict[int,QtWidgets.QDoubleSpinBox] = {}
+        self.setpointpctBoxes: dict[int,QtWidgets.QDoubleSpinBox] = {}
+        self.measurepctBoxes: dict[int,QtWidgets.QDoubleSpinBox] = {}
+        self.valveBoxes: dict[int,QtWidgets.QDoubleSpinBox] = {}
+        self.controlBoxes: dict[int,QtWidgets.QComboBox] = {}
+        self.fluidBoxes: dict[int,QtWidgets.QSpinBox] = {}
+        self.fluidNameBoxes: dict[int,QtWidgets.QLabel] = {}
+        self.writeSetpointBoxes: dict[int,QtWidgets.QDoubleSpinBox] = {}
+        self.writeSetpointpctBoxes:dict[int,QtWidgets.QDoubleSpinBox] = {}
+        self.userTags: dict[int,QtWidgets.QLineEdit] = {}
+        self.slopeBoxes: dict[int,QtWidgets.QSpinBox] = {}
 
         self.enabledMFCs = []
 

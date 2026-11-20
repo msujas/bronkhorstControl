@@ -2,12 +2,12 @@ from PyQt6.QtNetwork import QTcpSocket, QAbstractSocket
 from PyQt6.QtCore import QObject, QTimer, pyqtSignal, pyqtSlot
 from collections import deque
 
-DEBUG = True
+DEBUG = False
 
 class Client_qt(QObject):
     line_received = pyqtSignal(str)
     status_changed = pyqtSignal(str)
-    def __init__(self, host,port, interval_ms :int = 1500, parent=None):
+    def __init__(self, host,port, interval_ms :int = 1000, parent=None):
         super().__init__(parent)
         self.host=host
         self.port=port
@@ -47,9 +47,11 @@ class Client_qt(QObject):
         self.doconnect=False
         self.poll_timer.stop()
         self.reconnect_timer.stop()
+        self.replytimer.stop()
         self.socket.disconnectFromHost()
 
     def _onreplytimeout(self):
+        print('no reply')
         self.status_changed.emit(f"no reply to {self._inflight!r}; reconnecting")
         self.socket.abort()
         if self.doconnect:
@@ -90,6 +92,7 @@ class Client_qt(QObject):
 
     @pyqtSlot()
     def _on_connected(self):
+        print('connected')
         self.status_changed.emit("Connected")
         self._buffer.clear()
         self.poll_timer.start()
@@ -98,6 +101,7 @@ class Client_qt(QObject):
     @pyqtSlot()
     def _on_disconnected(self):
         self.poll_timer.stop()
+        print('disconnected')
         self.status_changed.emit("Disconnected")
         if self.doconnect:
             self.reconnect_timer.start()
@@ -114,10 +118,13 @@ class Client_qt(QObject):
             self._inflight=None
             self.replytimer.stop()
             self.line_received.emit(line)
+            self.poll_timer.start()
         self._send_next()
 
     @pyqtSlot(QAbstractSocket.SocketError)
     def _on_error(self):
-        self.status_changed.emit(f"Error: {self.socket.errorString()}")
+        message = f"Error: {self.socket.errorString()}"
+        print(message)
+        self.status_changed.emit(message)
         if self.doconnect and self.socket.state == QAbstractSocket.SocketState.UnconnectedState:
             self.reconnect_timer.start()
