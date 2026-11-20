@@ -82,11 +82,9 @@ class CommonFunctions():
 
             self.headerstring = logHeader(self.logfile, df)
             self.plot = self.plotBox.isChecked()
-            if self.plot:
-                if self.multi:
-                    self.plotSetup()
-                else:
-                    self.plotter = Plotter(host = self.host, port = self.port, log=False, initDF=df)
+
+            self.plotSetup()
+
             self.setMFCwidgets(True,df)
 
         if len(df.columns) == 0:
@@ -159,8 +157,7 @@ class CommonFunctions():
     def updateQ(self, pollstr:str):
         #print(pollstr)
         df = MFCclient.pollAlldecode(pollstr)
-        if self.plot and self.firstconnect:
-            self.plotter = Plotter(host = self.host, port = self.port, log=False, initDF=df)
+
         if self.firstconnect:
             self.setMFCwidgets(True,df)
 

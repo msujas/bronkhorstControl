@@ -249,13 +249,13 @@ class BronkhorstServer():
         s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.bind((self.host, self.port))
         s.listen()
-        #s.settimeout(5)
-        s.setblocking(False)
+        s.settimeout(5)
+        #s.setblocking(False)
         sel.register(s,selectors.EVENT_READ,data=None)
 
         try:
             while True:
-                events = sel.select(timeout=None)
+                events = sel.select(timeout=5)
                 for key, mask in events:
                     dprint(f'event: fd={key.fileobj.fileno()} mask={mask} data = {key.data is not None}')
                     if key.data is None:
