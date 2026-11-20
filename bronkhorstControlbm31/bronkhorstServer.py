@@ -142,7 +142,12 @@ class BronkhorstServer():
     def __init__(self):
         com,self.port, self.host, self.acceptedHosts, self.debug, vlevel = getArgs()
         mfcMain = startMfc(com)
-        self.mfc = MFC(0,mfcMain, vlevel=vlevel)
+        try:
+            self.mfc = MFC(0,mfcMain, vlevel=vlevel)
+        except Exception as e:
+            print(e)
+            print(f"couldn't connect to MFCs on {com}. Check connection")
+            exit()
         self.v = Verbose(vlevel)
         
     def accept_wrapper(self,sock,sel):
