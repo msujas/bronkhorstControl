@@ -151,6 +151,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
     def connectMFCs(self):
         self.host = self.hostInput.text()
         self.port = self.portInput.value()
+        self.firstconnect=True
         
         try:
             df = MFCclient(1,self.host,self.port, connid=self.connid).pollAll()
@@ -302,8 +303,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
         self.host = self.hostInput.text()
         self.port = self.portInput.value()
         plot = self.plotBox.isChecked()
-        mfc = MFCclient(1,self.host,self.port, connid=self.connid)
-        mfc.readAddresses()
+        try:
+            mfc = MFCclient(1,self.host,self.port, connid=self.connid)
+            mfc.readAddresses()
+        except:
+            print(f"couldn't connect to bronkhorstServer at {self.host}:{self.port}")
+            return
         self.plotBox.setChecked(False)
         self.connectMFCs()
         self.disableWidgets()
