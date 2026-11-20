@@ -33,10 +33,10 @@ def startMfc(com = 'COM1'):
 
 
 class MFC():
-    def __init__(self,address, mfcMain, vlevel = 0):
+    def __init__(self,address, com:str, vlevel = 0):
         self.address = address
-        self.mfcMain = mfcMain
-        self.com = mfcMain.comport
+        self.mfcMain = startMfc(com)
+        self.com = com
         self.pollparams = ['User tag', 'Control mode', 'Fluid name', 'Fluidset index','fMeasure', 'fSetpoint', 
                   'Measure', 'Setpoint', 'Valve output', 'Setpoint slope']
         self.ddenrs = paramDF['dde_nr'].loc[self.pollparams].values
