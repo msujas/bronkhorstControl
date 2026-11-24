@@ -27,7 +27,7 @@ mfctypes = {'fMeasure': float, 'address':np.uint8, 'fSetpoint':float, 'Setpoint_
 
 class MFCclient():
     def __init__(self,address, host=HOST,port=PORT, connid = socket.gethostname(), m = 1, c = 0, 
-                 getMax = False, vlevel = 1):
+                 getMax = False, vlevel = 1, com:int|None=None):
         #dt = datetime.fromtimestamp(time.time())
         eventlogfile = f'{homedir}/{logdir}/clientEvents.log'
         logging.basicConfig(filename=eventlogfile, level = logging.INFO, format = '%(asctime)s %(levelname)-8s %(message)s',
@@ -41,6 +41,7 @@ class MFCclient():
         self.c = c
         self.types = mfctypes
         self.maxCapacity = 0
+        self.com=com
         if getMax:
             self.readMaxCapacity()
         self.v = Verbose(vlevel)
@@ -256,6 +257,8 @@ class MFCclient():
     def makeMessage(self, *args):
         sep = ';'
         string = f'{self.address}'
+        if self.com:
+            string += f';COM{self.com}'
         for arg in args:
             string += f'{sep}{arg}'
         return string

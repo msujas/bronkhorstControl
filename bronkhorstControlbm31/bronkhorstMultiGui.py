@@ -85,20 +85,21 @@ class MultiServerGui(QtWidgets.QMainWindow, CommonFunctions):
         self.hostlabeltext = 'host names'
         self.portlabeltext = 'port values'
         self.rows = {'wink':0,
-                'host':1,
-                'port':2,
-                'address':3,
-                'slope':4,
-                'setpoint':5,
-                'measure':6,
-                'setpointpct':7,
-                'measurepct':8,
-                'valve':9,
-                'controlMode':10,
-                'fluidIndex':11,
-                'fluidName':12,
-                'writesp':13,
-                'usertag':14}
+                     'com':1,
+                'host':2,
+                'port':3,
+                'address':4,
+                'slope':5,
+                'setpoint':6,
+                'measure':7,
+                'setpointpct':8,
+                'measurepct':9,
+                'valve':10,
+                'controlMode':11,
+                'fluidIndex':12,
+                'fluidName':13,
+                'writesp':14,
+                'usertag':15}
         super().guiLayout()
         self.portInput = QtWidgets.QLineEdit()
         self.portInput.setObjectName('portInput')

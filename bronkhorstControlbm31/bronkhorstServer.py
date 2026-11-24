@@ -14,11 +14,6 @@ fulllogdir = f'{homedir}/{logdir}'
 os.makedirs(fulllogdir,exist_ok=True)
 logfile = f'{homedir}/{logdir}/bronkhorstServer.log'
 
-DEBUG = False
-def dprint(*args,**kwargs):
-    if DEBUG:
-        print(*args,**kwargs)
-
 HOST = 'localhost'
 PORT = 61245
 com = 'COM1'
@@ -90,6 +85,7 @@ def getArgs(port=PORT):
         return
     print(host)
     return com, PORT, host, acceptedHosts, debug, vlevel
+
 def run(port = PORT):
     com, port, host, acceptedHosts, debug,vlevel = getArgs()
     
@@ -139,8 +135,11 @@ def run(port = PORT):
                         conn.sendall(byteResult)
 
 class BronkhorstServer():
-    def __init__(self):
-        com,self.port, self.host, self.acceptedHosts, self.debug, vlevel = getArgs()
+    def __init__(self, host,port, com, acceptedHosts, debug, vlevel):
+        self.host=host
+        self.port=port
+        self.acceptedHosts=acceptedHosts
+        self.debug=debug
         mfcMain = startMfc(com)
         print('connecting to MFCs...')
         try:
@@ -191,17 +190,15 @@ class BronkhorstServer():
                 data.inb += recvData
                 while b'!' in data.inb:
                     bmessage, data.inb = data.inb.split(b'!',1)
-                    dprint(f'message received {bmessage!r}')
+                    self.v.print(f'message received {bmessage!r}',plevel=2)
                     strmessage = bmessage.decode()
                     if not strmessage:
                         continue
                     try:
-                        address = int(strmessage.split(';')[0])
-                        self.mfc.address = address
-                        mainmessage = self.mfc.strToMethod(strmessage)
+                        mainmessage = self.processMessage(strmessage)
                         #endmessageMarker = '!'
                         fullmessage = f'{mainmessage}!'
-                        dprint(f'return message: {fullmessage}')
+                        self.v.print(f'return message: {fullmessage}',plevel=2)
                         data.outb += bytes(fullmessage,encoding='utf-8')
                     except (ValueError, KeyError):
                         data.outb += f'invalid message: {bmessage!r}!'.encode()
@@ -215,11 +212,11 @@ class BronkhorstServer():
                 logger.debug(f'no data received from {data.addr}')
                 closeConnection()
                 return
-            dprint('finished reading')
+            self.v.print('finished reading',plevel=2)
         if mask & selectors.EVENT_WRITE and data.outb:
             self.v.print(f'sending data to {data.addr}', plevel=1)
             try:
-                dprint(f'sending {data.outb!r}')
+                self.v.print(f'sending {data.outb!r}',plevel=2)
                 sent = sock.send(data.outb)
                 data.outb = data.outb[sent:]
                 #logger.debug(f'data sent to {data.addr}')
@@ -230,10 +227,16 @@ class BronkhorstServer():
                 closeConnection()
                 return
         wanted = selectors.EVENT_READ | (selectors.EVENT_WRITE if data.outb else 0)
-        dprint(f'end: mask={mask} registered={key.events} wanted={wanted} outb={data.outb!r}')
+        self.v.print(f'end: mask={mask} registered={key.events} wanted={wanted} outb={data.outb!r}',plevel=2)
         if wanted != key.events: 
             sel.modify(sock, wanted, data = data)
-        dprint('service_connection done')
+        self.v.print('service_connection done',plevel=2)
+
+    def processMessage(self,message:str):
+        address = int(message.split(';')[0])
+        self.mfc.address = address
+        mainmessage = self.mfc.strToMethod(message)
+        return mainmessage
 
     def multiServer(self):
         
@@ -264,7 +267,7 @@ class BronkhorstServer():
             while True:
                 events = sel.select(timeout=1)
                 for key, mask in events:
-                    dprint(f'event: fd={key.fileobj.fileno()} mask={mask} data = {key.data is not None}')
+                    self.v.print(f'event: fd={key.fileobj.fileno()} mask={mask} data = {key.data is not None}',plevel=2)
                     if key.data is None:
                         self.accept_wrapper(key.fileobj,sel)
                     else:
@@ -274,7 +277,7 @@ class BronkhorstServer():
                             logger.info(f'new client {hostname}')
                             self.v.print(f'connection from {hostname}')
                         self.service_connection(key, mask,sel)
-                dprint('iter')
+                self.v.print('iter',plevel=2)
         except KeyboardInterrupt:
             logger.info('keyboard interupt')
             print("caught keyboard interrupt, exiting")
@@ -284,5 +287,51 @@ class BronkhorstServer():
         finally:
             sel.close()
 
+
+def getArgs_multi():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('host',default='localhost',nargs='?')
+    ap.add_argument('-c','--coms', help='list of com integers, comma separated. E.g. 3,5')
+    ap.add_argument('-p','--port', type=int, help='port number for the server')
+    ap.add_argument('-v','--vlevel',default=0, help='verbose level (default 0)')
+    ap.add_argument('-d','--debug', action='store_true', help='debug logging')
+    ap.add_argument('-ah','--acceptedHosts', default=None, help='comma separated list of accepted hosts')
+    ap.parse_args()
+    comlist = [f'COM{c}' for c in ap.coms.split(',')]
+    return ap.host, ap.port, ap.comlist, comlist, ap.vlevel, ap.debug, ap.acceptedHosts
+
+
+class MultiComServer(BronkhorstServer):
+    def __init__(self, *coms:str, host:str,port:int, vlevel:int, debug:bool, acceptedHosts):
+        self.host=host
+        self.port=port
+        self.v = Verbose(level=vlevel)
+        self.debug = debug
+        self.acceptedHosts = acceptedHosts
+        self.mfclist:dict[str,MFC] = {}
+        self.mfcmains = {}
+        for com in coms:
+            self.mfcmains[com] = startMfc(com)
+            self.mfclist[com] = MFC(0,self.mfcmains[com],vlevel)
+    
+    def processMessage(self, message):
+        msplit = message.split(';')
+        address = int(msplit[0])
+        com = msplit[1]
+        endmessage = msplit[2]
+        if not com in self.mfclist:
+            print(f'{com} not on server')
+            return None
+        mfc = self.mfclist[com]
+        mfc.address = address
+        return mfc.strToMethod(message)
+
 def runMulti():
-    BronkhorstServer().multiServer()
+    com,port,host, acceptedHosts, debug, vlevel = getArgs()
+    bserver = BronkhorstServer(host,port,com,acceptedHosts,debug,vlevel)
+    bserver.multiServer()
+
+def runMultiComServer():
+    host,port, comlist, vlevel,debug, acceptedHosts = getArgs_multi()
+    server = MultiComServer(*comlist, host=host,port=port, vlevel=vlevel,debug=debug, acceptedHosts=acceptedHosts)
+    server.multiServer()

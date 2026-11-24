@@ -102,18 +102,19 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
         self.hostlabeltext = 'host name'
         self.portlabeltext = 'port value'
         self.rows = {'wink':0,
-                'address':1,
-                'slope':2,
-                'setpoint':3,
-                'measure':4,
-                'setpointpct':5,
-                'measurepct':6,
-                'valve':7,
-                'controlMode':8,
-                'fluidIndex':9,
-                'fluidName':10,
-                'writesp':11,
-                'usertag':12}
+                     'com':1,
+                'address':2,
+                'slope':3,
+                'setpoint':4,
+                'measure':5,
+                'setpointpct':6,
+                'measurepct':7,
+                'valve':8,
+                'controlMode':9,
+                'fluidIndex':10,
+                'fluidName':11,
+                'writesp':12,
+                'usertag':13}
 
         #self.maxMFCs, self.vlevel = parseArguments()
         super().parseArguments()
@@ -277,8 +278,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
             return
         value = self.userTags[i].text()
         address = self.addressLabels[i].value()
+        com = self.comboxes[i].text()
+        comi = int(com.replace('COM',''))
         print(f'setting flow to {value} on address {address}')
-        newtag = MFCclient(address,self.host, self.port, connid=self.connid).writeName(value)
+        newtag = MFCclient(address,self.host, self.port, connid=self.connid, com=comi).writeName(value)
         self.userTags[i].setText(newtag)
 
     def setFlowAll(self):

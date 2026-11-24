@@ -100,6 +100,7 @@ class CommonFunctions():
                 newControlMode = df.loc[i]['Control mode']
                 newFluidIndex = df.loc[i]['Fluidset index']
                 self.addressLabels[i].setValue(df.loc[i]['address'])
+                self.comboxes[i].setText(df.loc[i]['COM'])
                 self.setpointBoxes[i].setValue(newSetpoint)
                 self.measureBoxes[i].setValue(df.loc[i]['fMeasure'])
                 self.valveBoxes[i].setValue(df.loc[i]['Valve output'])
@@ -324,6 +325,11 @@ class CommonFunctions():
         self.winkLabel.setMinimumHeight(self.yspacing)
         self.leftLayout.addWidget(self.winkLabel,self.rows['wink'],0)
 
+        self.comlabel = QtWidgets.QLabel()
+        self.comlabel.setObjectName('comlabel')
+        self.comlabel.setText('COM')
+        self.leftLayout.addWidget(self.comlabel,self.rows['com'],0)
+
         self.addressLabel = QtWidgets.QLabel()
         self.addressLabel.setObjectName('addressLabel')
         self.addressLabel.setText('address')
@@ -446,6 +452,7 @@ class CommonFunctions():
         self.writeSetpointpctBoxes:dict[int,QtWidgets.QDoubleSpinBox] = {}
         self.userTags: dict[int,QtWidgets.QLineEdit] = {}
         self.slopeBoxes: dict[int,QtWidgets.QSpinBox] = {}
+        self.comboxes: dict[int,QtWidgets.QLineEdit] = {}
 
         self.enabledMFCs = []
 
@@ -459,6 +466,13 @@ class CommonFunctions():
             self.winkbuttons[i].setEnabled(False)
             self.gridLayout.addWidget(self.winkbuttons[i], self.rows['wink'],i+1)
             self.winkbuttons[i].clicked.connect(partial(self.wink,i))
+
+            self.comboxes[i] = QtWidgets.QLineEdit()
+            self.comboxes[i].setObjectName(f'comboxes{i}')
+            self.comboxes[i].setReadOnly(True)
+            self.comboxes[i].setMaximumWidth(self.spinboxsizex)
+            self.comboxes[i].setMinimumHeight(self.yspacing)
+            self.gridLayout.addWidget(self.comboxes[i], self.rows['com'],i+1)
 
             self.addressLabels[i] = QtWidgets.QSpinBox()
             self.addressLabels[i].setObjectName(f'addressLabel{i}')
