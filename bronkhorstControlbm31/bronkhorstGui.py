@@ -147,7 +147,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
         elif not self.plot:
             plt.close()
 
-
+    def getcom(self,index):
+        return int(self.comboxes[index].text().replace('COM',''))
 
     def connectMFCs(self):
         self.host = self.hostInput.text()
@@ -269,8 +270,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
             return
         value = self.writeSetpointBoxes[i].value()
         address = self.addressLabels[i].value()
+        com = self.getcom(i)
         print(f'setting flow to {value} on address {address}')
-        newflow = MFCclient(address,self.host, self.port, connid=self.connid).writeSetpoint(value)
+        newflow = MFCclient(address,self.host, self.port, connid=self.connid,com=com).writeSetpoint(value)
         self.writeSetpointBoxes[i].setValue(newflow)
         
     def setUserTag(self,i):
@@ -278,10 +280,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
             return
         value = self.userTags[i].text()
         address = self.addressLabels[i].value()
-        com = self.comboxes[i].text()
-        comi = int(com.replace('COM',''))
+        com = self.getcom(i)
         print(f'setting flow to {value} on address {address}')
-        newtag = MFCclient(address,self.host, self.port, connid=self.connid, com=comi).writeName(value)
+        newtag = MFCclient(address,self.host, self.port, connid=self.connid, com=com).writeName(value)
         self.userTags[i].setText(newtag)
 
     def setFlowAll(self):
@@ -297,9 +298,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
         #text = self.controlBoxes[i].currentText()
         #value = int(text.split(';')[0])
         address = self.addressLabels[i].value()
+        com = self.getcom(i)
         print(f'setting address {address} to control mode {value}')
         
-        newmode = MFCclient(address, self.host,self.port, connid=self.connid).writeControlMode(value)
+        newmode = MFCclient(address, self.host,self.port, connid=self.connid,com=com).writeControlMode(value)
         self.controlBoxes[i].setCurrentIndex(newmode)
 
     def repoll(self):
@@ -324,21 +326,24 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
         value = self.fluidBoxes[i].value()
         address = self.addressLabels[i].value()
         print(f'setting address {address} to fluid {value}')
-        newfluid = MFCclient(address,self.host,self.port, connid=self.connid).writeFluidIndex(value)
+        com = self.getcom(i)
+        newfluid = MFCclient(address,self.host,self.port, connid=self.connid,com=com).writeFluidIndex(value)
         newfluidIndex = newfluid['Fluidset index']
         self.fluidBoxes[i].setValue(newfluidIndex)
     
     def wink(self,i):
         address = self.addressLabels[i].value()
-        MFCclient(address,self.host,self.port, connid=self.connid).wink()
+        com = self.getcom(i)
+        MFCclient(address,self.host,self.port, connid=self.connid,com=com).wink()
 
     def setSlope(self,i):
         if not self.running:
             return
         value = self.slopeBoxes[i].value()
         address = self.addressLabels[i].value()
+        com=self.getcom(i)
         print(f'setting slope to {value} on address {address}')
-        newslope = MFCclient(address,self.host,self.port,connid=self.connid).writeSlope(value)
+        newslope = MFCclient(address,self.host,self.port,connid=self.connid,com=com).writeSlope(value)
         self.slopeBoxes[i].setValue(newslope)
         
     def closeEvent(self,event:QtCore.QEvent):

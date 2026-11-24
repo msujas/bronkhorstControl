@@ -294,7 +294,7 @@ def getArgs_multi():
     ap.add_argument('host',default='localhost',nargs='?')
     ap.add_argument('-c','--coms',type=str, help='list of com integers, comma separated. E.g. 3,5')
     ap.add_argument('-p','--port', type=int, help='port number for the server', default=PORT)
-    ap.add_argument('-v','--vlevel',default=0, help='verbose level (default 0)')
+    ap.add_argument('-v','--vlevel',default=0, help='verbose level (default 0)', type = int)
     ap.add_argument('-d','--debug', action='store_true', help='debug logging')
     ap.add_argument('-ah','--acceptedHosts', default=None, help='comma separated list of accepted hosts')
     args = ap.parse_args()
@@ -324,12 +324,15 @@ class MultiComServer(BronkhorstServer):
             endmessage = msplit[1]
             com=None
 
-        if endmessage == 'pollAll':
+        if 'pollAll' in message:
             dflist:list[pd.DataFrame] = []
             for com in self.mfclist:
                 dflist.append(self.mfclist[com].pollAll())
-            df = pd.concat(dflist, axis=0)
-            return f'{dftostring(df)}'
+            df = pd.concat(dflist, axis=0, ignore_index=True)
+            self.v.print(df,plevel=2)
+            dfstring = dftostring(df)
+            self.v.print(dfstring,plevel=2)
+            return f'{dfstring}'
         
         if not com in self.mfclist:
             print(f'{com} not on server')
