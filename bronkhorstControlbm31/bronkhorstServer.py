@@ -1,10 +1,11 @@
 import socket
-from bronkhorstControlbm31.bronkhorst import MFC, startMfc, configfile
+from bronkhorstControlbm31.bronkhorst import MFC, startMfc, configfile, dftostring
 import os, pathlib
 import argparse
 import selectors, types
 import subprocess
 import logging
+import pandas as pd
 from .verbose import Verbose
 
 logger = logging.getLogger()
@@ -311,14 +312,25 @@ class MultiComServer(BronkhorstServer):
         self.mfclist:dict[str,MFC] = {}
         self.mfcmains = {}
         for com in coms:
-            self.mfcmains[com] = startMfc(com)
-            self.mfclist[com] = MFC(0,self.mfcmains[com],vlevel)
+            self.mfclist[com] = MFC(0,startMfc(com),vlevel)
     
-    def processMessage(self, message):
+    def processMessage(self, message:str):
         msplit = message.split(';')
         address = int(msplit[0])
-        com = msplit[1]
-        endmessage = msplit[2]
+        if msplit[1].startswith('COM'):
+            com = msplit[1]
+            endmessage = msplit[2]
+        else:
+            endmessage = msplit[1]
+            com=None
+
+        if endmessage == 'pollAll':
+            dflist:list[pd.DataFrame] = []
+            for com in self.mfclist:
+                dflist.append(self.mfclist[com].pollAll())
+            df = pd.concat(dflist, axis=0)
+            return f'{dftostring(df)}'
+        
         if not com in self.mfclist:
             print(f'{com} not on server')
             return None

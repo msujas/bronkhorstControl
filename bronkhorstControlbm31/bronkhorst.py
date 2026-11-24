@@ -30,7 +30,12 @@ paramDF = getParamDF()
 def startMfc(com = 'COM1'):
     mfcMain = propar.instrument(com)
     return mfcMain
-
+def dftostring(df:pd.DataFrame):
+    dfstring = ';'.join(df.columns)
+    for i in df.index.values:
+        dfstring += '\n'
+        dfstring += ';'.join([str(x) for x in df.loc[i]])
+    return dfstring
 
 class MFC():
     def __init__(self,address, mfcMain:propar.instrument, vlevel = 0):
@@ -200,11 +205,7 @@ class MFC():
     def pollAllServer(self):
         df = self.pollAll()
         self.v.print(df, plevel=1)
-        dfstring = ';'.join(df.columns)
-        for i in df.index.values:
-            dfstring += '\n'
-            dfstring += ';'.join([str(x) for x in df.loc[i]])
-        return dfstring
+        return dftostring(df)
     def readSlope(self):
         return self.readParam('Setpoint slope')
     def writeSlope(self,value):
