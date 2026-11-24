@@ -299,7 +299,7 @@ def getArgs_multi():
     ap.add_argument('-ah','--acceptedHosts', default=None, help='comma separated list of accepted hosts')
     args = ap.parse_args()
     comlist = [f'COM{c}' for c in args.coms.split(',')]
-    return args.host, args.port, args.comlist, comlist, args.vlevel, args.debug, args.acceptedHosts
+    return args.host, args.port, comlist, args.vlevel, args.debug, args.acceptedHosts
 
 
 class MultiComServer(BronkhorstServer):
