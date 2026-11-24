@@ -292,14 +292,14 @@ class BronkhorstServer():
 def getArgs_multi():
     ap = argparse.ArgumentParser()
     ap.add_argument('host',default='localhost',nargs='?')
-    ap.add_argument('-c','--coms', help='list of com integers, comma separated. E.g. 3,5')
-    ap.add_argument('-p','--port', type=int, help='port number for the server')
+    ap.add_argument('-c','--coms',type=str, help='list of com integers, comma separated. E.g. 3,5')
+    ap.add_argument('-p','--port', type=int, help='port number for the server', default=PORT)
     ap.add_argument('-v','--vlevel',default=0, help='verbose level (default 0)')
     ap.add_argument('-d','--debug', action='store_true', help='debug logging')
     ap.add_argument('-ah','--acceptedHosts', default=None, help='comma separated list of accepted hosts')
-    ap.parse_args()
-    comlist = [f'COM{c}' for c in ap.coms.split(',')]
-    return ap.host, ap.port, ap.comlist, comlist, ap.vlevel, ap.debug, ap.acceptedHosts
+    args = ap.parse_args()
+    comlist = [f'COM{c}' for c in args.coms.split(',')]
+    return args.host, args.port, args.comlist, comlist, args.vlevel, args.debug, args.acceptedHosts
 
 
 class MultiComServer(BronkhorstServer):
