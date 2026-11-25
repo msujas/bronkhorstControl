@@ -319,9 +319,7 @@ class MultiComServer(BronkhorstServer):
         address = int(msplit[0])
         if msplit[1].startswith('COM'):
             com = msplit[1]
-            endmessage = msplit[2]
         else:
-            endmessage = msplit[1]
             com=None
 
         if 'pollAll' in message:

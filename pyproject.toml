@@ -19,15 +19,13 @@ classifiers = [
 "Programming Language :: Python :: 3.13"]
 
 [project.scripts]
-bronkhorstServer = "bronkhorstControlbm31.bronkhorstServer:runMulti"
-bronkhorstMultiServer = "bronkhorstControlbm31.bronkhorstServer:runMulti"
-bronkhorstSingleServer = "bronkhorstControlbm31.bronkhorstServer:run"
+bronkhorstServer = "bronkhorstControlbm31.bronkhorstServer:runMultiComServer"
+bronkhorstSingleCom = "bronkhorstControlbm31.bronkhorstServer:runMulti"
 timePlot = "bronkhorstControlbm31.plotters:timePlot"
 barPlot = "bronkhorstControlbm31.plotters:barPlot"
 mfcPlotAll = "bronkhorstControlbm31.plotters:plotAll"
 mfcgui = "bronkhorstControlbm31.bronkhorstGui:main"
 mfclogplotter = "bronkhorstControlbm31.plotters:logPlotter"
-#mfcmultigui = "bronkhorstControlbm31.bronkhorstMultiGui:main"
 multiCOMserver = "bronkhorstControlbm31.bronkhorstServer:runMultiComServer"
 
 [project.gui-scripts]
