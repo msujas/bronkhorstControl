@@ -2,11 +2,18 @@ Repository for a client/server program for communicating with Bronkhorst MFCs re
 
 Usage: On the PC connected to the MFCs run bronkhorstServer in a terminal. Options are -c/--com input the com number as an integer (default 1, but check com ports in Device Manager), this will save next time you run so you shouldn't need to input it again. -p/--port port number, (default is value in the script, probably unnecessary to change). A positional argument which can be 'local' ('localhost'), 'remote' (hostname), or remoteip (ip address) (default local). If remote the hostname will be displayed to connect from another computer, otherwise it will be 'localhost'. The port number will also be displayed.
 
-The best way to run is to use the multi client server e.g.
+Start the server e.g.
 ```
 bronkhorstServer remote -c 7
 ```
 remoteip, the hostname/ hostname.domain (e.g. format: pcname.company.countrycode) or the IP address itself can be used instead of remote to help specify the hostname, sometimes it works better in cases where the PC has multiple connections.
+
+The server can also connect to MFCs on multiple com ports e.g.
+```
+bronkhorstServer remote -c 5,7
+```
+
+In this case the client must specify the com port to use.
 
 Use ctrl+c to close the server. May take 5 s to take effect.
 
@@ -37,6 +44,13 @@ Ar.wait() #block script until measured MFC flow/BPR pressure is within 0.1 of th
 Ar.wink() #make the LEDs on the MFC wink for 9 s
 ```
 
+With multiple com ports, the com number must be specified:
+```python
+from bronkhorstControlbm31 import MFCclient
+mfc1 = MFCclient(1,'mypc', com=5)
+mfc2 = MFCclient(1,'mypc',com=7)
+```
+
 There is a gui called mfcgui (still must be used in conjuction with bronkhorstServer). Run in the terminal. There is one option: -m/--maxMFCs - the maximum number of MFCs that may be needed (sets the number of columns of widgets, doesn't matter if it's more than you have), by default this is 10, if you have more, or want to reduce it to make it cleaner, run with the specific number you want. e.g. for 15 MFCs:
 ```
 mfcgui -m 15
@@ -45,7 +59,7 @@ Alternatively, there is mfcgui2 to run without command line (otherwise they are 
 ```
 mfcgui2 -m 15
 ```
-<img width="800" height="629" alt="mfcgui_202511" src="https://github.com/user-attachments/assets/9a71184d-8058-4bf2-a8b6-003eeeaad30c" />
+<img width="800" height="629" alt="mfcgui_202511" src="bronkhorstControlbm31/images/gui_image.png" />
 
 When plot data is checked, the following data will be plotted:
 
@@ -55,10 +69,6 @@ There is a 'reset axes' box on the plotter. If this is checked, the axes for the
 
 The GUI also logs the measure values and setpoints every 5 seconds. This is saved in the \<home>/bronkhorstClientLog/ folder.
 
-There is also mfcmultigui which allows you to connect to multiple servers with comma separated host and port values.
-```
-mfcmultigui
-```
 
 The logs can be plotted with the program
 ```
