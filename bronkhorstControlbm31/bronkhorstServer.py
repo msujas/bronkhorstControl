@@ -333,6 +333,11 @@ class MultiComServer(BronkhorstServer):
             dfstring = dftostring(df)
             self.v.print(dfstring,plevel=2)
             return f'{dfstring}'
+
+        elif 'getAddresses' in message:
+            for com in self.mfclist:
+                return self.mfclist[com].getAddresses()
+                
         
         if not com in self.mfclist:
             print(f'{com} not on server')

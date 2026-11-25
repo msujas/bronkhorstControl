@@ -266,7 +266,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
             self.writeConfig()
             
     def setFlow(self,i):
-        if not self.running:
+        if not self.running or self.firstconnect:
             return
         value = self.writeSetpointBoxes[i].value()
         address = self.addressLabels[i].value()
@@ -292,7 +292,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
             self.setFlow(i)
 
     def setControlMode(self,i):
-        if not self.running:
+        if not self.running or self.firstconnect:
             return
         value = self.controlBoxes[i].currentIndex()
         #text = self.controlBoxes[i].currentText()
@@ -321,7 +321,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
         self.running = False
 
     def setFluidIndex(self,i):
-        if not self.running:
+        if not self.running or self.firstconnect:
             return
         value = self.fluidBoxes[i].value()
         address = self.addressLabels[i].value()
@@ -337,7 +337,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, CommonFunctions):
         MFCclient(address,self.host,self.port, connid=self.connid,com=com).wink()
 
     def setSlope(self,i):
-        if not self.running:
+        if not self.running or self.firstconnect:
             return
         value = self.slopeBoxes[i].value()
         address = self.addressLabels[i].value()

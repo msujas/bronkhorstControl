@@ -74,6 +74,12 @@ class CommonFunctions():
             self.originalSetpoints[i] = -1
             self.originalSlopes[i] = -1
     def updateMFCs(self,df:pd.DataFrame):
+
+
+        if len(df.columns) == 0:
+            self.stopConnect()
+            self.disableWidgets()
+            return
         if self.firstconnect:
             self.initdf = df
             self.fmeas = df['fMeasure'].values
@@ -86,21 +92,17 @@ class CommonFunctions():
             self.plotSetup()
 
             self.setMFCwidgets(True,df)
-
-        if len(df.columns) == 0:
-            self.stopConnect()
-            self.disableWidgets()
-            return
         checkValue = self.runningIndicator.isChecked()
         self.runningIndicator.setChecked(not checkValue)
         
         for i in df.index.values:
             try:
+                if self.firstconnect:
+                    self.comboxes[i].setText(df.loc[i]['COM'])
+                self.addressLabels[i].setValue(df.loc[i]['address'])
                 newSetpoint = df.loc[i]['fSetpoint']
                 newControlMode = df.loc[i]['Control mode']
                 newFluidIndex = df.loc[i]['Fluidset index']
-                self.addressLabels[i].setValue(df.loc[i]['address'])
-                self.comboxes[i].setText(df.loc[i]['COM'])
                 self.setpointBoxes[i].setValue(newSetpoint)
                 self.measureBoxes[i].setValue(df.loc[i]['fMeasure'])
                 self.valveBoxes[i].setValue(df.loc[i]['Valve output'])
@@ -125,7 +127,7 @@ class CommonFunctions():
                 if self.firstconnect or newslope != self.originalSlopes[i]:
                     self.slopeBoxes[i].setValue(newslope)
                     self.originalSlopes[i] = newslope
-                self.firstconnect = False
+                
             except TypeError as e:
                 print(df)
                 logger.warning(e)
@@ -154,10 +156,17 @@ class CommonFunctions():
             self.userTags[i].setEnabled(enabled)
             self.fluidBoxes[i].setEnabled(not self.lockFluidIndex.isChecked())
             self.enabledMFCs.append(i)
+            self.slopeBoxes[i].setEnabled(enabled)
 
     def updateQ(self, pollstr:str):
         #print(pollstr)
-        df = MFCclient.pollAlldecode(pollstr)
+        try:
+            df = MFCclient.pollAlldecode(pollstr)
+        except Exception as e:
+            print(f'error decoding df string: {pollstr}')
+            print(e)
+            logger.error(e)
+            self.stopConnect()
 
         if self.firstconnect:
             self.setMFCwidgets(True,df)
