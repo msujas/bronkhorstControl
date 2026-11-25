@@ -27,7 +27,7 @@ barPlot = "bronkhorstControlbm31.plotters:barPlot"
 mfcPlotAll = "bronkhorstControlbm31.plotters:plotAll"
 mfcgui = "bronkhorstControlbm31.bronkhorstGui:main"
 mfclogplotter = "bronkhorstControlbm31.plotters:logPlotter"
-mfcmultigui = "bronkhorstControlbm31.bronkhorstMultiGui:main"
+#mfcmultigui = "bronkhorstControlbm31.bronkhorstMultiGui:main"
 multiCOMserver = "bronkhorstControlbm31.bronkhorstServer:runMultiComServer"
 
 [project.gui-scripts]

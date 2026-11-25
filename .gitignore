@@ -31,3 +31,5 @@ bronkhorstControlbm31/mfcgui.exe.spec
 .idea
 testgui.py
 tcp_client_gui.py
+bronkhorstControlbm31/bronkhorstMultiGui.py
+bronkhorstControlbm31/guiLayout.py
