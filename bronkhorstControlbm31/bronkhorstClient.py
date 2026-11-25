@@ -9,7 +9,6 @@ import logging
 import numpy as np
 import time
 from .verbose import Verbose
-#from datetime import datetime
 
 homedir = pathlib.Path.home()
 fulllogdir = f'{homedir}/{logdir}'
@@ -332,8 +331,3 @@ class MFCclient():
                 self.v.print(f"Sending {data.outb} to connection {data.connid}", plevel=1)
                 sent = sock.send(data.outb)  # Should be ready to write
                 data.outb = data.outb[sent:]
-
-
-    def pollQtLoop(self):
-        pass
-

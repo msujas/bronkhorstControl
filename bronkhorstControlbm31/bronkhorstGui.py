@@ -28,70 +28,9 @@ logger = logging.getLogger()
 fulllogdir = f'{homedir}/{logdir}'
 os.makedirs(fulllogdir,exist_ok=True)
 
-def parseArguments():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-m','--maxMFCs', default=10, type=int, help=('maximum number of MFCs that might be ' 
-                                                                      'needed (default 10)'))
-    parser.add_argument('-v', '--verbose', default=0, type = int, help= 'verbose level. Integer, default 0. 1 to print more, -1 to print less')
-    args = parser.parse_args()
-    maxMFCs = args.maxMFCs
-    vlevel = parser.verbose
-    return maxMFCs, vlevel
-
-class Worker(QtCore.QObject):
-    outputs = QtCore.pyqtSignal(pd.DataFrame)
-    stopsignal = QtCore.pyqtSignal()
-    def __init__(self, host, port, waittime = 1, vlevel = 0):
-        super(Worker,self).__init__()
-        self.host = host
-        self.port = port
-        self.waittime = waittime
-        self.mfc = MFCclient(1,self.host,self.port, connid=f'{socket.gethostname()}GUIthread', vlevel=vlevel)
-        self.running = True
-    def run(self):
-        self.wait = False
-        while self.running:
-            if self.wait:
-                continue
-            #os.system('cls')
-            self.runOnce()
-            QtCore.QThread.msleep(int(self.waittime*1000))
-            #time.sleep(self.waittime)
-        print('stopping polling')
-
-    def stop(self):
-        self.running = False
-    
-    def runOnce(self):
-        try:
-            df = self.mfc.pollAll()
-        except (OSError, AttributeError, ConnectionResetError):
-            message = "connection to server lost. Stopping polling"
-            print(message)
-            logger.warning(message)
-            self.outputs.emit(pd.DataFrame())
-            return
-        except KeyError as e:
-            message = f'no data returned. Stopping:\n{e}'
-            print(message)
-            logger.warning(message)
-            self.outputs.emit(pd.DataFrame())
-            return
-        except Exception as e:
-            logger.exception(e)
-            print(e)
-            self.wait = True
-            self.stopsignal.emit()
-            return
-            #raise e
-        self.outputs.emit(df)
-        
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
     def setupUi(self):
-        self.worker:Worker|None=None
-        self.multi = False
-        self.useQclient = True
         eventlogfile = f'{homedir}/{logdir}/mfcgui.log'
         logging.basicConfig(filename=eventlogfile, level = logging.INFO, format = '%(asctime)s %(levelname)-8s %(message)s',
                             datefmt = '%Y/%m/%d_%H:%M:%S')
@@ -123,7 +62,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 'writesp':12,
                 'usertag':13}
 
-        #self.maxMFCs, self.vlevel = parseArguments()
         self.parseArguments()
         self.v = Verbose(level = self.vlevel)
         self.guiLayout()
@@ -158,49 +96,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
     def getcom(self,index):
         return int(self.comboxes[index].text().replace('COM',''))
 
-    def connectMFCs(self):
-        self.host = self.hostInput.text()
-        self.port = self.portInput.value()
-        self.firstconnect=True
-        
-        try:
-            df = MFCclient(1,self.host,self.port, connid=self.connid).pollAll()
-            self.fmeas = df['fMeasure'].values
-            self.fsp = df['fSetpoint'].values
-        except (OSError, AttributeError) as e:
-            raise e
-        
-        self.plot = self.plotBox.isChecked()
-        if self.plot:
-            self.plotter = Plotter(host = self.host, port = self.port, log=False, initDF=df)
-
-        self.tlog = 0
-        self.logfile = getLogFile(self.host,self.port, self.logDirectory.text())
-        self.headerstring = logHeader(self.logfile, df)
-
-        
-        for i in df.index.values:
-            self.originalSetpoints[i] = df.loc[i]['fSetpoint']
-            self.writeSetpointBoxes[i].setValue(self.originalSetpoints[i])
-            self.enabledMFCs.append(i)
-            self.originalUserTags[i] = df.loc[i]['User tag']
-            self.originalControlModes[i] = df.loc[i]['Control mode']
-            self.userTags[i].setText(self.originalUserTags[i])
-            self.controlBoxes[i].setCurrentIndex(self.originalControlModes[i])
-            self.originalFluidIndexes[i] = df.loc[i]['Fluidset index']
-            self.fluidBoxes[i].setValue(self.originalFluidIndexes[i])
-            self.winkbuttons[i].setEnabled(True)
-            self.writeSetpointBoxes[i].setEnabled(True)
-            self.controlBoxes[i].setEnabled(True)
-            self.slopeBoxes[i].setEnabled(True)
-            self.originalSlopes[i] = df.loc[i]['Setpoint slope']
-            self.slopeBoxes[i].setValue(self.originalSlopes[i])
-            if not self.lockFluidIndex.isChecked():
-                self.fluidBoxes[i].setEnabled(True)
-            self.userTags[i].setEnabled(True)
-            self.addressLabels[i].setStyleSheet('color: black;')
-        self.updateMFCs(df)
-        logger.info(f'connected to server. Host: {self.host}, port: {self.port}')
 
 
     def setwidgets(self,enabled:bool):
@@ -215,28 +110,11 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         #self.logDirButton.setEnabled(enabled)
     def connectLoop(self):
         self.logfile = getLogFile(self.hostInput.text() ,self.portInput.value(), self.logDirectory.text())
-        if not self.running and not self.useQclient:
-            self.host = self.hostInput.text()
-            self.port = self.portInput.value()
-            self.waittime = self.pollTimeBox.value()
-            self.firstconnect = True
-            self.running = True
-            
-            self.setwidgets(False)
-            self.worker = Worker(self.host,self.port, self.waittime, vlevel = self.vlevel)
-            self.thread:QtCore.QThread = QtCore.QThread()
-            self.worker.moveToThread(self.thread)
-            self.thread.started.connect(self.worker.run)
-            self.worker.outputs.connect(self.updateMFCs)
-            self.worker.stopsignal.connect(self.closefromthread)
-            self.thread.start()
-        elif self.useQclient and not self.running: #handles running and not running
-            #self.connectMFCs()
-
+        if not self.running: #handles running and not running
             self.setwidgets(False)
             self.connectQt()
             self.running = True
-        elif self.running:
+        else:
             self.stopConnect()
             self.disableWidgets()
             
@@ -358,8 +236,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         parser.add_argument('-v', '--verbose', default=0, type = int, help= 'verbose level. Integer, default 0. 1 to print more, -1 to print less')
         args = parser.parse_args()
         self.maxMFCs = args.maxMFCs
-        self.vlevel = args.verbose
-        #return maxMFCs, vlevel   
+        self.vlevel = args.verbose 
 
     def lockFluidIndexes(self):
         for i in self.enabledMFCs:
@@ -544,11 +421,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
     
     def stopConnect(self):
-        if not self.worker is None:
-            self.worker.stop()
-            self.thread.quit()
-            self.worker.deleteLater()
-            self.thread.wait()
         if self.plot:
             plt.close()
         if not self.qclient is None:
@@ -558,7 +430,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.running = False
 
     def guiLayout(self):
-        
         self.qclient :Client_qt|None = None
         self.configfile = f'{fulllogdir}/guiconfig.log'
         self.xspacing = 90

@@ -163,9 +163,7 @@ class BronkhorstServer():
     def service_connection(self,key,mask,sel):
         sock = key.fileobj
         data = key.data
-        #logger.debug(f'accepted connection from {data.addr}')
         connectionLostMessage = f'connection lost with client: {data.addr}'
-        #data.outb = b''
         def closeConnection():
             self.v.print(f'closing connection to {data.addr}', plevel=1)
             sel.unregister(sock)
@@ -180,9 +178,7 @@ class BronkhorstServer():
         if mask & selectors.EVENT_READ:
             try:
                 recvData = sock.recv(1024)
-                
             except (ConnectionAbortedError, ConnectionResetError):
-                
                 print(connectionLostMessage)
                 logger.info(connectionLostMessage)
                 recvData = b''
@@ -197,7 +193,6 @@ class BronkhorstServer():
                         continue
                     try:
                         mainmessage = self.processMessage(strmessage)
-                        #endmessageMarker = '!'
                         fullmessage = f'{mainmessage}!'
                         self.v.print(f'return message: {fullmessage}',plevel=2)
                         data.outb += bytes(fullmessage,encoding='utf-8')
@@ -220,7 +215,6 @@ class BronkhorstServer():
                 self.v.print(f'sending {data.outb!r}',plevel=2)
                 sent = sock.send(data.outb)
                 data.outb = data.outb[sent:]
-                #logger.debug(f'data sent to {data.addr}')
             except ConnectionResetError:
                 print(connectionLostMessage)
                 logger.info(connectionLostMessage)

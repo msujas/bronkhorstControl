@@ -1,5 +1,11 @@
 Repository for a client/server program for communicating with Bronkhorst MFCs remotely. Intended to be used with Pylatus or similar scripting environment. To install, clone the repository, then run 'pip install -e .' inside. This will create the bronkhorstServer program. Can also get from PyPi, 'pip install bronkhorstControlbm31'. Uses the Bronkhorst propar library. Also requires pandas, matplotlib and PyQt6.
 
+Differences from 1.x.x -> 2.x.x
+- mfcmultigui has been removed. Main server now accepts MFCs multiple com ports, and the regular mfcgui can interract with that
+- mfcgui uses Qt networking and timers to regularly poll the server. This significantly reduces CPU usage
+- mfcgui now displays the COM port for each MFC
+- If the server is reading multiple com ports, the com number (integer) must be specified in MFCclient
+
 Usage: On the PC connected to the MFCs run bronkhorstServer in a terminal. Options are -c/--com input the com number as an integer (default 1, but check com ports in Device Manager), this will save next time you run so you shouldn't need to input it again. -p/--port port number, (default is value in the script, probably unnecessary to change). A positional argument which can be 'local' ('localhost'), 'remote' (hostname), or remoteip (ip address) (default local). If remote the hostname will be displayed to connect from another computer, otherwise it will be 'localhost'. The port number will also be displayed.
 
 Start the server e.g.
