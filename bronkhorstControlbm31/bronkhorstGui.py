@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 from .bronkhorstClient import MFCclient
 from .bronkhorstServer import HOST, PORT, logdir
 from .plotters import Plotter, getLogFile, logHeader, logMFCs, clientlogdir
-from .guiLayout import fulllogdir
 import logging
 import pathlib, os
 import socket
@@ -25,6 +24,9 @@ if platform.system() == 'Windows':
 homedir = pathlib.Path.home()
 
 logger = logging.getLogger()
+
+fulllogdir = f'{homedir}/{logdir}'
+os.makedirs(fulllogdir,exist_ok=True)
 
 def parseArguments():
     parser = argparse.ArgumentParser()
@@ -222,7 +224,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             
             self.setwidgets(False)
             self.worker = Worker(self.host,self.port, self.waittime, vlevel = self.vlevel)
-            self.thread = QtCore.QThread()
+            self.thread:QtCore.QThread = QtCore.QThread()
             self.worker.moveToThread(self.thread)
             self.thread.started.connect(self.worker.run)
             self.worker.outputs.connect(self.updateMFCs)
