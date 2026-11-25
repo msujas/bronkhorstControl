@@ -22,9 +22,12 @@ def connect(host=HOST, port=PORT):
     s.connect((host,port))
     return s
 
+mfctypes = {'fMeasure': float, 'address':np.uint8, 'fSetpoint':float, 'Setpoint_pct':float, 'Measure_pct':float, 
+                      'Valve output': float, 'Fluidset index': np.uint8,  'Control mode':np.uint8, 'Setpoint slope': int}
+
 class MFCclient():
     def __init__(self,address, host=HOST,port=PORT, connid = socket.gethostname(), m = 1, c = 0, 
-                 getMax = False, vlevel = 1):
+                 getMax = False, vlevel = 1, com:int|None=None):
         #dt = datetime.fromtimestamp(time.time())
         eventlogfile = f'{homedir}/{logdir}/clientEvents.log'
         logging.basicConfig(filename=eventlogfile, level = logging.INFO, format = '%(asctime)s %(levelname)-8s %(message)s',
@@ -36,9 +39,9 @@ class MFCclient():
         self.multi = True
         self.m = m
         self.c = c
-        self.types = {'fMeasure': float, 'address':np.uint8, 'fSetpoint':float, 'Setpoint_pct':float, 'Measure_pct':float, 
-                      'Valve output': float, 'Fluidset index': np.uint8,  'Control mode':np.uint8, 'Setpoint slope': int}
+        self.types = mfctypes
         self.maxCapacity = 0
+        self.com=com
         if getMax:
             self.readMaxCapacity()
         self.v = Verbose(vlevel)
@@ -179,6 +182,19 @@ class MFCclient():
         df = pd.DataFrame(data = array,columns=columns)
         df = df.astype(self.types)
         return df
+
+    @classmethod
+    def pollAlldecode(self, pollAllData:str):
+        datalines = pollAllData.split('\n')
+        columns = datalines[0].split(';')
+        array = [[i for i in line.split(';')] for line in datalines[1:] if line]
+        df = pd.DataFrame(data = array,columns=columns)
+        try:
+            df = df.astype(mfctypes)
+        except KeyError as e:
+            print(columns)
+            raise e
+        return df
     
     def pollAll2(self):
         data = self.makeSendMessage('readParams_allAddsPars')
@@ -225,6 +241,7 @@ class MFCclient():
         data = self.makeSendMessage('wink')
         return data
     def sendMessage(self,message):
+        message += '!'
         bytemessage = bytes(message,encoding='utf-8')
         if not self.multi:
             self.s = connect(self.host,self.port)
@@ -240,6 +257,8 @@ class MFCclient():
     def makeMessage(self, *args):
         sep = ';'
         string = f'{self.address}'
+        if self.com:
+            string += f';COM{self.com}'
         for arg in args:
             string += f'{sep}{arg}'
         return string
@@ -313,4 +332,8 @@ class MFCclient():
                 self.v.print(f"Sending {data.outb} to connection {data.connid}", plevel=1)
                 sent = sock.send(data.outb)  # Should be ready to write
                 data.outb = data.outb[sent:]
+
+
+    def pollQtLoop(self):
+        pass
 

@@ -30,13 +30,18 @@ paramDF = getParamDF()
 def startMfc(com = 'COM1'):
     mfcMain = propar.instrument(com)
     return mfcMain
-
+def dftostring(df:pd.DataFrame):
+    dfstring = ';'.join(df.columns)
+    for i in df.index.values:
+        dfstring += '\n'
+        dfstring += ';'.join([str(x) for x in df.loc[i]])
+    return dfstring
 
 class MFC():
-    def __init__(self,address, mfcMain, vlevel = 0):
+    def __init__(self,address, mfcMain:propar.instrument, vlevel = 0):
         self.address = address
         self.mfcMain = mfcMain
-        self.com = mfcMain.comport
+        self.com:str = self.mfcMain.comport
         self.pollparams = ['User tag', 'Control mode', 'Fluid name', 'Fluidset index','fMeasure', 'fSetpoint', 
                   'Measure', 'Setpoint', 'Valve output', 'Setpoint slope']
         self.ddenrs = paramDF['dde_nr'].loc[self.pollparams].values
@@ -194,16 +199,13 @@ class MFC():
         df['Measure'] = df['Measure'].apply(lambda x: x*100/32000)
         df['Setpoint'] = df['Setpoint'].apply(lambda x: x*100/32000)
         df['Valve output'] = df['Valve output'].apply(lambda x: x/2**24)
+        df['COM'] = [self.com]*len(self.addresses)
         df = df.rename({'Measure':'Measure_pct', 'Setpoint':'Setpoint_pct'}, axis = 1)
         return df
     def pollAllServer(self):
         df = self.pollAll()
         self.v.print(df, plevel=1)
-        dfstring = ';'.join(df.columns)
-        for i in df.index.values:
-            dfstring += '\n'
-            dfstring += ';'.join([str(x) for x in df.loc[i]])
-        return dfstring
+        return dftostring(df)
     def readSlope(self):
         return self.readParam('Setpoint slope')
     def writeSlope(self,value):
@@ -230,11 +232,19 @@ class MFC():
             print('com needs to be defined to run this')
             return
         return propar.instrument(self.com, self.address).wink()
-    def strToMethod(self,inputString):
+    def getCOM(self):
+        return self.com
+    def strToMethod(self,inputString:str):
         stringSplit = inputString.split(';')
         #address = stringSplit[0]
-        methodName = stringSplit[1]
-        args = stringSplit[2:]
+        methodi = 1
+        argi=2
+        if stringSplit[1].startswith('COM'):
+            #_comstring = stringSplit[1]
+            methodi = 2
+            argi = 3
+        methodName = stringSplit[methodi]
+        args = stringSplit[argi:]
         methodDct = {'readName': self.readName, 'readParam':self.readParam,
                      'readSetpoint':self.readSetpoint, 'writeSetpoint':self.writeSetpoint,
                      'writeParam':self.writeParam, 'readFlow':self.readFlow,
@@ -246,7 +256,7 @@ class MFC():
                      'readValve': self.readValve, 'readParams_names':self.readParams_names,
                      'readParams_allAddsPars':self.readParams_allAddsPars,'testMessage':self.testMessage,
                      'readSlope': self.readSlope, 'writeSlope':self.writeSlope, 'writeSP_slope':self.writeSP_Slope,
-                     'readMaxCapacity':self.readMaxCapacity, 'writePID':self.writePID}
+                     'readMaxCapacity':self.readMaxCapacity, 'writePID':self.writePID, 'getCOM':self.getCOM}
         method = methodDct[methodName]
         val = method(*args)
         if type(val) == dict:

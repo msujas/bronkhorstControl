@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bronkhorstControlbm31"
-version = "1.5.0"
+version = "2.0.0"
 requires-python = ">= 3.10"
 dependencies = ["bronkhorst-propar", "pandas", "matplotlib", "pyqt6"]
 authors = [{name = "Kenneth P. Marshall", email = "kenneth.marshall@esrf.fr"}]
@@ -19,18 +19,18 @@ classifiers = [
 "Programming Language :: Python :: 3.13"]
 
 [project.scripts]
-bronkhorstServer = "bronkhorstControlbm31.bronkhorstServer:runMulti"
-bronkhorstMultiServer = "bronkhorstControlbm31.bronkhorstServer:runMulti"
-bronkhorstSingleServer = "bronkhorstControlbm31.bronkhorstServer:run"
+bronkhorstServer = "bronkhorstControlbm31.bronkhorstServer:runMultiComServer"
+bronkhorstSingleCom = "bronkhorstControlbm31.bronkhorstServer:runMulti"
 timePlot = "bronkhorstControlbm31.plotters:timePlot"
 barPlot = "bronkhorstControlbm31.plotters:barPlot"
 mfcPlotAll = "bronkhorstControlbm31.plotters:plotAll"
 mfcgui = "bronkhorstControlbm31.bronkhorstGui:main"
 mfclogplotter = "bronkhorstControlbm31.plotters:logPlotter"
+multiCOMserver = "bronkhorstControlbm31.bronkhorstServer:runMultiComServer"
 
 [project.gui-scripts]
 mfcgui2 = "bronkhorstControlbm31.bronkhorstGui:main"
-mfcmultigui = "bronkhorstControlbm31.bronkhorstMultiGui:main"
+
 
 [tool.setuptools]
 include-package-data = true
