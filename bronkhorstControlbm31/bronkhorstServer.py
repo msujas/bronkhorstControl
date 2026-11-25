@@ -338,6 +338,8 @@ class MultiComServer(BronkhorstServer):
             for com in self.mfclist:
                 return self.mfclist[com].getAddresses()
                 
+        if len(self.mfclist) == 1 and com is None:
+            com = list(self.mfclist.keys())[0]
         
         if not com in self.mfclist:
             print(f'{com} not on server')
